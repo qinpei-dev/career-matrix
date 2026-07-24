@@ -1,6 +1,7 @@
 """Public API schemas."""
 
 from .analysis import AnalysisCreate, AnalysisEvidence, AnalysisRead, JobAnalysisRead
+from .analysis_task import AnalysisTaskCreate, AnalysisTaskRead, AnalysisTaskStarted
 from .document import (
     DocumentChunkPublic,
     DocumentChunkRead,
@@ -17,6 +18,9 @@ __all__ = [
     "AnalysisCreate",
     "AnalysisEvidence",
     "AnalysisRead",
+    "AnalysisTaskCreate",
+    "AnalysisTaskRead",
+    "AnalysisTaskStarted",
     "DocumentChunkRead",
     "DocumentChunkPublic",
     "DocumentDetailRead",

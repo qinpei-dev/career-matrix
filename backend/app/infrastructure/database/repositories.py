@@ -2,12 +2,14 @@
 
 import math
 import uuid
+from datetime import datetime
 
-from sqlalchemy import Float, func, select
+from sqlalchemy import Float, func, select, update
 from sqlalchemy.orm import Session
 
 from .models import (
-    AgentRun, AgentStep, Analysis, CandidateProfile, Document, DocumentChunk, Job, User,
+    AgentRun, AgentStep, Analysis, AnalysisTask, CandidateProfile, Document,
+    DocumentChunk, Job, User,
 )
 
 
@@ -232,6 +234,164 @@ class AnalysisRepository:
                 .order_by(Analysis.created_at.desc(), Analysis.id.desc())
             )
         )
+
+
+class AnalysisTaskRepository:
+    def __init__(self, session: Session) -> None:
+        self.session = session
+
+    def add(self, task: AnalysisTask) -> AnalysisTask:
+        self.session.add(task)
+        self.session.flush()
+        return task
+
+    def get_for_user(
+        self, task_id: uuid.UUID, user_id: uuid.UUID
+    ) -> AnalysisTask | None:
+        return self.session.scalar(
+            select(AnalysisTask).where(
+                AnalysisTask.id == task_id,
+                AnalysisTask.user_id == user_id,
+            )
+        )
+
+    def get_active_for_job(
+        self, user_id: uuid.UUID, job_id: uuid.UUID
+    ) -> AnalysisTask | None:
+        return self.session.scalar(
+            select(AnalysisTask).where(
+                AnalysisTask.user_id == user_id,
+                AnalysisTask.job_id == job_id,
+                AnalysisTask.status.in_(
+                    ("PENDING", "FETCHING_JOB", "ANALYZING",
+                     "SAVING_RESULT", "WAITING_FOR_REVIEW")
+                ),
+            )
+        )
+
+    def get_current_for_job(
+        self, user_id: uuid.UUID, job_id: uuid.UUID
+    ) -> AnalysisTask | None:
+        return self.session.scalar(
+            select(AnalysisTask)
+            .where(
+                AnalysisTask.user_id == user_id,
+                AnalysisTask.job_id == job_id,
+                AnalysisTask.status.in_(
+                    ("PENDING", "FETCHING_JOB", "ANALYZING",
+                     "SAVING_RESULT", "WAITING_FOR_REVIEW", "FAILED")
+                ),
+            )
+            .order_by(AnalysisTask.created_at.desc(), AnalysisTask.id.desc())
+        )
+
+    def claim(
+        self,
+        task_id: uuid.UUID,
+        user_id: uuid.UUID,
+        *,
+        expected_status: str,
+        expected_version: int,
+        claim_token: str,
+        claimed_at: datetime,
+        lease_expires_at: datetime,
+        increment_retry: bool = False,
+    ) -> bool:
+        conditions = [
+            AnalysisTask.id == task_id,
+            AnalysisTask.user_id == user_id,
+            AnalysisTask.status == expected_status,
+            AnalysisTask.is_running.is_(False),
+            AnalysisTask.version == expected_version,
+        ]
+        if increment_retry:
+            conditions.append(AnalysisTask.retry_count < AnalysisTask.max_retries)
+        values: dict[str, object] = {
+            "is_running": True,
+            "claim_token": claim_token,
+            "claimed_at": claimed_at,
+            "lease_expires_at": lease_expires_at,
+            "version": AnalysisTask.version + 1,
+        }
+        if increment_retry:
+            values["retry_count"] = AnalysisTask.retry_count + 1
+        result = self.session.execute(
+            update(AnalysisTask)
+            .where(*conditions)
+            .values(**values)
+        )
+        self.session.commit()
+        return result.rowcount == 1
+
+    def compare_and_set(
+        self,
+        task_id: uuid.UUID,
+        user_id: uuid.UUID,
+        *,
+        expected_status: str,
+        expected_version: int,
+        values: dict[str, object],
+        claim_token: str | None = None,
+        require_idle: bool = False,
+    ) -> bool:
+        conditions = [
+            AnalysisTask.id == task_id,
+            AnalysisTask.user_id == user_id,
+            AnalysisTask.status == expected_status,
+            AnalysisTask.version == expected_version,
+        ]
+        if claim_token is not None:
+            conditions.extend((
+                AnalysisTask.is_running.is_(True),
+                AnalysisTask.claim_token == claim_token,
+            ))
+        if require_idle:
+            conditions.append(AnalysisTask.is_running.is_(False))
+        result = self.session.execute(
+            update(AnalysisTask)
+            .where(*conditions)
+            .values(**values, version=AnalysisTask.version + 1)
+        )
+        self.session.commit()
+        return result.rowcount == 1
+
+    def release(self, task_id: uuid.UUID, claim_token: str) -> bool:
+        result = self.session.execute(
+            update(AnalysisTask)
+            .where(
+                AnalysisTask.id == task_id,
+                AnalysisTask.claim_token == claim_token,
+                AnalysisTask.is_running.is_(True),
+            )
+            .values(
+                is_running=False,
+                claim_token=None,
+                claimed_at=None,
+                lease_expires_at=None,
+                version=AnalysisTask.version + 1,
+            )
+        )
+        self.session.commit()
+        return result.rowcount == 1
+
+    def release_expired(self, now: datetime) -> int:
+        result = self.session.execute(
+            update(AnalysisTask)
+            .where(
+                AnalysisTask.is_running.is_(True),
+                AnalysisTask.lease_expires_at.is_not(None),
+                AnalysisTask.lease_expires_at < now,
+            )
+            .values(
+                is_running=False,
+                claim_token=None,
+                claimed_at=None,
+                lease_expires_at=None,
+                version=AnalysisTask.version + 1,
+            )
+        )
+        self.session.commit()
+        return result.rowcount
 
 
 class AgentRunRepository:

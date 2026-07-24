@@ -5,6 +5,7 @@ from sqlalchemy.orm import Session
 
 from ..application.analysis_service import ApplicationAnalysisService
 from ..application.analysis_service import AnalysisService
+from ..application.analysis_task_service import AnalysisTaskService
 from ..application.agent_service import AgentRunService
 from ..application.crud_service import DEFAULT_USER_EMAIL, CrudService
 from ..application.document_service import DocumentService
@@ -112,4 +113,24 @@ def get_agent_run_service(
         analyzer=AnalysisService(DeepSeekProvider()),
         retrieval_service=RetrievalService(session, x_user_email, embedding_provider),
         timeout_seconds=settings.agent_run_timeout_seconds,
+    )
+
+
+def get_analysis_task_service(
+    session: Session = Depends(get_db_session),
+    embedding_provider: EmbeddingProvider = Depends(get_embedding_provider),
+    x_user_email: str = Header(
+        default=DEFAULT_USER_EMAIL,
+        alias="X-User-Email",
+        min_length=3,
+        max_length=320,
+        pattern=r"^[^\s@]+@[^\s@]+$",
+    ),
+) -> AnalysisTaskService:
+    """Build the request-scoped persistent analysis task workflow."""
+    return AnalysisTaskService(
+        session,
+        x_user_email,
+        analyzer=AnalysisService(DeepSeekProvider()),
+        retrieval_service=RetrievalService(session, x_user_email, embedding_provider),
     )
