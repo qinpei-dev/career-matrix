@@ -30,6 +30,7 @@ from backend.app.infrastructure.database.session import (
 )
 
 TABLE_NAMES = {
+    "analysis_tasks",
     "agent_runs",
     "agent_steps",
     "users",
@@ -200,6 +201,47 @@ def test_initial_migration_upgrade_and_downgrade_on_sqlite(monkeypatch, tmp_path
 
     command.downgrade(config, "base")
     assert TABLE_NAMES.isdisjoint(set(inspect(engine).get_table_names()))
+    engine.dispose()
+    get_settings.cache_clear()
+
+
+def test_analysis_task_lease_migration_round_trip(monkeypatch, tmp_path) -> None:
+    database_url = _sqlite_url(tmp_path / "analysis-task-lease.db")
+    monkeypatch.setenv("DATABASE_URL", database_url)
+    get_settings.cache_clear()
+    config = _alembic_config()
+
+    command.upgrade(config, "20260724_0009")
+    engine = create_engine(database_url)
+    assert "claim_token" not in {
+        column["name"] for column in inspect(engine).get_columns("analysis_tasks")
+    }
+    engine.dispose()
+
+    command.upgrade(config, "20260724_0010")
+    engine = create_engine(database_url)
+    columns = {
+        column["name"] for column in inspect(engine).get_columns("analysis_tasks")
+    }
+    assert {"claim_token", "claimed_at", "lease_expires_at"} <= columns
+    result_fk = next(
+        item for item in inspect(engine).get_foreign_keys("analysis_tasks")
+        if item["constrained_columns"] == ["result_id"]
+    )
+    assert result_fk["options"]["ondelete"] == "RESTRICT"
+    engine.dispose()
+
+    command.downgrade(config, "20260724_0009")
+    engine = create_engine(database_url)
+    columns = {
+        column["name"] for column in inspect(engine).get_columns("analysis_tasks")
+    }
+    assert {"claim_token", "claimed_at", "lease_expires_at"}.isdisjoint(columns)
+    result_fk = next(
+        item for item in inspect(engine).get_foreign_keys("analysis_tasks")
+        if item["constrained_columns"] == ["result_id"]
+    )
+    assert result_fk["options"]["ondelete"] == "SET NULL"
     engine.dispose()
     get_settings.cache_clear()
 

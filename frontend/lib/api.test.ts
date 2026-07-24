@@ -2,6 +2,12 @@ import assert from "node:assert/strict";
 import { afterEach, test } from "node:test";
 import { API_BASE_URL, ApiError, api, apiFetch } from "./api.ts";
 import { documentUploadNotice } from "./document-upload.ts";
+import {
+  shouldDeleteCachedTask,
+  hasTaskPollingTimedOut,
+  shouldPollAnalysisTask,
+  TASK_POLL_TIMEOUT_MS,
+} from "./analysis-task-recovery.ts";
 
 const originalFetch = globalThis.fetch;
 
@@ -123,6 +129,53 @@ test("agent run APIs create and poll encoded runs", async () => {
   assert.equal(requests[0].init?.method, "POST");
   assert.equal(requests[0].init?.body, JSON.stringify({ job_id: "job-1" }));
   assert.equal(requests[1].url, `${API_BASE_URL}/api/v1/agent/runs/run%2F1`);
+});
+
+test("analysis task APIs create, run, retry, complete, and encode IDs", async () => {
+  const requests: Array<{ url: string; init?: RequestInit }> = [];
+  globalThis.fetch = async (input, init) => {
+    requests.push({ url: String(input), init });
+    return new Response(JSON.stringify({
+      task_id: "task/1", id: "task/1", status: "PENDING",
+      current_step: "PENDING", progress: 0,
+    }), { status: 200, headers: { "Content-Type": "application/json" } });
+  };
+
+  await api.createAnalysisTask("job-1");
+  await api.getAnalysisTask("task/1");
+  await api.getActiveAnalysisTask("job/1");
+  await api.runAnalysisTask("task/1");
+  await api.retryAnalysisTask("task/1");
+  await api.completeAnalysisTask("task/1");
+
+  assert.equal(requests[0].init?.body, JSON.stringify({ job_id: "job-1" }));
+  assert.deepEqual(requests.slice(1).map((request) => request.url), [
+    `${API_BASE_URL}/api/v1/analysis-tasks/task%2F1`,
+    `${API_BASE_URL}/api/v1/analysis-tasks/active?job_id=job%2F1`,
+    `${API_BASE_URL}/api/v1/analysis-tasks/task%2F1/run`,
+    `${API_BASE_URL}/api/v1/analysis-tasks/task%2F1/retry`,
+    `${API_BASE_URL}/api/v1/analysis-tasks/task%2F1/complete`,
+  ]);
+  assert.deepEqual(requests.slice(3).map((request) => request.init?.method), [
+    "POST", "POST", "POST",
+  ]);
+});
+
+test("analysis task recovery distinguishes missing tasks and polling states", () => {
+  assert.equal(shouldDeleteCachedTask(new ApiError("missing", 404)), true);
+  assert.equal(shouldDeleteCachedTask(new ApiError("server", 500)), false);
+  const task = {
+    id: "task-1", user_id: "user-1", job_id: "job-1",
+    status: "ANALYZING" as const, current_step: "ANALYZING", progress: 30,
+    retry_count: 0, max_retries: 3, error_code: null, error_message: null,
+    result_id: null, started_at: null, completed_at: null,
+    created_at: "", updated_at: "", is_running: false,
+    claimed_at: null, lease_expires_at: null,
+  };
+  assert.equal(shouldPollAnalysisTask(task), true);
+  assert.equal(shouldPollAnalysisTask({...task, status: "FAILED"}), false);
+  assert.equal(hasTaskPollingTimedOut(1_000, 1_000 + TASK_POLL_TIMEOUT_MS - 1), false);
+  assert.equal(hasTaskPollingTimedOut(1_000, 1_000 + TASK_POLL_TIMEOUT_MS), true);
 });
 
 test("document APIs use encoded user-scoped document paths", async () => {

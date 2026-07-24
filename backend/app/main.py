@@ -10,6 +10,7 @@ from pydantic import BaseModel, Field, field_validator
 
 from .application.analysis_service import analyze_job
 from .application.agent_service import recover_stale_agent_runs
+from .application.analysis_task_service import recover_interrupted_analysis_tasks
 from .application.crud_service import ResourceConflictError, ResourceNotFoundError
 from .api.dependencies import get_db_session
 from .api.v1 import router as v1_router
@@ -37,6 +38,7 @@ async def lifespan(application: FastAPI):
                     session,
                     get_settings().agent_run_timeout_seconds,
                 )
+                recover_interrupted_analysis_tasks(session)
         except (DatabaseConfigurationError, SQLAlchemyError) as exc:
             logger.warning("Agent Run startup recovery skipped: %s", exc)
     yield

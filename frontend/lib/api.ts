@@ -49,6 +49,43 @@ export interface AnalysisEvidence {
   requirement: string;
 }
 
+export type AnalysisTaskStatus =
+  | "PENDING"
+  | "FETCHING_JOB"
+  | "ANALYZING"
+  | "SAVING_RESULT"
+  | "WAITING_FOR_REVIEW"
+  | "COMPLETED"
+  | "FAILED";
+
+export interface AnalysisTaskStarted {
+  task_id: string;
+  status: AnalysisTaskStatus;
+  current_step: string;
+  progress: number;
+}
+
+export interface AnalysisTask {
+  id: string;
+  user_id: string;
+  job_id: string;
+  status: AnalysisTaskStatus;
+  current_step: string;
+  progress: number;
+  retry_count: number;
+  max_retries: number;
+  error_code: string | null;
+  error_message: string | null;
+  result_id: string | null;
+  started_at: string | null;
+  completed_at: string | null;
+  created_at: string;
+  updated_at: string;
+  is_running: boolean;
+  claimed_at: string | null;
+  lease_expires_at: string | null;
+}
+
 export type AgentRunStatus = "pending" | "running" | "completed" | "failed" | "timeout";
 export type AgentStepStatus = "running" | "completed" | "failed";
 
@@ -203,6 +240,32 @@ export const api = {
     { method: "POST" },
   ),
   getAnalyses: () => apiFetch<Analysis[]>("/api/v1/analyses"),
+  createAnalysisTask: (jobId: string) => apiFetch<AnalysisTaskStarted>(
+    "/api/v1/analysis-tasks",
+    {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ job_id: jobId }),
+    },
+  ),
+  getAnalysisTask: (taskId: string) => apiFetch<AnalysisTask>(
+    `/api/v1/analysis-tasks/${encodeURIComponent(taskId)}`,
+  ),
+  getActiveAnalysisTask: (jobId: string) => apiFetch<AnalysisTask>(
+    `/api/v1/analysis-tasks/active?job_id=${encodeURIComponent(jobId)}`,
+  ),
+  runAnalysisTask: (taskId: string) => apiFetch<AnalysisTask>(
+    `/api/v1/analysis-tasks/${encodeURIComponent(taskId)}/run`,
+    { method: "POST" },
+  ),
+  retryAnalysisTask: (taskId: string) => apiFetch<AnalysisTask>(
+    `/api/v1/analysis-tasks/${encodeURIComponent(taskId)}/retry`,
+    { method: "POST" },
+  ),
+  completeAnalysisTask: (taskId: string) => apiFetch<AnalysisTask>(
+    `/api/v1/analysis-tasks/${encodeURIComponent(taskId)}/complete`,
+    { method: "POST" },
+  ),
   createAgentRun: (jobId: string) => apiFetch<AgentRunStarted>(
     "/api/v1/agent/runs",
     {
