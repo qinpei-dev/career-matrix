@@ -13,7 +13,7 @@ from .application.agent_service import recover_stale_agent_runs
 from .application.analysis_task_service import recover_interrupted_analysis_tasks
 from .application.crud_service import ResourceConflictError, ResourceNotFoundError
 from .api.dependencies import get_db_session
-from .api.v1 import router as v1_router
+from .api.v1.router import router as v1_router
 from .core.config import get_settings
 from .infrastructure.database.session import (
     DatabaseConfigurationError,
