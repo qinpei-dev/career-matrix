@@ -5,6 +5,7 @@ import { usePathname } from "next/navigation";
 import { Icon } from "./icons";
 
 const nav = [
+  { href: "/security-tests/untrusted-content", label: "安全测试", icon: "spark" },
   { href: "/", label: "工作台", icon: "grid" },
   { href: "/jobs", label: "岗位管理", icon: "briefcase" },
   { href: "/resumes", label: "简历管理", icon: "file" },

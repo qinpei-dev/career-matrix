@@ -1,3 +1,5 @@
+import type { SecurityTestReport } from "./security-report";
+
 const DEFAULT_API_BASE_URL = "http://localhost:8000";
 
 export const API_BASE_URL = (
@@ -304,5 +306,9 @@ export const api = {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ query, top_k: topK }),
     },
+  ),
+  runUntrustedContentSecurityTest: () => apiFetch<SecurityTestReport>(
+    "/api/v1/security-tests/untrusted-content",
+    { method: "POST" },
   ),
 };
