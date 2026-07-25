@@ -25,6 +25,7 @@ from ..infrastructure.llm.parser import (
 )
 from ..infrastructure.llm.provider import LLMProvider, LLMServiceError
 from ..schemas.analysis import AnalysisEvidence
+from ..core.security import redact_sensitive_text
 
 SCORING_VERSION = "deterministic-v1"
 PROMPT_VERSION = "retrieval-evidence-v2"
@@ -127,9 +128,9 @@ class ApplicationAnalysisService:
                     AnalysisEvidence(
                         chunk_id=match.chunk_id,
                         document_id=match.document_id,
-                        content=match.content,
-                        section=match.section,
-                        requirement=requirement,
+                        content=redact_sensitive_text(match.content),
+                        section=redact_sensitive_text(match.section),
+                        requirement=redact_sensitive_text(requirement),
                     )
                     for match in matches
                     if match.score >= EVIDENCE_MIN_SCORE

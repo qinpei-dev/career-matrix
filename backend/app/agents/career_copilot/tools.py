@@ -22,6 +22,13 @@ from .schemas import (
 InputT = TypeVar("InputT", bound=BaseModel)
 OutputT = TypeVar("OutputT", bound=BaseModel)
 
+ALLOWED_ANALYSIS_TOOL_NAMES = (
+    "retrieve_candidate_evidence",
+    "calculate_match_score",
+    "generate_application_material",
+    "save_analysis_result",
+)
+
 
 @dataclass(frozen=True)
 class ToolDefinition(Generic[InputT, OutputT]):
@@ -72,28 +79,28 @@ def create_tool_registry(
 ) -> ToolRegistry:
     registry = ToolRegistry()
     registry.register(ToolDefinition(
-        name="retrieve_candidate_evidence",
+        name=ALLOWED_ANALYSIS_TOOL_NAMES[0],
         description="Retrieve user-owned resume evidence for explicit job requirements.",
         input_schema=RetrieveCandidateEvidenceInput,
         output_schema=RetrieveCandidateEvidenceOutput,
         handler=retrieve_handler,
     ))
     registry.register(ToolDefinition(
-        name="calculate_match_score",
+        name=ALLOWED_ANALYSIS_TOOL_NAMES[1],
         description="Calculate a deterministic match score from structured evidence statuses.",
         input_schema=CalculateMatchScoreInput,
         output_schema=CalculateMatchScoreOutput,
         handler=calculate_handler,
     ))
     registry.register(ToolDefinition(
-        name="generate_application_material",
+        name=ALLOWED_ANALYSIS_TOOL_NAMES[2],
         description="Generate the bounded first-version match report from validated structured data.",
         input_schema=GenerateApplicationMaterialInput,
         output_schema=GenerateApplicationMaterialOutput,
         handler=generate_handler,
     ))
     registry.register(ToolDefinition(
-        name="save_analysis_result",
+        name=ALLOWED_ANALYSIS_TOOL_NAMES[3],
         description="Persist a completed analysis through the injected application handler.",
         input_schema=SaveAnalysisResultInput,
         output_schema=SaveAnalysisResultOutput,

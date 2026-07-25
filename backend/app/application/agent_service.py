@@ -51,6 +51,8 @@ from .analysis_service import (
 )
 from .crud_service import ResourceConflictError, ResourceNotFoundError
 from .retrieval_service import RetrievalService
+from ..core.security import public_error_message
+from ..core.security import redact_sensitive_text
 
 
 class AgentRunService:
@@ -141,9 +143,7 @@ class AgentRunService:
                 AgentRunStatus.RUNNING.value,
             }:
                 failed_run.status = AgentRunStatus.FAILED.value
-                failed_run.error_message = (
-                    getattr(exc, "public_message", None) or str(exc) or "agent workflow failed"
-                )
+                failed_run.error_message = public_error_message(exc, "agent workflow failed")
                 self.session.commit()
         finally:
             self._active_run_id = None
@@ -195,9 +195,9 @@ class AgentRunService:
                     evidence.append(AnalysisEvidence(
                         chunk_id=match.chunk_id,
                         document_id=match.document_id,
-                        content=match.content,
-                        section=match.section,
-                        requirement=requirement,
+                        content=redact_sensitive_text(match.content),
+                        section=redact_sensitive_text(match.section),
+                        requirement=redact_sensitive_text(requirement),
                     ))
         return RetrieveCandidateEvidenceOutput(evidence=evidence)
 

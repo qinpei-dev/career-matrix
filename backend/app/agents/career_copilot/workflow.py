@@ -6,6 +6,7 @@ from collections.abc import Callable
 from time import perf_counter
 
 from ...infrastructure.llm.parser import ExtractedAnalysis
+from ...core.security import public_error_message
 from . import nodes
 from .schemas import AgentError, AgentRunStatus, AgentStepName, ValidatedAgentInput
 from .state import CareerCopilotState
@@ -61,7 +62,7 @@ class CareerCopilotWorkflow:
                 handler()
             except Exception as exc:
                 duration_ms = max(0, round((self.clock() - started) * 1000))
-                message = getattr(exc, "public_message", None) or str(exc) or "agent workflow failed"
+                message = public_error_message(exc, "agent workflow failed")
                 state.status = AgentRunStatus.FAILED
                 state.errors.append(AgentError(step=step_name, message=message))
                 self.step_failed(step_name, message, duration_ms)

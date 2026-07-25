@@ -3,9 +3,10 @@
 import json
 from typing import Any, Literal
 
-from pydantic import BaseModel, ConfigDict, Field, ValidationError
+from pydantic import BaseModel, ConfigDict, Field, ValidationError, field_validator
 
 from ...services.scoring import calculate_match_score
+from ...core.security import sanitize_model_payload
 from .provider import LLMResponseFormatError
 
 
@@ -17,6 +18,19 @@ class JobRequirements(BaseModel):
     project_requirements: list[str] = Field(default_factory=list)
     education_requirements: list[str] = Field(default_factory=list)
     experience_requirements: list[str] = Field(default_factory=list)
+
+    @field_validator(
+        "core_skills",
+        "preferred_skills",
+        "project_requirements",
+        "education_requirements",
+        "experience_requirements",
+    )
+    @classmethod
+    def bound_retrieval_inputs(cls, values: list[str]) -> list[str]:
+        """Keep model-derived RAG queries small, factual, and finite."""
+        bounded = [item.strip()[:300] for item in values[:50] if item.strip()]
+        return list(dict.fromkeys(bounded))
 
 
 class ExtractedAnalysis(BaseModel):
@@ -149,6 +163,8 @@ def parse_analysis(content: str) -> JobAnalysis:
 def parse_extracted_analysis(content: str) -> ExtractedAnalysis:
     """Validate provider output without accepting or calculating a score."""
     try:
-        return ExtractedAnalysis.model_validate(extract_json_object(content))
+        return ExtractedAnalysis.model_validate(
+            sanitize_model_payload(extract_json_object(content))
+        )
     except (ValidationError, LLMResponseFormatError) as exc:
         raise LLMResponseFormatError("模型返回格式错误") from exc
