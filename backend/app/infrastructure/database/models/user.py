@@ -16,6 +16,7 @@ if TYPE_CHECKING:
     from .candidate_profile import CandidateProfile
     from .document import Document
     from .job import Job
+    from .user_settings import UserSettings
 
 
 class User(TimestampMixin, Base):
@@ -40,4 +41,9 @@ class User(TimestampMixin, Base):
     agent_runs: Mapped[list["AgentRun"]] = relationship(
         back_populates="user",
         cascade="all, delete-orphan",
+    )
+    settings: Mapped["UserSettings | None"] = relationship(
+        back_populates="user",
+        cascade="all, delete-orphan",
+        uselist=False,
     )

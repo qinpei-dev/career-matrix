@@ -7,9 +7,10 @@ from .candidate_profile import CandidateProfile
 from .document import Document, DocumentChunk
 from .job import Job
 from .user import User
+from .user_settings import UserSettings
 
 __all__ = [
     "AgentRun", "AgentStep", "Analysis", "AnalysisTask", "AnalysisTaskStatus",
     "CandidateProfile", "Document",
-    "DocumentChunk", "Job", "User",
+    "DocumentChunk", "Job", "User", "UserSettings",
 ]

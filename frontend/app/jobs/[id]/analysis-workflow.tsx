@@ -166,10 +166,15 @@ export function AnalysisWorkflow({
     setBusy(true);
     setError(null);
     try {
+      const settings = await api.getSettings();
       const started = await api.createAnalysisTask(jobId);
       window.localStorage.setItem(storageKey, started.task_id);
       const pending = await api.getAnalysisTask(started.task_id);
       setTask(pending);
+      if (!settings.default_analysis_options.auto_run) {
+        router.refresh();
+        return;
+      }
       const current = await api.runAnalysisTask(started.task_id);
       setTask(current);
       await syncAnalysis(current);

@@ -170,6 +170,104 @@ export interface RetrievalMatch {
   score: number;
 }
 
+export interface DashboardStats {
+  jobs: number;
+  analyses: number;
+  analyzed_jobs: number;
+  pending_jobs: number;
+  average_score: number | null;
+  high_matches: number;
+  documents: number;
+  ready_documents: number;
+  active_tasks: number;
+  failed_tasks: number;
+}
+
+export interface DashboardRecentAnalysis {
+  id: string;
+  job_id: string;
+  job_title: string;
+  company: string | null;
+  status: string;
+  score: number | null;
+  updated_at: string;
+}
+
+export interface DashboardRecentJob extends Job {
+  analysis_status: string | null;
+  analysis_score: number | null;
+}
+
+export interface DashboardRecentTask {
+  id: string;
+  job_id: string;
+  job_title: string;
+  status: AnalysisTaskStatus;
+  progress: number;
+  error_message: string | null;
+  updated_at: string;
+}
+
+export interface Dashboard {
+  stats: DashboardStats;
+  recent_jobs: DashboardRecentJob[];
+  recent_analyses: DashboardRecentAnalysis[];
+  recent_tasks: DashboardRecentTask[];
+}
+
+export interface WorkspaceSearchResult {
+  type: "job" | "resume" | "analysis";
+  id: string;
+  title: string;
+  subtitle: string;
+  excerpt: string;
+  href: string;
+  updated_at: string;
+}
+
+export interface WorkspaceSearchResponse {
+  query: string;
+  total: number;
+  results: WorkspaceSearchResult[];
+}
+
+export interface WorkspaceNotification {
+  id: string;
+  level: "success" | "error" | "info";
+  title: string;
+  detail: string;
+  href: string;
+  created_at: string;
+}
+
+export interface DefaultAnalysisOptions {
+  auto_run: boolean;
+  require_review: boolean;
+}
+
+export interface UserSettings {
+  user_id: string;
+  email: string;
+  display_name: string;
+  target_role: string | null;
+  default_analysis_options: DefaultAnalysisOptions;
+  page_size: 10 | 20 | 50 | 100;
+  show_technical_details: boolean;
+  updated_at: string;
+}
+
+export interface ProviderStatus {
+  provider: string;
+  model: string;
+  configured: boolean;
+  credential: "已配置（已脱敏）" | "未配置";
+}
+
+export interface ProviderStatuses {
+  llm: ProviderStatus;
+  embedding: ProviderStatus;
+}
+
 export class ApiError extends Error {
   public readonly status: number;
   public readonly body?: unknown;
@@ -227,6 +325,23 @@ export async function apiFetch<T>(
 }
 
 export const api = {
+  getDashboard: () => apiFetch<Dashboard>("/api/v1/workspace/dashboard"),
+  searchWorkspace: (query: string, limit = 30) => apiFetch<WorkspaceSearchResponse>(
+    `/api/v1/workspace/search?q=${encodeURIComponent(query)}&limit=${limit}`,
+  ),
+  getNotifications: (limit = 10) => apiFetch<WorkspaceNotification[]>(
+    `/api/v1/workspace/notifications?limit=${limit}`,
+  ),
+  getSettings: () => apiFetch<UserSettings>("/api/v1/workspace/settings"),
+  updateSettings: (payload: Partial<Omit<UserSettings, "user_id" | "email" | "updated_at">>) => apiFetch<UserSettings>(
+    "/api/v1/workspace/settings",
+    {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload),
+    },
+  ),
+  getProviderStatuses: () => apiFetch<ProviderStatuses>("/api/v1/workspace/providers"),
   createJob: (payload: Pick<Job, "title" | "company" | "description" | "source_url" | "source_type">) => apiFetch<JobCreateResponse>(
     "/api/v1/jobs",
     {

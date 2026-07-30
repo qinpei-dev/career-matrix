@@ -22,7 +22,9 @@ export function latestAnalysesByJob(analyses: Analysis[]): Map<string, Analysis>
   return latest;
 }
 
-export function analysisLabel(analysis?: Analysis): string {
+type AnalysisListStatus = Pick<Analysis, "status" | "score">;
+
+export function analysisLabel(analysis?: AnalysisListStatus): string {
   if (!analysis) return "待分析";
   const status = analysis.status.toLowerCase();
   if (["completed", "complete", "success", "succeeded"].includes(status)) return "已分析";
@@ -32,7 +34,7 @@ export function analysisLabel(analysis?: Analysis): string {
   return analysis.status;
 }
 
-export function toJobListItem(job: Job, analysis?: Analysis): JobListItem {
+export function toJobListItem(job: Job, analysis?: AnalysisListStatus): JobListItem {
   const company = job.company || "未填写公司";
   const accent = company === "未填写公司"
     ? job.title.slice(0, 2).toUpperCase()

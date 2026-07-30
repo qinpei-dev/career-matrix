@@ -9,7 +9,7 @@ from sqlalchemy.orm import Session
 
 from .models import (
     AgentRun, AgentStep, Analysis, AnalysisTask, CandidateProfile, Document,
-    DocumentChunk, Job, User,
+    DocumentChunk, Job, User, UserSettings,
 )
 
 
@@ -24,6 +24,19 @@ class UserRepository:
             self.session.add(user)
             self.session.flush()
         return user
+
+
+class UserSettingsRepository:
+    def __init__(self, session: Session) -> None:
+        self.session = session
+
+    def get_for_user(self, user_id: uuid.UUID) -> UserSettings | None:
+        return self.session.get(UserSettings, user_id)
+
+    def add(self, settings: UserSettings) -> UserSettings:
+        self.session.add(settings)
+        self.session.flush()
+        return settings
 
 
 class ProfileRepository:
@@ -323,6 +336,15 @@ class AnalysisTaskRepository:
             select(AnalysisTask).where(
                 AnalysisTask.id == task_id,
                 AnalysisTask.user_id == user_id,
+            )
+        )
+
+    def list_for_user(self, user_id: uuid.UUID) -> list[AnalysisTask]:
+        return list(
+            self.session.scalars(
+                select(AnalysisTask)
+                .where(AnalysisTask.user_id == user_id)
+                .order_by(AnalysisTask.updated_at.desc(), AnalysisTask.id.desc())
             )
         )
 

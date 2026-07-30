@@ -10,6 +10,7 @@ from ..application.agent_service import AgentRunService
 from ..application.crud_service import DEFAULT_USER_EMAIL, CrudService
 from ..application.document_service import DocumentService
 from ..application.retrieval_service import RetrievalService
+from ..application.workspace_service import WorkspaceService
 from ..core.config import get_settings
 from ..infrastructure.database.session import get_db_session
 from ..infrastructure.embedding import create_embedding_provider
@@ -34,6 +35,20 @@ def get_crud_service(
 ) -> CrudService:
     """Build a request-scoped service for the selected local user."""
     return CrudService(session, x_user_email)
+
+
+def get_workspace_service(
+    session: Session = Depends(get_db_session),
+    x_user_email: str = Header(
+        default=DEFAULT_USER_EMAIL,
+        alias="X-User-Email",
+        min_length=3,
+        max_length=320,
+        pattern=r"^[^\s@]+@[^\s@]+$",
+    ),
+) -> WorkspaceService:
+    """Build user-isolated dashboard, search, and settings workflows."""
+    return WorkspaceService(session, x_user_email)
 
 
 def get_application_analysis_service(
