@@ -196,15 +196,19 @@ class AnalysisTaskService:
         return task
 
     def get_current_for_job(self, job_id: uuid.UUID) -> AnalysisTask:
-        user = self.users.get_or_create_by_email(self.user_email)
-        if self.jobs.get_for_user(job_id, user.id) is None:
-            self.session.rollback()
-            raise ResourceNotFoundError("job not found")
-        task = self.tasks.get_current_for_job(user.id, job_id)
+        task = self.find_current_for_job(job_id)
         if task is None:
             self.session.rollback()
             raise ResourceNotFoundError("active analysis task not found")
         return task
+
+    def find_current_for_job(self, job_id: uuid.UUID) -> AnalysisTask | None:
+        """Return no task without turning the normal empty state into an HTTP error."""
+        user = self.users.get_or_create_by_email(self.user_email)
+        if self.jobs.get_for_user(job_id, user.id) is None:
+            self.session.rollback()
+            raise ResourceNotFoundError("job not found")
+        return self.tasks.get_current_for_job(user.id, job_id)
 
     def run(self, task_id: uuid.UUID) -> AnalysisTask:
         task = self.get(task_id)

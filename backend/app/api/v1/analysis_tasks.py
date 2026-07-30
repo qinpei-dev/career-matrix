@@ -2,7 +2,7 @@
 
 import uuid
 
-from fastapi import APIRouter, Depends, status
+from fastapi import APIRouter, Depends, Response, status
 
 from ...application.analysis_task_service import AnalysisTaskService
 from ...schemas.analysis_task import (
@@ -32,7 +32,8 @@ def get_active_analysis_task(
     job_id: uuid.UUID,
     service: AnalysisTaskService = Depends(get_analysis_task_service),
 ) -> object:
-    return service.get_current_for_job(job_id)
+    task = service.find_current_for_job(job_id)
+    return task if task is not None else Response(status_code=status.HTTP_204_NO_CONTENT)
 
 
 @router.get("/{task_id}", response_model=AnalysisTaskRead)

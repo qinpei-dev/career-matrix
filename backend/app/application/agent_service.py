@@ -154,6 +154,29 @@ class AgentRunService:
         if run is None:
             self.session.rollback()
             raise ResourceNotFoundError("agent run not found")
+        return self._to_read(run)
+
+    def get_active_run(self, job_id: uuid.UUID) -> AgentRunRead:
+        """Return the persisted active run for refresh/restart recovery."""
+        run = self.find_active_run(job_id)
+        if run is None:
+            self.session.rollback()
+            raise ResourceNotFoundError("active agent run not found")
+        return run
+
+    def find_active_run(self, job_id: uuid.UUID) -> AgentRunRead | None:
+        """Return no run without logging a normal empty state as a browser error."""
+        user = self.users.get_or_create_by_email(self.user_email)
+        if self.jobs.get_for_user(job_id, user.id) is None:
+            self.session.rollback()
+            raise ResourceNotFoundError("job not found")
+        run = self.runs.get_active_for_job(user.id, job_id)
+        if run is None:
+            return None
+        return self._to_read(run)
+
+    @staticmethod
+    def _to_read(run: AgentRun) -> AgentRunRead:
         result = AgentFinalResult.model_validate(run.result_json) if run.result_json else None
         return AgentRunRead(
             run_id=run.id,

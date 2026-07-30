@@ -67,6 +67,13 @@ export function AnalysisWorkflow({
   const modelReasons = stringList(result, "reasoning");
   const reasons = modelReasons.length ? modelReasons : scoreReasons(result);
   const gaps = stringList(result, "missing_skills");
+  const strengths = stringList(result, "matched_skills");
+  const partial = stringList(result, "partial_skills");
+  const learningPlan = stringList(result, "learning_plan");
+  const projectEvidence = stringList(result, "project_evidence");
+  const experienceEvidence = stringList(result, "experience_evidence");
+  const greeting = typeof result.greeting === "string" ? result.greeting : "";
+  const summary = typeof result.summary === "string" ? result.summary : "";
   const evidence = analysis?.evidence_json ?? [];
 
   const syncAnalysis = useCallback(async (current: AnalysisTask) => {
@@ -83,6 +90,7 @@ export function AnalysisWorkflow({
     setError(null);
     try {
       const current = await api.getActiveAnalysisTask(jobId);
+      if (!current) return;
       window.localStorage.setItem(storageKey, current.id);
       setTask(current);
       await syncAnalysis(current);
@@ -285,10 +293,27 @@ export function AnalysisWorkflow({
     </section>
 
     {analysis && <section className="soft-shadow rounded-2xl border border-[#e4e9e2] bg-white p-6">
+      {summary && <p className="mb-6 rounded-xl bg-[#f4f7f1] p-4 text-sm leading-7 text-[#56645e]">{summary}</p>}
       <div className="grid gap-6 sm:grid-cols-2">
         <div><h3 className="text-[15px] font-bold">匹配理由</h3>{reasons.length ? <ul className="mt-4 space-y-3">{reasons.map((reason) => <li key={reason} className="text-sm leading-6 text-[#65706b]">• {reason}</li>)}</ul> : <p className="mt-4 text-sm text-[#8a938f]">暂无额外匹配理由。</p>}</div>
         <div><h3 className="text-[15px] font-bold">能力缺口</h3>{gaps.length ? <div className="mt-4 flex flex-wrap gap-2">{gaps.map((gap) => <span key={gap} className="rounded-lg bg-[#f7eadf] px-2.5 py-1.5 text-[11px] font-semibold text-[#8b5e3b]">{gap}</span>)}</div> : <p className="mt-4 text-sm text-[#8a938f]">未识别到明确缺口。</p>}</div>
       </div>
+      <div className="mt-6 grid gap-5 border-t border-[#edf0eb] pt-5 md:grid-cols-3">
+        <div><h3 className="text-sm font-bold">优势</h3><p className="mt-2 text-xs leading-6 text-[#65706b]">{strengths.length ? strengths.join("、") : "暂无已验证优势"}</p></div>
+        <div><h3 className="text-sm font-bold">部分匹配</h3><p className="mt-2 text-xs leading-6 text-[#65706b]">{partial.length ? partial.join("、") : "暂无部分匹配项"}</p></div>
+        <div><h3 className="text-sm font-bold">改进建议</h3><p className="mt-2 text-xs leading-6 text-[#65706b]">{learningPlan.length ? learningPlan.join("；") : "暂无额外建议"}</p></div>
+      </div>
+      {(projectEvidence.length > 0 || experienceEvidence.length > 0) && <div className="mt-6 border-t border-[#edf0eb] pt-5">
+        <h3 className="text-[15px] font-bold">面试准备要点</h3>
+        <ul className="mt-3 space-y-2 text-xs leading-6 text-[#65706b]">
+          {[...projectEvidence, ...experienceEvidence].map((item) => <li key={item}>• {item}</li>)}
+        </ul>
+      </div>}
+      {greeting && <div className="mt-6 border-t border-[#edf0eb] pt-5">
+        <h3 className="text-[15px] font-bold">沟通草稿</h3>
+        <p className="mt-3 whitespace-pre-line rounded-xl bg-[#f6f8f4] p-4 text-sm leading-7 text-[#56645e]">{greeting}</p>
+        <p className="mt-2 text-[11px] text-[#8a938f]">仅供复制和人工审核，系统不会自动发送或投递。</p>
+      </div>}
       <div className="mt-6 border-t border-[#edf0eb] pt-5">
         <h3 className="text-[15px] font-bold">引用证据 <span className="text-[10px] text-[#929a96]">{evidence.length} 条</span></h3>
         {evidence.length ? <div className="mt-4 grid gap-3">{evidence.map((item) => <article key={`${item.requirement}-${item.chunk_id}`} className="rounded-xl bg-[#f6f8f4] p-4"><h4 className="text-xs font-bold text-[#315d4f]">{item.requirement}</h4><p className="mt-2 text-xs leading-6 text-[#626d68]">{item.content}</p></article>)}</div> : <p className="mt-4 text-sm text-[#8a938f]">暂无可引用的简历向量证据。</p>}

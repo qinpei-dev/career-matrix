@@ -368,7 +368,7 @@ export const api = {
   getAnalysisTask: (taskId: string) => apiFetch<AnalysisTask>(
     `/api/v1/analysis-tasks/${encodeURIComponent(taskId)}`,
   ),
-  getActiveAnalysisTask: (jobId: string) => apiFetch<AnalysisTask>(
+  getActiveAnalysisTask: (jobId: string) => apiFetch<AnalysisTask | undefined>(
     `/api/v1/analysis-tasks/active?job_id=${encodeURIComponent(jobId)}`,
   ),
   runAnalysisTask: (taskId: string) => apiFetch<AnalysisTask>(

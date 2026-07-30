@@ -2,7 +2,7 @@
 
 import uuid
 
-from fastapi import APIRouter, BackgroundTasks, Depends, status
+from fastapi import APIRouter, BackgroundTasks, Depends, Response, status
 
 from ...agents.career_copilot.schemas import AgentRunCreate, AgentRunRead, AgentRunStarted
 from ...application.agent_service import AgentRunService
@@ -20,6 +20,15 @@ def create_agent_run(
     started = service.create_run(payload.job_id)
     background_tasks.add_task(service.execute, started.run_id)
     return started
+
+
+@router.get("/active", response_model=AgentRunRead)
+def get_active_agent_run(
+    job_id: uuid.UUID,
+    service: AgentRunService = Depends(get_agent_run_service),
+) -> object:
+    run = service.find_active_run(job_id)
+    return run if run is not None else Response(status_code=status.HTTP_204_NO_CONTENT)
 
 
 @router.get("/{run_id}", response_model=AgentRunRead)

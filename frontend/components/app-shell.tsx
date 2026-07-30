@@ -11,7 +11,7 @@ const nav = [
   { href: "/", label: "工作台", icon: "grid" },
   { href: "/jobs", label: "岗位管理", icon: "briefcase" },
   { href: "/resumes", label: "简历管理", icon: "file" },
-  { href: "/agents", label: "Agent 预览", icon: "spark" },
+  { href: "/agents", label: "Agent 工作流", icon: "spark" },
   { href: "/settings", label: "设置", icon: "settings" },
 ];
 
@@ -61,7 +61,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
           <p className="mb-2 px-3 text-[10px] font-bold tracking-[.16em] text-[#909994]">主菜单</p>
           {nav.map((item) => {
             const active = item.href === "/" ? pathname === "/" : pathname.startsWith(item.href);
-            return <Link key={item.href} href={item.href} className={`flex items-center gap-3 rounded-xl px-3 py-3 text-sm font-semibold transition ${active ? "bg-white text-[#234e43] shadow-sm" : "text-[#66706d] hover:bg-white/60 hover:text-[#234e43]"}`}><Icon name={item.icon} className="h-[18px] w-[18px]" />{item.label}{item.label === "Agent 预览" && <span className="ml-auto rounded-full bg-[#e2e6e0] px-1.5 py-0.5 text-[8px] font-black text-[#7f8985]">未来</span>}</Link>;
+            return <Link key={item.href} href={item.href} className={`flex items-center gap-3 rounded-xl px-3 py-3 text-sm font-semibold transition ${active ? "bg-white text-[#234e43] shadow-sm" : "text-[#66706d] hover:bg-white/60 hover:text-[#234e43]"}`}><Icon name={item.icon} className="h-[18px] w-[18px]" />{item.label}</Link>;
           })}
         </nav>
 

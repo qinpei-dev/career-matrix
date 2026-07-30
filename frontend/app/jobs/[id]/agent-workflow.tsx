@@ -1,7 +1,8 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
-import { api, type AgentRun, type AgentStepStatus } from "@/lib/api";
+import { ApiError, type AgentRun, type AgentStepStatus } from "@/lib/api";
+import { agentRunsApi } from "@/lib/agent-runs-api";
 
 const stepLabels: Record<string, string> = {
   validate_input: "校验岗位与用户资料",
@@ -26,15 +27,28 @@ export function AgentWorkflow({ jobId }: { jobId: string }) {
   const [error, setError] = useState<string | null>(null);
 
   const refreshRun = useCallback(async (id: string) => {
-    const current = await api.getAgentRun(id);
+    const current = await agentRunsApi.get(id);
     setRun(current);
     return current;
   }, []);
 
   useEffect(() => {
     const saved = window.localStorage.getItem(storageKey);
-    if (saved) setRunId(saved);
-  }, [storageKey]);
+    if (saved) {
+      setRunId(saved);
+      return;
+    }
+    void agentRunsApi.getActive(jobId).then((current) => {
+      if (!current) return;
+      window.localStorage.setItem(storageKey, current.run_id);
+      setRun(current);
+      setRunId(current.run_id);
+    }).catch((caught) => {
+      if (!(caught instanceof ApiError && caught.status === 404)) {
+        setError(caught instanceof Error ? caught.message : "无法恢复 Agent 状态");
+      }
+    });
+  }, [jobId, storageKey]);
 
   useEffect(() => {
     if (!runId) return;
@@ -65,7 +79,7 @@ export function AgentWorkflow({ jobId }: { jobId: string }) {
     setError(null);
     setRun(null);
     try {
-      const started = await api.createAgentRun(jobId);
+      const started = await agentRunsApi.create(jobId);
       window.localStorage.setItem(storageKey, started.run_id);
       setRunId(started.run_id);
     } catch (caught) {
