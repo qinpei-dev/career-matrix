@@ -15,6 +15,9 @@ class DocumentListItem(BaseModel):
     file_type: str
     status: str
     chunk_count: int
+    embedding_status: Literal["processing", "ready", "failed"]
+    rag_available: bool
+    can_retry: bool
     created_at: datetime
 
 

@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { api } from "@/lib/api";
+import { documentsApi } from "@/lib/documents-api";
 
 export function DeleteDocument({ documentId }: { documentId: string }) {
   const router = useRouter();
@@ -14,7 +14,7 @@ export function DeleteDocument({ documentId }: { documentId: string }) {
     setDeleting(true);
     setError("");
     try {
-      await api.deleteDocument(documentId);
+      await documentsApi.delete(documentId);
       router.push("/resumes");
       router.refresh();
     } catch (caught) {

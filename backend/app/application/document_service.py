@@ -33,6 +33,9 @@ class DocumentSummary:
     file_type: str
     status: str
     chunk_count: int
+    embedding_status: str
+    rag_available: bool
+    can_retry: bool
     created_at: datetime
     updated_at: datetime
 
@@ -91,12 +94,22 @@ class DocumentService:
 
     @staticmethod
     def _summary(document: Document, chunk_count: int) -> DocumentSummary:
+        rag_available = document.status == "ready" and chunk_count > 0
         return DocumentSummary(
             id=document.id,
             filename=document.filename,
             file_type=document.file_type,
             status=document.status,
             chunk_count=chunk_count,
+            embedding_status=(
+                "ready"
+                if rag_available
+                else "failed"
+                if document.status == "failed"
+                else "processing"
+            ),
+            rag_available=rag_available,
+            can_retry=document.status == "failed",
             created_at=document.created_at,
             updated_at=document.updated_at,
         )
@@ -149,6 +162,19 @@ class DocumentService:
         try:
             destination.parent.mkdir(parents=True, exist_ok=True)
             destination.write_bytes(data)
+        except OSError as exc:
+            document.status = "failed"
+            self.session.commit()
+            raise DocumentProcessingError("failed to store uploaded document") from exc
+
+        self._process(document_id, data, file_type)
+        document = self.session.get(Document, document_id)
+        if document is None:
+            raise DocumentProcessingError("processed document could not be loaded")
+        return DocumentUploadResult(document=document, created=True)
+
+    def _process(self, document_id: uuid.UUID, data: bytes, file_type: str) -> None:
+        try:
             text = extract_pdf_text(data) if file_type == "pdf" else extract_docx_text(data)
             chunks = chunk_resume_text(text)
             if not chunks:
@@ -166,7 +192,7 @@ class DocumentService:
                 )
             chunk_models = [
                 DocumentChunk(
-                    document_id=document.id,
+                    document_id=document_id,
                     content=chunk.content,
                     section=chunk.section,
                     chunk_index=index,
@@ -175,10 +201,11 @@ class DocumentService:
                 for index, chunk in enumerate(chunks)
             ]
             self.documents.add_chunks(chunk_models)
+            document = self.session.get(Document, document_id)
+            if document is None:
+                raise DocumentProcessingError("document not found while processing")
             document.status = "ready"
             self.session.commit()
-            self.session.refresh(document)
-            return DocumentUploadResult(document=document, created=True)
         except Exception as exc:
             self.session.rollback()
             failed_document = self.session.get(Document, document_id)
@@ -188,6 +215,37 @@ class DocumentService:
             if isinstance(exc, (DocumentProcessingError, EmbeddingServiceError)):
                 raise
             raise DocumentProcessingError("failed to process uploaded document") from exc
+
+    def retry(self, document_id: uuid.UUID) -> DocumentSummary:
+        """Retry parsing and embedding for a failed document owned by the user."""
+        user = self._current_user()
+        document = self.documents.get_for_user(document_id, user.id)
+        if document is None:
+            self.session.rollback()
+            raise ResourceNotFoundError("document not found")
+        if document.status != "failed":
+            self.session.rollback()
+            raise DocumentProcessingError("only failed documents can be retried")
+
+        stored_path = Path(document.storage_path)
+        try:
+            if (
+                not stored_path.is_file()
+                or not stored_path.resolve().is_relative_to(self.storage_root)
+            ):
+                raise DocumentProcessingError("stored document file is unavailable")
+            data = stored_path.read_bytes()
+        except OSError as exc:
+            raise DocumentProcessingError("stored document file is unavailable") from exc
+
+        document.status = "processing"
+        self.session.commit()
+        self._process(document.id, data, document.file_type)
+        result = self.documents.get_for_user_with_chunk_count(document.id, user.id)
+        if result is None:
+            raise ResourceNotFoundError("document not found")
+        self.session.commit()
+        return self._summary(*result)
 
     def list_documents(self) -> list[DocumentSummary]:
         user = self._current_user()

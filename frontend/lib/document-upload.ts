@@ -1,4 +1,4 @@
-import type { ResumeDocumentUpload } from "./api";
+import type { ResumeDocumentUpload } from "./documents-api";
 
 export type UploadNotice = {
   message: string;

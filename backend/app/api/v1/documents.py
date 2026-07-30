@@ -86,6 +86,25 @@ def get_document(
     return service.get_document(document_id)
 
 
+@router.post("/{document_id}/retry", response_model=DocumentDetailRead)
+def retry_document(
+    document_id: uuid.UUID,
+    service: DocumentService = Depends(get_document_service),
+) -> object:
+    """Retry parsing and embedding a failed user-owned document."""
+    try:
+        return service.retry(document_id)
+    except DocumentProcessingError as exc:
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT
+            if "only failed" in str(exc)
+            else status.HTTP_422_UNPROCESSABLE_ENTITY,
+            detail=str(exc),
+        ) from exc
+    except EmbeddingServiceError as exc:
+        raise HTTPException(status_code=exc.status_code, detail=exc.public_message) from exc
+
+
 @router.get("/{document_id}/chunks", response_model=list[DocumentChunkPublic])
 def list_document_chunks(
     document_id: uuid.UUID,
