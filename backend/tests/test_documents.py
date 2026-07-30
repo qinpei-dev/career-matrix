@@ -202,6 +202,9 @@ def test_document_list_detail_and_chunks_are_user_scoped(document_api) -> None:
             "file_type": "docx",
             "status": "ready",
             "chunk_count": 2,
+            "embedding_status": "ready",
+            "rag_available": True,
+            "can_retry": False,
             "created_at": uploaded["created_at"],
         }
     ]
@@ -318,6 +321,65 @@ def test_failed_document_can_be_retried_after_embedding_recovers(document_api) -
         documents = session.scalars(select(Document)).all()
         assert len(documents) == 1
         assert documents[0].status == "ready"
+
+
+def test_failed_document_retry_endpoint_is_real_and_user_scoped(document_api) -> None:
+    client, session_factory, _ = document_api
+    owner_headers = {"X-User-Email": "owner@example.test"}
+    app.dependency_overrides[get_embedding_provider] = lambda: FailingEmbeddingProvider()
+    failed = client.post(
+        "/api/v1/documents/upload",
+        headers=owner_headers,
+        files={"file": ("resume.docx", _docx_bytes())},
+    )
+    assert failed.status_code == 502
+
+    with session_factory() as session:
+        document = session.scalar(select(Document))
+        assert document is not None
+        document_id = document.id
+
+    assert client.post(
+        f"/api/v1/documents/{document_id}/retry",
+        headers={"X-User-Email": "other@example.test"},
+    ).status_code == 404
+
+    app.dependency_overrides[get_embedding_provider] = lambda: TestEmbeddingProvider()
+    retried = client.post(
+        f"/api/v1/documents/{document_id}/retry",
+        headers=owner_headers,
+    )
+    assert retried.status_code == 200, retried.text
+    assert retried.json()["status"] == "ready"
+    assert retried.json()["embedding_status"] == "ready"
+    assert retried.json()["rag_available"] is True
+    assert retried.json()["can_retry"] is False
+    assert retried.json()["chunk_count"] == 2
+
+    duplicate_retry = client.post(
+        f"/api/v1/documents/{document_id}/retry",
+        headers=owner_headers,
+    )
+    assert duplicate_retry.status_code == 409
+
+
+def test_failed_document_list_exposes_truthful_rag_status(document_api) -> None:
+    client, _, _ = document_api
+    headers = {"X-User-Email": "owner@example.test"}
+    app.dependency_overrides[get_embedding_provider] = lambda: FailingEmbeddingProvider()
+    response = client.post(
+        "/api/v1/documents/upload",
+        headers=headers,
+        files={"file": ("resume.docx", _docx_bytes())},
+    )
+    assert response.status_code == 502
+
+    [document] = client.get("/api/v1/documents", headers=headers).json()
+    assert document["status"] == "failed"
+    assert document["embedding_status"] == "failed"
+    assert document["rag_available"] is False
+    assert document["can_retry"] is True
+    assert document["chunk_count"] == 0
 
 
 def test_delete_document_removes_database_rows_and_stored_file(document_api) -> None:

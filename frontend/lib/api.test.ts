@@ -178,6 +178,46 @@ test("analysis task recovery distinguishes missing tasks and polling states", ()
   assert.equal(hasTaskPollingTimedOut(1_000, 1_000 + TASK_POLL_TIMEOUT_MS), true);
 });
 
+test("workspace APIs search safely and persist settings", async () => {
+  const requests: Array<{ url: string; init?: RequestInit }> = [];
+  globalThis.fetch = async (input, init) => {
+    requests.push({ url: String(input), init });
+    return new Response(JSON.stringify({ results: [], page_size: 20 }), {
+      status: 200,
+      headers: { "Content-Type": "application/json" },
+    });
+  };
+
+  await api.getDashboard();
+  await api.searchWorkspace("平台 / RAG", 20);
+  await api.getNotifications(5);
+  await api.getSettings();
+  await api.updateSettings({
+    display_name: "Candidate",
+    page_size: 50,
+    show_technical_details: true,
+  });
+  await api.getProviderStatuses();
+
+  assert.deepEqual(requests.map((request) => request.url), [
+    `${API_BASE_URL}/api/v1/workspace/dashboard`,
+    `${API_BASE_URL}/api/v1/workspace/search?q=%E5%B9%B3%E5%8F%B0%20%2F%20RAG&limit=20`,
+    `${API_BASE_URL}/api/v1/workspace/notifications?limit=5`,
+    `${API_BASE_URL}/api/v1/workspace/settings`,
+    `${API_BASE_URL}/api/v1/workspace/settings`,
+    `${API_BASE_URL}/api/v1/workspace/providers`,
+  ]);
+  assert.equal(requests[4].init?.method, "PATCH");
+  assert.equal(
+    requests[4].init?.body,
+    JSON.stringify({
+      display_name: "Candidate",
+      page_size: 50,
+      show_technical_details: true,
+    }),
+  );
+});
+
 test("document APIs use encoded user-scoped document paths", async () => {
   const requestedUrls: string[] = [];
   globalThis.fetch = async (input) => {

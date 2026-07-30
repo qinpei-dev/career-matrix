@@ -196,6 +196,48 @@ def test_duplicate_active_run_is_rejected(agent_database) -> None:
     }
 
 
+def test_active_run_api_recovers_persisted_run_and_is_user_isolated(
+    agent_database,
+) -> None:
+    client, session_factory = agent_database
+    owner = {"X-User-Email": "owner@example.test"}
+    job = create_profile_and_job(client, owner)
+    with session_factory() as session:
+        user = session.scalar(select(User).where(User.email == "owner@example.test"))
+        assert user is not None
+        run = AgentRun(
+            user_id=user.id,
+            job_id=uuid.UUID(job["id"]),
+            status="running",
+            current_step="retrieve_candidate_evidence",
+            result_json={},
+        )
+        session.add(run)
+        session.commit()
+        run_id = str(run.id)
+
+    recovered = client.get(
+        f"/api/v1/agent/runs/active?job_id={job['id']}",
+        headers=owner,
+    )
+    assert recovered.status_code == 200
+    assert recovered.json()["run_id"] == run_id
+    assert client.get(
+        f"/api/v1/agent/runs/active?job_id={job['id']}",
+        headers={"X-User-Email": "other@example.test"},
+    ).status_code == 404
+
+    other_job = client.post(
+        "/api/v1/jobs",
+        headers=owner,
+        json={"title": "No active run", "description": "Normal empty state"},
+    ).json()
+    assert client.get(
+        f"/api/v1/agent/runs/active?job_id={other_job['id']}",
+        headers=owner,
+    ).status_code == 204
+
+
 def test_timeout_is_persisted_without_analysis(agent_database) -> None:
     client, session_factory = agent_database
     job = create_profile_and_job(client)

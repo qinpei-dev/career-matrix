@@ -10,7 +10,13 @@ from sqlalchemy import create_engine, func, select
 from sqlalchemy.orm import Session, sessionmaker
 
 from backend.app.infrastructure.database.base import Base
-from backend.app.infrastructure.database.models import Analysis, CandidateProfile, Job, User
+from backend.app.infrastructure.database.models import (
+    Analysis,
+    AnalysisTask,
+    CandidateProfile,
+    Job,
+    User,
+)
 from backend.app.infrastructure.database.session import create_session_factory, get_db_session
 from backend.app.main import app
 
@@ -102,6 +108,200 @@ def test_job_create_list_get_and_user_isolation(api_database) -> None:
     other_headers = {"X-User-Email": "other@example.test"}
     assert client.get(f"/api/v1/jobs/{job_id}", headers=other_headers).status_code == 404
     assert client.get("/api/v1/jobs", headers=other_headers).json() == []
+
+
+def test_job_search_filter_sort_and_pagination(api_database) -> None:
+    client, _ = api_database
+    jobs = [
+        {
+            "title": "Python Engineer",
+            "company": "Beta",
+            "description": "Build Python APIs",
+            "source_type": "manual",
+        },
+        {
+            "title": "Frontend Engineer",
+            "company": "Alpha",
+            "description": "Build interfaces",
+            "source_type": "extension",
+        },
+        {
+            "title": "Data Engineer",
+            "company": "Gamma",
+            "description": "Build pipelines",
+            "source_type": "manual",
+        },
+    ]
+    created_jobs = []
+    for payload in jobs:
+        response = client.post("/api/v1/jobs", json=payload)
+        assert response.status_code == 201
+        created_jobs.append(response.json())
+
+    searched = client.get("/api/v1/jobs", params={"query": "alpha"})
+    assert [job["title"] for job in searched.json()] == ["Frontend Engineer"]
+
+    filtered = client.get(
+        "/api/v1/jobs",
+        params={"source_type": "manual", "sort": "title_asc"},
+    )
+    assert [job["title"] for job in filtered.json()] == [
+        "Data Engineer",
+        "Python Engineer",
+    ]
+
+    first_page = client.get(
+        "/api/v1/jobs",
+        params={"sort": "company_asc", "offset": 0, "limit": 2},
+    )
+    second_page = client.get(
+        "/api/v1/jobs",
+        params={"sort": "company_asc", "offset": 2, "limit": 2},
+    )
+    assert [job["company"] for job in first_page.json()] == ["Alpha", "Beta"]
+    assert [job["company"] for job in second_page.json()] == ["Gamma"]
+
+    profile = client.post(
+        "/api/v1/profiles",
+        json={"name": "Search Candidate", "skills": ["Python"]},
+    ).json()
+    assert client.post(
+        "/api/v1/analyses",
+        json={
+            "job_id": created_jobs[0]["id"],
+            "candidate_profile_id": profile["id"],
+            "status": "completed",
+            "score": 90,
+            "result_json": {},
+        },
+    ).status_code == 201
+    analyzed = client.get(
+        "/api/v1/jobs",
+        params={"analysis_status": "analyzed"},
+    )
+    pending = client.get(
+        "/api/v1/jobs",
+        params={"analysis_status": "pending", "sort": "title_asc"},
+    )
+    assert [job["title"] for job in analyzed.json()] == ["Python Engineer"]
+    assert [job["title"] for job in pending.json()] == [
+        "Data Engineer",
+        "Frontend Engineer",
+    ]
+
+
+def test_job_patch_recomputes_fingerprint_and_enforces_user_isolation(
+    api_database,
+) -> None:
+    client, _ = api_database
+    owner = {"X-User-Email": "owner@example.test"}
+    other = {"X-User-Email": "other@example.test"}
+    first = client.post(
+        "/api/v1/jobs",
+        headers=owner,
+        json={"title": "First", "description": "Original"},
+    ).json()
+    second = client.post(
+        "/api/v1/jobs",
+        headers=owner,
+        json={"title": "Second", "description": "Different"},
+    ).json()
+
+    updated = client.patch(
+        f"/api/v1/jobs/{first['id']}",
+        headers=owner,
+        json={"title": "Updated", "company": " Example ", "description": "New JD"},
+    )
+    assert updated.status_code == 200
+    assert updated.json()["title"] == "Updated"
+    assert updated.json()["company"] == "Example"
+
+    duplicate = client.patch(
+        f"/api/v1/jobs/{second['id']}",
+        headers=owner,
+        json={"title": "Updated", "company": "Example", "description": "New JD"},
+    )
+    assert duplicate.status_code == 409
+    assert client.get(f"/api/v1/jobs/{second['id']}", headers=owner).json()["title"] == "Second"
+    assert client.patch(
+        f"/api/v1/jobs/{first['id']}",
+        headers=other,
+        json={"title": "Stolen"},
+    ).status_code == 404
+
+
+def test_job_delete_rejects_active_work_then_cascades_terminal_records(
+    api_database,
+) -> None:
+    client, session_factory = api_database
+    profile = client.post(
+        "/api/v1/profiles",
+        json={"name": "Candidate", "skills": ["Python"]},
+    ).json()
+    job = client.post(
+        "/api/v1/jobs",
+        json={"title": "Delete Me", "description": "Temporary"},
+    ).json()
+    analysis = client.post(
+        "/api/v1/analyses",
+        json={
+            "job_id": job["id"],
+            "candidate_profile_id": profile["id"],
+            "status": "completed",
+            "score": 80,
+            "result_json": {},
+        },
+    ).json()
+    with session_factory() as session:
+        user_id = session.scalar(select(User.id))
+        session.add(
+            AnalysisTask(
+                user_id=user_id,
+                job_id=uuid.UUID(job["id"]),
+                status="WAITING_FOR_REVIEW",
+                current_step="WAITING_FOR_REVIEW",
+                progress=90,
+                result_id=uuid.UUID(analysis["id"]),
+            )
+        )
+        session.commit()
+
+    blocked = client.delete(f"/api/v1/jobs/{job['id']}")
+    assert blocked.status_code == 409
+    assert "分析任务" in blocked.json()["detail"]
+
+    with session_factory() as session:
+        task = session.scalar(select(AnalysisTask))
+        assert task is not None
+        task.status = "COMPLETED"
+        task.current_step = "COMPLETED"
+        task.progress = 100
+        session.commit()
+
+    deleted = client.delete(f"/api/v1/jobs/{job['id']}")
+    assert deleted.status_code == 204
+    assert client.get(f"/api/v1/jobs/{job['id']}").status_code == 404
+    with session_factory() as session:
+        assert session.scalar(select(func.count()).select_from(Job)) == 0
+        assert session.scalar(select(func.count()).select_from(Analysis)) == 0
+        assert session.scalar(select(func.count()).select_from(AnalysisTask)) == 0
+
+
+def test_job_delete_is_user_scoped(api_database) -> None:
+    client, _ = api_database
+    job = client.post(
+        "/api/v1/jobs",
+        headers={"X-User-Email": "owner@example.test"},
+        json={"title": "Owned", "description": "Private"},
+    ).json()
+    assert client.delete(
+        f"/api/v1/jobs/{job['id']}",
+        headers={"X-User-Email": "other@example.test"},
+    ).status_code == 404
+    assert client.get(
+        f"/api/v1/jobs/{job['id']}",
+        headers={"X-User-Email": "owner@example.test"},
+    ).status_code == 200
 
 
 def test_analysis_create_list_and_relationship_validation(api_database) -> None:

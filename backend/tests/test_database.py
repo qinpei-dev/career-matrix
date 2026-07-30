@@ -22,6 +22,7 @@ from backend.app.infrastructure.database.models import (
     DocumentChunk,
     Job,
     User,
+    UserSettings,
 )
 from backend.app.infrastructure.database import session as database_session
 from backend.app.infrastructure.database.session import (
@@ -39,6 +40,7 @@ TABLE_NAMES = {
     "analyses",
     "documents",
     "document_chunks",
+    "user_settings",
 }
 
 
@@ -87,6 +89,16 @@ def test_database_usage_without_url_raises_clear_error(monkeypatch) -> None:
 def test_models_define_required_tables_and_postgresql_jsonb() -> None:
     assert set(Base.metadata.tables) == TABLE_NAMES
     assert set(User.__table__.columns.keys()) == {"id", "email", "created_at", "updated_at"}
+    assert set(UserSettings.__table__.columns.keys()) == {
+        "user_id",
+        "display_name",
+        "target_role",
+        "default_analysis_options",
+        "page_size",
+        "show_technical_details",
+        "created_at",
+        "updated_at",
+    }
     assert set(Document.__table__.columns.keys()) == {
         "id",
         "user_id",
@@ -242,6 +254,43 @@ def test_analysis_task_lease_migration_round_trip(monkeypatch, tmp_path) -> None
         if item["constrained_columns"] == ["result_id"]
     )
     assert result_fk["options"]["ondelete"] == "SET NULL"
+    engine.dispose()
+    get_settings.cache_clear()
+
+
+def test_user_settings_migration_round_trip(monkeypatch, tmp_path) -> None:
+    database_url = _sqlite_url(tmp_path / "user-settings.db")
+    monkeypatch.setenv("DATABASE_URL", database_url)
+    get_settings.cache_clear()
+    config = _alembic_config()
+
+    command.upgrade(config, "20260724_0010")
+    engine = create_engine(database_url)
+    assert "user_settings" not in inspect(engine).get_table_names()
+    engine.dispose()
+
+    command.upgrade(config, "20260730_0011")
+    engine = create_engine(database_url)
+    assert set(column["name"] for column in inspect(engine).get_columns("user_settings")) == {
+        "user_id",
+        "display_name",
+        "target_role",
+        "default_analysis_options",
+        "page_size",
+        "show_technical_details",
+        "created_at",
+        "updated_at",
+    }
+    engine.dispose()
+
+    command.downgrade(config, "20260724_0010")
+    engine = create_engine(database_url)
+    assert "user_settings" not in inspect(engine).get_table_names()
+    engine.dispose()
+
+    command.upgrade(config, "head")
+    engine = create_engine(database_url)
+    assert "user_settings" in inspect(engine).get_table_names()
     engine.dispose()
     get_settings.cache_clear()
 

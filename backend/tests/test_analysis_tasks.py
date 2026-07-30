@@ -639,6 +639,16 @@ def test_active_api_and_mutations_are_user_isolated(task_database) -> None:
             f"/api/v1/analysis-tasks/{task['task_id']}/{action}", headers=other
         ).status_code == 404
 
+    empty_job = client.post(
+        "/api/v1/jobs",
+        headers=owner,
+        json={"title": "No active task", "description": "Normal empty state"},
+    ).json()
+    assert client.get(
+        f"/api/v1/analysis-tasks/active?job_id={empty_job['id']}",
+        headers=owner,
+    ).status_code == 204
+
 
 def test_two_concurrent_runs_execute_analysis_once(task_database) -> None:
     client, factory = task_database
