@@ -146,7 +146,7 @@ docker compose exec backend python -m alembic -c alembic.ini current
 docker compose down
 ```
 
-最近一次 Phase 8.1 本地验收结果：三个容器 healthy，Backend `/health` 返回 HTTP 200，Dashboard、Jobs、Resume、Job Detail 均返回 HTTP 200，Alembic `current == head == 20260720_0007`，停止后 named volume 保留。
+当前 Alembic 唯一 head 为 `20260730_0011`。最新 Web 功能审计、闭环范围与验收记录见 [docs/web-feature-audit-2026-07-30.md](docs/web-feature-audit-2026-07-30.md)。
 
 ## 项目边界
 
