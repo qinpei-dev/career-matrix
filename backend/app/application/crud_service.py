@@ -16,6 +16,7 @@ from ..infrastructure.database.repositories import (
     UserRepository,
 )
 from ..schemas import AnalysisCreate, JobCreate, ProfileCreate, ProfileUpdate
+from ..schemas.job import JobUpdate
 from .job_fingerprint import generate_job_fingerprint
 
 # Development/demo fallback only. Authentication can replace the request-scoped
@@ -127,9 +128,26 @@ class CrudService:
             self.session.commit()
             return JobCreationResult(existing, "duplicate", "该岗位已保存")
 
-    def list_jobs(self) -> list[Job]:
+    def list_jobs(
+        self,
+        *,
+        query: str | None = None,
+        source_type: str | None = None,
+        analysis_status: str | None = None,
+        sort: str = "updated_desc",
+        offset: int = 0,
+        limit: int = 20,
+    ) -> list[Job]:
         user = self._current_user()
-        jobs = self.jobs.list_for_user(user.id)
+        jobs = self.jobs.list_for_user(
+            user.id,
+            query=query,
+            source_type=source_type,
+            analysis_status=analysis_status,
+            sort=sort,
+            offset=offset,
+            limit=limit,
+        )
         self.session.commit()
         return jobs
 
@@ -141,6 +159,48 @@ class CrudService:
             raise ResourceNotFoundError("job not found")
         self.session.commit()
         return job
+
+    def update_job(self, job_id: uuid.UUID, payload: JobUpdate) -> Job:
+        user = self._current_user()
+        job = self.jobs.get_for_user(job_id, user.id)
+        if job is None:
+            self.session.rollback()
+            raise ResourceNotFoundError("job not found")
+
+        values = payload.model_dump(exclude_unset=True)
+        candidate = {
+            "title": values.get("title", job.title),
+            "company": values.get("company", job.company),
+            "description": values.get("description", job.description),
+            "source_url": values.get("source_url", job.source_url),
+        }
+        fingerprint = generate_job_fingerprint(**candidate)
+        duplicate = self.jobs.get_by_fingerprint_for_user(fingerprint, user.id)
+        if duplicate is not None and duplicate.id != job.id:
+            self.session.rollback()
+            raise ResourceConflictError("该岗位与已保存岗位重复")
+
+        for field, value in values.items():
+            setattr(job, field, value)
+        job.job_fingerprint = fingerprint
+        try:
+            self._commit(job)
+        except IntegrityError as exc:
+            self.session.rollback()
+            raise ResourceConflictError("该岗位与已保存岗位重复") from exc
+        return job
+
+    def delete_job(self, job_id: uuid.UUID) -> None:
+        user = self._current_user()
+        job = self.jobs.get_for_user(job_id, user.id)
+        if job is None:
+            self.session.rollback()
+            raise ResourceNotFoundError("job not found")
+        if self.jobs.has_active_work(job.id, user.id):
+            self.session.rollback()
+            raise ResourceConflictError("岗位仍有运行中或待确认的分析任务，暂时无法删除")
+        self.jobs.delete_with_dependents(job)
+        self.session.commit()
 
     def create_analysis(self, payload: AnalysisCreate) -> Analysis:
         user = self._current_user()

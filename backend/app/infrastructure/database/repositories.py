@@ -4,7 +4,7 @@ import math
 import uuid
 from datetime import datetime
 
-from sqlalchemy import Float, func, select, update
+from sqlalchemy import Float, delete, exists, func, or_, select, update
 from sqlalchemy.orm import Session
 
 from .models import (
@@ -60,19 +60,90 @@ class JobRepository:
             )
         )
 
-    def list_for_user(self, user_id: uuid.UUID) -> list[Job]:
-        return list(
-            self.session.scalars(
-                select(Job)
-                .where(Job.user_id == user_id)
-                .order_by(Job.created_at.desc(), Job.id.desc())
+    def list_for_user(
+        self,
+        user_id: uuid.UUID,
+        *,
+        query: str | None = None,
+        source_type: str | None = None,
+        analysis_status: str | None = None,
+        sort: str = "updated_desc",
+        offset: int = 0,
+        limit: int | None = 20,
+    ) -> list[Job]:
+        statement = select(Job).where(Job.user_id == user_id)
+        if query:
+            pattern = f"%{query.lower()}%"
+            statement = statement.where(
+                or_(
+                    func.lower(Job.title).like(pattern),
+                    func.lower(func.coalesce(Job.company, "")).like(pattern),
+                )
+            )
+        if source_type:
+            statement = statement.where(Job.source_type == source_type)
+        has_analysis = exists(
+            select(Analysis.id).where(
+                Analysis.job_id == Job.id,
+                Analysis.user_id == user_id,
             )
         )
+        if analysis_status == "analyzed":
+            statement = statement.where(has_analysis)
+        elif analysis_status == "pending":
+            statement = statement.where(~has_analysis)
+        ordering = {
+            "updated_desc": (Job.updated_at.desc(), Job.id.desc()),
+            "created_desc": (Job.created_at.desc(), Job.id.desc()),
+            "title_asc": (func.lower(Job.title), Job.id),
+            "company_asc": (func.lower(func.coalesce(Job.company, "")), Job.id),
+        }[sort]
+        statement = statement.order_by(*ordering).offset(offset)
+        if limit is not None:
+            statement = statement.limit(limit)
+        return list(self.session.scalars(statement))
 
     def get_for_user(self, job_id: uuid.UUID, user_id: uuid.UUID) -> Job | None:
         return self.session.scalar(
             select(Job).where(Job.id == job_id, Job.user_id == user_id)
         )
+
+    def has_active_work(self, job_id: uuid.UUID, user_id: uuid.UUID) -> bool:
+        active_task = self.session.scalar(
+            select(AnalysisTask.id).where(
+                AnalysisTask.job_id == job_id,
+                AnalysisTask.user_id == user_id,
+                or_(
+                    AnalysisTask.is_running.is_(True),
+                    AnalysisTask.status.in_(
+                        (
+                            "PENDING",
+                            "FETCHING_JOB",
+                            "ANALYZING",
+                            "SAVING_RESULT",
+                            "WAITING_FOR_REVIEW",
+                        )
+                    ),
+                ),
+            ).limit(1)
+        )
+        if active_task is not None:
+            return True
+        active_run = self.session.scalar(
+            select(AgentRun.id).where(
+                AgentRun.job_id == job_id,
+                AgentRun.user_id == user_id,
+                AgentRun.status.in_(("pending", "running")),
+            ).limit(1)
+        )
+        return active_run is not None
+
+    def delete_with_dependents(self, job: Job) -> None:
+        # Tasks can point at analyses through a RESTRICT foreign key, so remove
+        # every terminal task before the job's ORM cascades delete its results.
+        self.session.execute(delete(AnalysisTask).where(AnalysisTask.job_id == job.id))
+        self.session.delete(job)
+        self.session.flush()
 
 
 class DocumentRepository:

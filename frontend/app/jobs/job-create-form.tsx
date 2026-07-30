@@ -2,7 +2,7 @@
 
 import { type FormEvent, useState } from "react";
 import { useRouter } from "next/navigation";
-import { api } from "@/lib/api";
+import { jobsApi } from "@/lib/jobs-api";
 
 export function JobCreateForm() {
   const router = useRouter();
@@ -18,7 +18,7 @@ export function JobCreateForm() {
     setError("");
     setDuplicateJobId("");
     try {
-      const job = await api.createJob({
+      const job = await jobsApi.create({
         title: String(form.get("title") || ""),
         company: String(form.get("company") || "") || null,
         description: String(form.get("description") || ""),
