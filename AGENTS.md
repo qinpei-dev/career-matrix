@@ -80,7 +80,7 @@ node --test extension/tests/content.test.js extension/tests/popup.test.js
 
 ## 8. 数据库与 Alembic 规则
 
-- 当前仓库 Alembic 唯一 head 是 `20260724_0010`（`analysis_task_claim_lease`）。用 `python -m alembic -c alembic.ini heads` 复核，不要沿用旧文档中的 head。
+- 当前仓库 Alembic 唯一 head 是 `20260730_0012`（`analysis_task_claim_lease`）。用 `python -m alembic -c alembic.ini heads` 复核，不要沿用旧文档中的 head。
 - 修改 SQLAlchemy 模型或数据库约束时必须新增 migration，禁止重写 `backend/alembic/versions/` 中已有迁移历史。
 - 在一次性或已备份的测试数据库中验证 upgrade 和 downgrade；至少执行目标迁移的 upgrade、downgrade，再 upgrade 回 head，并运行数据库相关 pytest。
 - Alembic 使用根目录 `alembic.ini`，实际数据库 URL 来自应用设置。执行迁移前确认目标数据库，禁止对未知或重要数据库盲目操作。
