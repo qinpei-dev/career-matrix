@@ -3,7 +3,7 @@
 import logging
 from contextlib import asynccontextmanager
 
-from fastapi import FastAPI, HTTPException, Request
+from fastapi import Depends, FastAPI, HTTPException, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 from pydantic import BaseModel, Field, field_validator
@@ -12,9 +12,10 @@ from .application.analysis_service import analyze_job
 from .application.agent_service import recover_stale_agent_runs
 from .application.analysis_task_service import recover_interrupted_analysis_tasks
 from .application.crud_service import ResourceConflictError, ResourceNotFoundError
-from .api.dependencies import get_db_session
+from .api.dependencies import get_current_user, get_db_session
 from .api.v1.router import router as v1_router
 from .core.config import get_settings
+from .infrastructure.database.models import User
 from .infrastructure.database.session import (
     DatabaseConfigurationError,
     get_default_session_factory,
@@ -97,7 +98,10 @@ class JobAnalysisRequest(BaseModel):
 
 
 @app.post("/api/analyze-job", response_model=JobAnalysis)
-def analyze_job_endpoint(payload: JobAnalysisRequest) -> JobAnalysis:
+def analyze_job_endpoint(
+    payload: JobAnalysisRequest,
+    _current_user: User = Depends(get_current_user),
+) -> JobAnalysis:
     """Analyze a job description through the configured LLM service."""
     try:
         return analyze_job(

@@ -20,6 +20,7 @@ class Settings(BaseSettings):
     )
 
     database_url: str = Field(min_length=1)
+    demo_auth_tokens: dict[str, str] = Field(default_factory=dict)
     document_storage_path: Path = PROJECT_ROOT / "data" / "documents"
     embedding_provider: str = "openai_compatible"
     embedding_model: str = "BAAI/bge-m3"

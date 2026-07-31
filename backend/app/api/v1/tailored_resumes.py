@@ -9,6 +9,7 @@ from ...application.tailored_resume_service import (
     TailoredResumeService,
     UnsupportedTailoredContentError,
 )
+from ...infrastructure.database.models import User
 from ...infrastructure.embedding.provider import EmbeddingServiceError
 from ...infrastructure.llm.provider import LLMServiceError
 from ...schemas import (
@@ -18,7 +19,7 @@ from ...schemas import (
     TailoredResumeStarted,
     TailoredResumeUpdate,
 )
-from ..dependencies import get_tailored_resume_service
+from ..dependencies import get_current_user, get_tailored_resume_service
 
 router = APIRouter(prefix="/tailored-resumes", tags=["tailored-resumes"])
 
@@ -115,8 +116,11 @@ def export_tailored_resume_docx(
 
 
 @router.get("/{resume_id}/export.pdf")
-def export_tailored_resume_pdf(resume_id: uuid.UUID) -> None:
-    del resume_id
+def export_tailored_resume_pdf(
+    resume_id: uuid.UUID,
+    current_user: User = Depends(get_current_user),
+) -> None:
+    del resume_id, current_user
     raise HTTPException(
         status_code=status.HTTP_501_NOT_IMPLEMENTED,
         detail="PDF export is NOT VERIFIED; use the real DOCX export.",
