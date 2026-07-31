@@ -1,4 +1,4 @@
-import { API_BASE_URL, apiFetch } from "./api.ts";
+import { apiFetch, apiFetchBlob } from "./api.ts";
 
 export type TailoredResumeStatus =
   | "DRAFT"
@@ -135,6 +135,7 @@ export const tailoredResumesApi = {
     `/api/v1/tailored-resumes/${encodeURIComponent(id)}`,
     { method: "DELETE" },
   ),
-  docxUrl: (id: string) =>
-    `${API_BASE_URL}/api/v1/tailored-resumes/${encodeURIComponent(id)}/export.docx`,
+  downloadDocx: (id: string) => apiFetchBlob(
+    `/api/v1/tailored-resumes/${encodeURIComponent(id)}/export.docx`,
+  ),
 };

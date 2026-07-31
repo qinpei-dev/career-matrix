@@ -292,6 +292,19 @@ function errorMessage(body: unknown, status: number): string {
   return `API request failed (${status})`;
 }
 
+export function demoAuthorizationHeader(): string {
+  const token = process.env.NEXT_PUBLIC_DEMO_AUTH_TOKEN?.trim();
+  if (!token) throw new ApiError("Demo auth token is not configured", 0);
+  return `Bearer ${token}`;
+}
+
+export function authenticatedHeaders(headers?: HeadersInit): Headers {
+  const authenticated = new Headers(headers);
+  if (!authenticated.has("Accept")) authenticated.set("Accept", "application/json");
+  authenticated.set("Authorization", demoAuthorizationHeader());
+  return authenticated;
+}
+
 export async function apiFetch<T>(
   path: string,
   init: RequestInit = {},
@@ -303,12 +316,10 @@ export async function apiFetch<T>(
     response = await fetch(url, {
       ...init,
       cache: init.cache ?? "no-store",
-      headers: {
-        Accept: "application/json",
-        ...init.headers,
-      },
+      headers: authenticatedHeaders(init.headers),
     });
   } catch (error) {
+    if (error instanceof ApiError) throw error;
     throw new ApiError(
       error instanceof Error ? `无法连接 API：${error.message}` : "无法连接 API",
       0,
@@ -322,6 +333,34 @@ export async function apiFetch<T>(
 
   if (response.status === 204) return undefined as T;
   return response.json() as Promise<T>;
+}
+
+export async function apiFetchBlob(
+  path: string,
+  init: RequestInit = {},
+): Promise<Blob> {
+  const url = `${API_BASE_URL}${path.startsWith("/") ? path : `/${path}`}`;
+  let response: Response;
+
+  try {
+    response = await fetch(url, {
+      ...init,
+      cache: init.cache ?? "no-store",
+      headers: authenticatedHeaders(init.headers),
+    });
+  } catch (error) {
+    if (error instanceof ApiError) throw error;
+    throw new ApiError(
+      error instanceof Error ? `Unable to connect to API: ${error.message}` : "Unable to connect to API",
+      0,
+    );
+  }
+
+  if (!response.ok) {
+    const body = await response.json().catch(() => undefined);
+    throw new ApiError(errorMessage(body, response.status), response.status, body);
+  }
+  return response.blob();
 }
 
 export const api = {

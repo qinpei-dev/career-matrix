@@ -1,4 +1,9 @@
-import { API_BASE_URL, ApiError, apiFetch } from "./api.ts";
+import {
+  API_BASE_URL,
+  ApiError,
+  apiFetch,
+  demoAuthorizationHeader,
+} from "./api.ts";
 
 export type DocumentProcessingStatus = "processing" | "ready" | "failed";
 
@@ -63,6 +68,7 @@ export function uploadDocument(
     const xhr = new XMLHttpRequest();
     xhr.open("POST", `${API_BASE_URL}/api/v1/documents/upload`);
     xhr.setRequestHeader("Accept", "application/json");
+    xhr.setRequestHeader("Authorization", demoAuthorizationHeader());
     xhr.upload.onprogress = (event) => {
       if (event.lengthComputable) {
         onProgress(Math.min(100, Math.round((event.loaded / event.total) * 100)));

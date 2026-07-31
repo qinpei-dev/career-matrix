@@ -13,7 +13,7 @@ import {
   type TailoredResumeListItem,
 } from "@/lib/tailored-resumes-api";
 
-type BusyAction = "loading" | "generating" | "saving" | "finalizing" | "deleting" | null;
+type BusyAction = "loading" | "generating" | "saving" | "finalizing" | "deleting" | "downloading" | null;
 
 function errorText(error: unknown): string {
   return error instanceof Error ? error.message : "操作失败，请稍后重试";
@@ -228,6 +228,25 @@ export function TailoredResumeWorkflow({
     }
   }
 
+  async function downloadDocx() {
+    if (!resume || busy) return;
+    setBusy("downloading");
+    setError("");
+    try {
+      const blob = await tailoredResumesApi.downloadDocx(resume.id);
+      const url = URL.createObjectURL(blob);
+      const anchor = document.createElement("a");
+      anchor.href = url;
+      anchor.download = "tailored-resume.docx";
+      anchor.click();
+      window.setTimeout(() => URL.revokeObjectURL(url), 0);
+    } catch (caught) {
+      setError(errorText(caught));
+    } finally {
+      setBusy(null);
+    }
+  }
+
   return <div className="mt-7 space-y-5">
     <section className="soft-shadow rounded-2xl border border-[#e4e9e2] bg-white p-5 md:p-6">
       <div className="grid gap-5 lg:grid-cols-2">
@@ -354,7 +373,7 @@ export function TailoredResumeWorkflow({
       <section className="sticky bottom-4 z-10 flex flex-wrap gap-3 rounded-2xl border border-[#dce3dc] bg-white/95 p-4 shadow-lg backdrop-blur">
         <button onClick={save} disabled={busy !== null || finalized} className="rounded-xl bg-[#315d4f] px-4 py-2.5 text-sm font-bold text-white disabled:opacity-50">{busy === "saving" ? "保存中…" : "保存草稿"}</button>
         <button onClick={finalize} disabled={busy !== null || finalized} className="rounded-xl border border-[#315d4f] px-4 py-2.5 text-sm font-bold text-[#315d4f] disabled:opacity-50">{busy === "finalizing" ? "确认中…" : finalized ? "已最终确认" : "最终确认"}</button>
-        <a href={tailoredResumesApi.docxUrl(resume.id)} className="rounded-xl border border-[#d9dfd9] px-4 py-2.5 text-sm font-bold text-[#4d5d56]">下载 DOCX</a>
+        <button onClick={downloadDocx} disabled={busy !== null} className="rounded-xl border border-[#d9dfd9] px-4 py-2.5 text-sm font-bold text-[#4d5d56] disabled:opacity-50">{busy === "downloading" ? "下载中…" : "下载 DOCX"}</button>
         <button disabled title="PDF export NOT VERIFIED" className="rounded-xl border border-dashed border-[#d9dfd9] px-4 py-2.5 text-sm font-bold text-[#929a96]">PDF · NOT VERIFIED</button>
         <button onClick={remove} disabled={busy !== null || finalized} className="ml-auto rounded-xl px-4 py-2.5 text-sm font-bold text-[#a14d42] disabled:opacity-40">{busy === "deleting" ? "删除中…" : "删除草稿"}</button>
       </section>
