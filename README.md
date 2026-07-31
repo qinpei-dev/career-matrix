@@ -131,6 +131,8 @@ flowchart LR
 - Backend 容器可从本地、Git 忽略的 `.env.docker` 读取 LLM / Embedding 配置。
 - `DATABASE_URL` 由 Compose 注入并指向内部 `postgres` 服务。
 - 浏览器默认通过 `NEXT_PUBLIC_API_BASE_URL=http://localhost:8000` 访问 API；Next.js SSR 通过 Compose 服务名访问 Backend。
+- 当前身份认证是仅供本地演示的轻量 Demo Token；浏览器使用的 `NEXT_PUBLIC_DEMO_AUTH_TOKEN` 会进入前端 bundle，因此它不等同于生产认证，也不适用于公网部署。
+- 生产环境必须用 OAuth2、JWT 或服务端 session 等正式认证方案替换 Demo Token。
 - Extension、Native Host、评分、RAG 和 Agent 逻辑与容器部署相互隔离。
 
 ## 验证

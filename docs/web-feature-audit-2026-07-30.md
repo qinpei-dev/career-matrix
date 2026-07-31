@@ -53,7 +53,7 @@
 
 ## 明确保留的 OUT OF SCOPE
 
-- 正式账号/鉴权/RBAC：当前 `X-User-Email` 仍是本地 Demo 身份方案。
+- 正式账号/鉴权/RBAC：当前 Demo 使用服务端 Demo Token 认证，请求格式为 `Authorization: Bearer <demo_token>`。该方案仅用于本地 Demo，Token 不等同生产认证，不适用于公网部署；生产环境应替换为 OAuth2、JWT 或服务端 session。
 - 自动投递、招聘站自动聊天、自动邮件/短信/推送：不在产品安全边界内。
 - 真实第三方发送接口：仓库无基础设施，沟通稿只供人工复制和确认。
 - 独立申请状态 CRM：现有仓库无该业务模型；本次不为扩大范围而重建数据库。
