@@ -10,6 +10,7 @@ from sqlalchemy import create_engine
 from sqlalchemy.orm import Session
 
 from backend.app import main
+from backend.app.application.security_test_service import TEST_SECRET_CANARY
 from backend.app.infrastructure.database.base import Base
 from backend.app.infrastructure.database.session import (
     create_session_factory,
@@ -78,6 +79,28 @@ def test_valid_token_maps_to_database_user_and_ignores_spoofed_email(
 
     assert response.status_code == 200
     assert response.json()["email"] == "demo@example.com"
+
+
+def test_untrusted_content_security_test_requires_demo_auth(
+    auth_api: TestClient,
+) -> None:
+    response = auth_api.post("/api/v1/security-tests/untrusted-content")
+
+    assert response.status_code == 401
+    assert response.headers["www-authenticate"] == "Bearer"
+
+
+def test_untrusted_content_security_test_runs_for_valid_token(
+    auth_api: TestClient,
+) -> None:
+    response = auth_api.post(
+        "/api/v1/security-tests/untrusted-content",
+        headers={"Authorization": "Bearer test-token-demo"},
+    )
+
+    assert response.status_code == 200
+    assert response.json()["overall_status"] == "PASS"
+    assert TEST_SECRET_CANARY not in response.text
 
 
 def test_different_tokens_preserve_user_isolation(auth_api: TestClient) -> None:

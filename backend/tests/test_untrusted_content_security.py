@@ -7,7 +7,6 @@ import base64
 from pathlib import Path
 
 import pytest
-from fastapi.testclient import TestClient
 
 from backend.app.application.security_test_service import (
     EXPECTED_AGENT_STEPS,
@@ -22,7 +21,6 @@ from backend.app.core.security import (
     public_error_message,
 )
 from backend.app.infrastructure.llm.parser import parse_extracted_analysis
-from backend.app.main import app
 
 
 @pytest.fixture(scope="module")
@@ -64,7 +62,7 @@ def test_regression_runs_real_api_agent_rag_parser_and_persistence(
     assert len(EXPECTED_AGENT_STEPS) == 6
 
 
-def test_canary_is_absent_from_result_trace_evidence_and_api_response(
+def test_canary_is_absent_from_result_trace_and_evidence(
     regression_report,
 ) -> None:
     serialized = regression_report.model_dump_json()
@@ -79,12 +77,6 @@ def test_canary_is_absent_from_result_trace_evidence_and_api_response(
         regression_report.trace, ensure_ascii=False
     )
     assert "[REDACTED]" in serialized
-
-    response = TestClient(app).post("/api/v1/security-tests/untrusted-content")
-    assert response.status_code == 200
-    assert TEST_SECRET_CANARY not in response.text
-    assert response.json()["overall_status"] == "PASS"
-
 
 def test_agent_registry_has_no_external_action_tool(regression_report) -> None:
     forbidden = ("send", "message", "email", "apply", "delete", "upload")
