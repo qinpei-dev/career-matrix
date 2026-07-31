@@ -9,7 +9,7 @@ from sqlalchemy.orm import Session
 
 from .models import (
     AgentRun, AgentStep, Analysis, AnalysisTask, CandidateProfile, Document,
-    DocumentChunk, Job, User, UserSettings,
+    DocumentChunk, Job, TailoredResume, User, UserSettings,
 )
 
 
@@ -224,6 +224,98 @@ class DocumentRepository:
             )
         )
 
+    def get_chunk_for_document(
+        self, chunk_id: uuid.UUID, document_id: uuid.UUID
+    ) -> DocumentChunk | None:
+        return self.session.scalar(
+            select(DocumentChunk).where(
+                DocumentChunk.id == chunk_id,
+                DocumentChunk.document_id == document_id,
+            )
+        )
+
+
+class TailoredResumeRepository:
+    def __init__(self, session: Session) -> None:
+        self.session = session
+
+    def add(self, resume: TailoredResume) -> TailoredResume:
+        self.session.add(resume)
+        self.session.flush()
+        return resume
+
+    def get_for_user(
+        self, resume_id: uuid.UUID, user_id: uuid.UUID
+    ) -> TailoredResume | None:
+        return self.session.scalar(
+            select(TailoredResume).where(
+                TailoredResume.id == resume_id,
+                TailoredResume.user_id == user_id,
+            )
+        )
+
+    def list_for_user(
+        self, user_id: uuid.UUID, job_id: uuid.UUID | None = None
+    ) -> list[TailoredResume]:
+        statement = select(TailoredResume).where(TailoredResume.user_id == user_id)
+        if job_id is not None:
+            statement = statement.where(TailoredResume.job_id == job_id)
+        return list(
+            self.session.scalars(
+                statement.order_by(TailoredResume.created_at.desc(), TailoredResume.id.desc())
+            )
+        )
+
+    def claim_generation(
+        self, resume_id: uuid.UUID, user_id: uuid.UUID, expected_version: int
+    ) -> bool:
+        result = self.session.execute(
+            update(TailoredResume)
+            .where(
+                TailoredResume.id == resume_id,
+                TailoredResume.user_id == user_id,
+                TailoredResume.version == expected_version,
+                TailoredResume.is_generating.is_(False),
+                TailoredResume.status.in_(("DRAFT", "FAILED")),
+            )
+            .values(
+                is_generating=True,
+                error_message=None,
+                version=TailoredResume.version + 1,
+            )
+        )
+        self.session.commit()
+        return result.rowcount == 1
+
+    def recover_stale_generation(
+        self,
+        resume_id: uuid.UUID,
+        user_id: uuid.UUID,
+        *,
+        stale_before: datetime,
+        recovered_at: datetime,
+    ) -> bool:
+        result = self.session.execute(
+            update(TailoredResume)
+            .where(
+                TailoredResume.id == resume_id,
+                TailoredResume.user_id == user_id,
+                TailoredResume.is_generating.is_(True),
+                TailoredResume.updated_at < stale_before,
+            )
+            .values(
+                status="FAILED",
+                is_generating=False,
+                error_message="生成任务超时，已允许重试",
+                updated_at=recovered_at,
+                version=TailoredResume.version + 1,
+            )
+            .execution_options(synchronize_session=False)
+        )
+        self.session.commit()
+        self.session.expire_all()
+        return result.rowcount == 1
+
 
 class RetrievalRepository:
     def __init__(self, session: Session) -> None:
@@ -243,10 +335,11 @@ class RetrievalRepository:
         user_id: uuid.UUID,
         query_embedding: list[float],
         top_k: int,
+        document_id: uuid.UUID | None = None,
     ) -> list[tuple[DocumentChunk, float]]:
         if self.session.bind is not None and self.session.bind.dialect.name == "postgresql":
             distance = DocumentChunk.embedding.op("<=>", return_type=Float)(query_embedding)
-            rows = self.session.execute(
+            statement = (
                 select(DocumentChunk, (1.0 - distance).label("score"))
                 .join(Document)
                 .where(
@@ -254,22 +347,24 @@ class RetrievalRepository:
                     Document.status == "ready",
                     DocumentChunk.embedding.is_not(None),
                 )
-                .order_by(distance)
-                .limit(top_k)
             )
+            if document_id is not None:
+                statement = statement.where(DocumentChunk.document_id == document_id)
+            rows = self.session.execute(statement.order_by(distance).limit(top_k))
             return [(chunk, float(score)) for chunk, score in rows]
 
-        chunks = list(
-            self.session.scalars(
-                select(DocumentChunk)
+        statement = (
+            select(DocumentChunk)
                 .join(Document)
                 .where(
                     Document.user_id == user_id,
                     Document.status == "ready",
                     DocumentChunk.embedding.is_not(None),
                 )
-            )
         )
+        if document_id is not None:
+            statement = statement.where(DocumentChunk.document_id == document_id)
+        chunks = list(self.session.scalars(statement))
         scored = [
             (
                 chunk,
