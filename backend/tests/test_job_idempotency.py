@@ -43,7 +43,7 @@ def job_api(
 
     app.dependency_overrides[get_db_session] = override_session
     try:
-        with TestClient(app) as client:
+        with TestClient(app, headers={"Authorization": "Bearer test-token-demo"}) as client:
             yield client, session_factory
     finally:
         app.dependency_overrides.clear()
@@ -85,12 +85,12 @@ def test_different_users_can_save_the_same_job(job_api) -> None:
 
     first = client.post(
         "/api/v1/jobs",
-        headers={"X-User-Email": "first@example.test"},
+        headers={"Authorization": "Bearer test-token-first"},
         json=_payload(),
     )
     second = client.post(
         "/api/v1/jobs",
-        headers={"X-User-Email": "second@example.test"},
+        headers={"Authorization": "Bearer test-token-second"},
         json=_payload(),
     )
 

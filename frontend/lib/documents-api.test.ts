@@ -1,12 +1,40 @@
 import assert from "node:assert/strict";
 import { afterEach, test } from "node:test";
 import { API_BASE_URL } from "./api.ts";
-import { documentsApi } from "./documents-api.ts";
+import { documentsApi, uploadDocument } from "./documents-api.ts";
 
 const originalFetch = globalThis.fetch;
+const originalXMLHttpRequest = globalThis.XMLHttpRequest;
+process.env.NEXT_PUBLIC_DEMO_AUTH_TOKEN = "test-web-token";
 
 afterEach(() => {
   globalThis.fetch = originalFetch;
+  globalThis.XMLHttpRequest = originalXMLHttpRequest;
+});
+
+test("document upload attaches Demo Auth to XMLHttpRequest", async () => {
+  const headers = new Map<string, string>();
+
+  class FakeXMLHttpRequest {
+    status = 201;
+    responseText = JSON.stringify({ id: "resume-1", upload_status: "created" });
+    upload: { onprogress: ((event: ProgressEvent) => void) | null } = { onprogress: null };
+    onerror: (() => void) | null = null;
+    onload: (() => void) | null = null;
+
+    open() {}
+    setRequestHeader(name: string, value: string) { headers.set(name, value); }
+    send() { this.onload?.(); }
+  }
+
+  globalThis.XMLHttpRequest = FakeXMLHttpRequest as unknown as typeof XMLHttpRequest;
+  await uploadDocument(
+    new File(["resume"], "resume.pdf", { type: "application/pdf" }),
+    () => undefined,
+  );
+
+  assert.equal(headers.get("Authorization"), "Bearer test-web-token");
+  assert.equal(headers.get("Accept"), "application/json");
 });
 
 test("document management APIs encode IDs and expose retry", async () => {

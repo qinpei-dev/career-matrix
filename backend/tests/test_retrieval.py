@@ -62,7 +62,7 @@ def retrieval_api(
     app.dependency_overrides[get_db_session] = override_session
     app.dependency_overrides[get_embedding_provider] = lambda: SemanticTestProvider()
     try:
-        with TestClient(app) as client:
+        with TestClient(app, headers={"Authorization": "Bearer test-token-demo"}) as client:
             yield client
     finally:
         app.dependency_overrides.clear()
@@ -71,7 +71,7 @@ def retrieval_api(
 
 
 def test_retrieval_returns_top_chunks_by_cosine_similarity(retrieval_api) -> None:
-    headers = {"X-User-Email": "owner@example.test"}
+    headers = {"Authorization": "Bearer test-token-owner"}
     python_document = retrieval_api.post(
         "/api/v1/documents/upload",
         headers=headers,
@@ -97,8 +97,8 @@ def test_retrieval_returns_top_chunks_by_cosine_similarity(retrieval_api) -> Non
 
 
 def test_retrieval_never_returns_another_users_chunks(retrieval_api) -> None:
-    owner_headers = {"X-User-Email": "owner@example.test"}
-    other_headers = {"X-User-Email": "other@example.test"}
+    owner_headers = {"Authorization": "Bearer test-token-owner"}
+    other_headers = {"Authorization": "Bearer test-token-other"}
     owner_document = retrieval_api.post(
         "/api/v1/documents/upload",
         headers=owner_headers,

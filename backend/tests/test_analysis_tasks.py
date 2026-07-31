@@ -93,7 +93,7 @@ def task_database(
     app.dependency_overrides[get_db_session] = override_session
     app.dependency_overrides[get_embedding_provider] = lambda: EmptyEmbeddingProvider()
     try:
-        with TestClient(app) as client:
+        with TestClient(app, headers={"Authorization": "Bearer test-token-demo"}) as client:
             yield client, factory
     finally:
         app.dependency_overrides.clear()
@@ -393,9 +393,9 @@ def test_new_session_can_query_and_continue_interrupted_task(task_database) -> N
 
 def test_missing_and_other_users_tasks_are_404(task_database) -> None:
     client, _ = task_database
-    owner = {"X-User-Email": "owner@example.test"}
+    owner = {"Authorization": "Bearer test-token-owner"}
     task = create_task(client, create_profile_and_job(client, owner), owner)
-    other = {"X-User-Email": "other@example.test"}
+    other = {"Authorization": "Bearer test-token-other"}
 
     assert client.get(
         f"/api/v1/analysis-tasks/{task['task_id']}", headers=other
@@ -622,8 +622,8 @@ def test_database_partial_index_rejects_second_active_task(task_database) -> Non
 
 def test_active_api_and_mutations_are_user_isolated(task_database) -> None:
     client, _ = task_database
-    owner = {"X-User-Email": "owner@example.test"}
-    other = {"X-User-Email": "intruder@example.test"}
+    owner = {"Authorization": "Bearer test-token-owner"}
+    other = {"Authorization": "Bearer test-token-intruder"}
     job = create_profile_and_job(client, owner)
     task = create_task(client, job, owner)
     active = client.get(

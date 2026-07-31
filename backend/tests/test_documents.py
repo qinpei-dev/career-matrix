@@ -84,7 +84,7 @@ def document_api(
     app.dependency_overrides[get_db_session] = override_session
     app.dependency_overrides[get_embedding_provider] = lambda: TestEmbeddingProvider()
     try:
-        with TestClient(app) as client:
+        with TestClient(app, headers={"Authorization": "Bearer test-token-demo"}) as client:
             yield client, session_factory, storage_root
     finally:
         app.dependency_overrides.clear()
@@ -122,7 +122,7 @@ def test_upload_parses_and_persists_chunks(
     client, session_factory, _ = document_api
     response = client.post(
         "/api/v1/documents/upload",
-        headers={"X-User-Email": "owner@example.test"},
+        headers={"Authorization": "Bearer test-token-owner"},
         files={"file": (filename, content)},
     )
 
@@ -154,12 +154,12 @@ def test_uploads_are_owned_and_stored_per_user(document_api) -> None:
     client, session_factory, storage_root = document_api
     first = client.post(
         "/api/v1/documents/upload",
-        headers={"X-User-Email": "first@example.test"},
+        headers={"Authorization": "Bearer test-token-first"},
         files={"file": ("resume.docx", _docx_bytes())},
     ).json()
     second = client.post(
         "/api/v1/documents/upload",
-        headers={"X-User-Email": "second@example.test"},
+        headers={"Authorization": "Bearer test-token-second"},
         files={"file": ("resume.docx", _docx_bytes())},
     ).json()
 
@@ -186,7 +186,7 @@ def test_upload_rejects_unsupported_file_type(document_api) -> None:
 
 def test_document_list_detail_and_chunks_are_user_scoped(document_api) -> None:
     client, _, _ = document_api
-    owner_headers = {"X-User-Email": "owner@example.test"}
+    owner_headers = {"Authorization": "Bearer test-token-owner"}
     uploaded = client.post(
         "/api/v1/documents/upload",
         headers=owner_headers,
@@ -222,7 +222,7 @@ def test_document_list_detail_and_chunks_are_user_scoped(document_api) -> None:
     assert [chunk["chunk_index"] for chunk in chunks.json()] == [0, 1]
     assert set(chunks.json()[0]) == {"chunk_id", "section", "chunk_index", "content"}
 
-    other_headers = {"X-User-Email": "other@example.test"}
+    other_headers = {"Authorization": "Bearer test-token-other"}
     assert client.get("/api/v1/documents", headers=other_headers).json() == []
     assert client.get(
         f"/api/v1/documents/{uploaded['id']}", headers=other_headers
@@ -234,7 +234,7 @@ def test_document_list_detail_and_chunks_are_user_scoped(document_api) -> None:
 
 def test_duplicate_upload_returns_existing_document(document_api) -> None:
     client, session_factory, _ = document_api
-    headers = {"X-User-Email": "owner@example.test"}
+    headers = {"Authorization": "Bearer test-token-owner"}
     content = _docx_bytes()
     first = client.post(
         "/api/v1/documents/upload",
@@ -325,7 +325,7 @@ def test_failed_document_can_be_retried_after_embedding_recovers(document_api) -
 
 def test_failed_document_retry_endpoint_is_real_and_user_scoped(document_api) -> None:
     client, session_factory, _ = document_api
-    owner_headers = {"X-User-Email": "owner@example.test"}
+    owner_headers = {"Authorization": "Bearer test-token-owner"}
     app.dependency_overrides[get_embedding_provider] = lambda: FailingEmbeddingProvider()
     failed = client.post(
         "/api/v1/documents/upload",
@@ -341,7 +341,7 @@ def test_failed_document_retry_endpoint_is_real_and_user_scoped(document_api) ->
 
     assert client.post(
         f"/api/v1/documents/{document_id}/retry",
-        headers={"X-User-Email": "other@example.test"},
+        headers={"Authorization": "Bearer test-token-other"},
     ).status_code == 404
 
     app.dependency_overrides[get_embedding_provider] = lambda: TestEmbeddingProvider()
@@ -365,7 +365,7 @@ def test_failed_document_retry_endpoint_is_real_and_user_scoped(document_api) ->
 
 def test_failed_document_list_exposes_truthful_rag_status(document_api) -> None:
     client, _, _ = document_api
-    headers = {"X-User-Email": "owner@example.test"}
+    headers = {"Authorization": "Bearer test-token-owner"}
     app.dependency_overrides[get_embedding_provider] = lambda: FailingEmbeddingProvider()
     response = client.post(
         "/api/v1/documents/upload",

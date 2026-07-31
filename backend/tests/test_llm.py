@@ -7,10 +7,29 @@ import pytest
 from fastapi.testclient import TestClient
 
 from backend.app import main
+from backend.app.api.dependencies import get_current_user
+from backend.app.infrastructure.database.models import User
 from backend.app.infrastructure.llm import deepseek
 from backend.app.services import llm
 
-client = TestClient(main.app)
+client = TestClient(
+    main.app,
+    headers={"Authorization": "Bearer test-token-demo"},
+)
+
+
+@pytest.fixture(autouse=True)
+def authenticated_legacy_client():
+    """Keep LLM behavior tests focused while auth is covered at the real boundary."""
+    previous = main.app.dependency_overrides.get(get_current_user)
+    main.app.dependency_overrides[get_current_user] = lambda: User(
+        email="demo@example.com"
+    )
+    yield
+    if previous is None:
+        main.app.dependency_overrides.pop(get_current_user, None)
+    else:
+        main.app.dependency_overrides[get_current_user] = previous
 
 STRUCTURED_ANALYSIS = {
     "job_requirements": {

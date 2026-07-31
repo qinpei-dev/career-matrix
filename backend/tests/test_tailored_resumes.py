@@ -80,7 +80,7 @@ def tailoring_api(
     app.dependency_overrides[get_embedding_provider] = lambda: TestEmbeddingProvider()
     app.dependency_overrides[get_resume_tailoring_provider] = lambda: provider
     try:
-        with TestClient(app) as client:
+        with TestClient(app, headers={"Authorization": "Bearer test-token-demo"}) as client:
             yield client, session_factory, provider
     finally:
         app.dependency_overrides.clear()
@@ -317,12 +317,12 @@ def test_stale_generation_recovers_but_fresh_generation_remains_claimed(
 def test_ownership_missing_resources_and_job_filter(tailoring_api) -> None:
     client, session_factory, _ = tailoring_api
     job_id, document_id = _seed(session_factory, email="owner@example.test")
-    owner = {"X-User-Email": "owner@example.test"}
+    owner = {"Authorization": "Bearer test-token-owner"}
     resume_id = _create(
         client, job_id, document_id,
         headers=owner,
     )
-    other = {"X-User-Email": "other@example.test"}
+    other = {"Authorization": "Bearer test-token-other"}
     assert client.get(f"/api/v1/tailored-resumes/{resume_id}", headers=other).status_code == 404
     assert client.post(
         "/api/v1/tailored-resumes",

@@ -4,6 +4,7 @@ import { API_BASE_URL } from "./api.ts";
 import { jobsApi } from "./jobs-api.ts";
 
 const originalFetch = globalThis.fetch;
+process.env.NEXT_PUBLIC_DEMO_AUTH_TOKEN = "test-web-token";
 
 afterEach(() => {
   globalThis.fetch = originalFetch;

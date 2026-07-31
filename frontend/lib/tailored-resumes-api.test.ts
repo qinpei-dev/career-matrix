@@ -8,18 +8,20 @@ import {
 } from "./tailored-resumes-api.ts";
 
 const originalFetch = globalThis.fetch;
+process.env.NEXT_PUBLIC_DEMO_AUTH_TOKEN = "test-web-token";
 
 afterEach(() => {
   globalThis.fetch = originalFetch;
 });
 
-test("tailored resume API covers create generate save finalize delete and download", async () => {
-  const requests: Array<{ url: string; method: string; body?: string }> = [];
+test("tailored resume API covers create generate save finalize delete and authenticated download", async () => {
+  const requests: Array<{ url: string; method: string; body?: string; init?: RequestInit }> = [];
   globalThis.fetch = async (input, init) => {
     requests.push({
       url: String(input),
       method: init?.method ?? "GET",
       body: typeof init?.body === "string" ? init.body : undefined,
+      init,
     });
     if (init?.method === "DELETE") return new Response(null, { status: 204 });
     return new Response(JSON.stringify({ id: "version/1", status: "GENERATED" }), {
@@ -35,6 +37,7 @@ test("tailored resume API covers create generate save finalize delete and downlo
   await tailoredResumesApi.update("version/1", { skills: ["Python"] });
   await tailoredResumesApi.finalize("version/1");
   await tailoredResumesApi.delete("version/1");
+  const downloaded = await tailoredResumesApi.downloadDocx("version/1");
 
   assert.deepEqual(requests.map(({ url, method }) => ({ url, method })), [
     { url: `${API_BASE_URL}/api/v1/tailored-resumes`, method: "POST" },
@@ -44,11 +47,14 @@ test("tailored resume API covers create generate save finalize delete and downlo
     { url: `${API_BASE_URL}/api/v1/tailored-resumes/version%2F1`, method: "PATCH" },
     { url: `${API_BASE_URL}/api/v1/tailored-resumes/version%2F1/finalize`, method: "POST" },
     { url: `${API_BASE_URL}/api/v1/tailored-resumes/version%2F1`, method: "DELETE" },
+    { url: `${API_BASE_URL}/api/v1/tailored-resumes/version%2F1/export.docx`, method: "GET" },
   ]);
   assert.match(requests[4].body ?? "", /Python/);
+  assert.equal(requests[7].url, `${API_BASE_URL}/api/v1/tailored-resumes/version%2F1/export.docx`);
+  assert.equal(downloaded instanceof Blob, true);
   assert.equal(
-    tailoredResumesApi.docxUrl("version/1"),
-    `${API_BASE_URL}/api/v1/tailored-resumes/version%2F1/export.docx`,
+    new Headers(requests[7].init?.headers).get("Authorization"),
+    "Bearer test-web-token",
   );
 });
 

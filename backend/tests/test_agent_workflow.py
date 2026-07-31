@@ -75,7 +75,7 @@ def agent_database(
     app.dependency_overrides[get_db_session] = override_session
     app.dependency_overrides[get_embedding_provider] = lambda: EmptyEmbeddingProvider()
     try:
-        with TestClient(app) as client:
+        with TestClient(app, headers={"Authorization": "Bearer test-token-demo"}) as client:
             yield client, session_factory
     finally:
         app.dependency_overrides.clear()
@@ -128,7 +128,7 @@ def test_workflow_transitions_and_persists_run_steps(agent_database) -> None:
 
 def test_agent_run_is_user_isolated(agent_database) -> None:
     client, _ = agent_database
-    owner = {"X-User-Email": "owner@example.test"}
+    owner = {"Authorization": "Bearer test-token-owner"}
     job = create_profile_and_job(client, owner)
     run_id = client.post(
         "/api/v1/agent/runs", headers=owner, json={"job_id": job["id"]}
@@ -136,11 +136,11 @@ def test_agent_run_is_user_isolated(agent_database) -> None:
 
     assert client.get(
         f"/api/v1/agent/runs/{run_id}",
-        headers={"X-User-Email": "other@example.test"},
+        headers={"Authorization": "Bearer test-token-other"},
     ).status_code == 404
     assert client.post(
         "/api/v1/agent/runs",
-        headers={"X-User-Email": "other@example.test"},
+        headers={"Authorization": "Bearer test-token-other"},
         json={"job_id": job["id"]},
     ).status_code == 404
 
@@ -200,7 +200,7 @@ def test_active_run_api_recovers_persisted_run_and_is_user_isolated(
     agent_database,
 ) -> None:
     client, session_factory = agent_database
-    owner = {"X-User-Email": "owner@example.test"}
+    owner = {"Authorization": "Bearer test-token-owner"}
     job = create_profile_and_job(client, owner)
     with session_factory() as session:
         user = session.scalar(select(User).where(User.email == "owner@example.test"))
@@ -224,7 +224,7 @@ def test_active_run_api_recovers_persisted_run_and_is_user_isolated(
     assert recovered.json()["run_id"] == run_id
     assert client.get(
         f"/api/v1/agent/runs/active?job_id={job['id']}",
-        headers={"X-User-Email": "other@example.test"},
+        headers={"Authorization": "Bearer test-token-other"},
     ).status_code == 404
 
     other_job = client.post(

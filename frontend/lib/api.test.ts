@@ -10,6 +10,7 @@ import {
 } from "./analysis-task-recovery.ts";
 
 const originalFetch = globalThis.fetch;
+process.env.NEXT_PUBLIC_DEMO_AUTH_TOKEN = "test-web-token";
 
 afterEach(() => {
   globalThis.fetch = originalFetch;
@@ -17,8 +18,10 @@ afterEach(() => {
 
 test("apiFetch builds the API URL and returns JSON", async () => {
   let requestedUrl = "";
-  globalThis.fetch = async (input) => {
+  let requestedInit: RequestInit | undefined;
+  globalThis.fetch = async (input, init) => {
     requestedUrl = String(input);
+    requestedInit = init;
     return new Response(JSON.stringify([{ id: "job-1" }]), {
       status: 200,
       headers: { "Content-Type": "application/json" },
@@ -27,6 +30,7 @@ test("apiFetch builds the API URL and returns JSON", async () => {
 
   const result = await apiFetch<Array<{ id: string }>>("/api/v1/jobs");
   assert.equal(requestedUrl, `${API_BASE_URL}/api/v1/jobs`);
+  assert.equal(new Headers(requestedInit?.headers).get("Authorization"), "Bearer test-web-token");
   assert.deepEqual(result, [{ id: "job-1" }]);
 });
 

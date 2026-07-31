@@ -34,7 +34,7 @@ def workspace_database(
 
     app.dependency_overrides[get_db_session] = override_session
     try:
-        with TestClient(app) as client:
+        with TestClient(app, headers={"Authorization": "Bearer test-token-demo"}) as client:
             yield client, session_factory
     finally:
         app.dependency_overrides.clear()
@@ -72,8 +72,8 @@ def _create_analysis_data(client: TestClient, headers: dict[str, str]) -> tuple[
 
 def test_settings_are_persisted_and_isolated(workspace_database) -> None:
     client, session_factory = workspace_database
-    owner = {"X-User-Email": "owner@example.test"}
-    other = {"X-User-Email": "other@example.test"}
+    owner = {"Authorization": "Bearer test-token-owner"}
+    other = {"Authorization": "Bearer test-token-other"}
 
     initial = client.get("/api/v1/workspace/settings", headers=owner)
     assert initial.status_code == 200
@@ -111,7 +111,7 @@ def test_dashboard_search_and_notifications_use_real_owned_data(
     workspace_database,
 ) -> None:
     client, session_factory = workspace_database
-    headers = {"X-User-Email": "owner@example.test"}
+    headers = {"Authorization": "Bearer test-token-owner"}
     job_id, analysis_id = _create_analysis_data(client, headers)
 
     with session_factory() as session:
@@ -177,7 +177,7 @@ def test_dashboard_search_and_notifications_use_real_owned_data(
     }
     assert client.get(
         "/api/v1/workspace/search?q=Acme",
-        headers={"X-User-Email": "other@example.test"},
+        headers={"Authorization": "Bearer test-token-other"},
     ).json()["total"] == 0
 
 
@@ -199,7 +199,7 @@ def test_dashboard_and_search_are_not_limited_to_job_list_page_size(
     workspace_database,
 ) -> None:
     client, _ = workspace_database
-    headers = {"X-User-Email": "many-jobs@example.test"}
+    headers = {"Authorization": "Bearer test-token-many-jobs"}
     for index in range(21):
         created = client.post(
             "/api/v1/jobs",

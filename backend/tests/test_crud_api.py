@@ -33,7 +33,7 @@ def api_database(tmp_path: Path) -> Generator[tuple[TestClient, sessionmaker[Ses
 
     app.dependency_overrides[get_db_session] = override_session
     try:
-        with TestClient(app) as client:
+        with TestClient(app, headers={"Authorization": "Bearer test-token-demo"}) as client:
             yield client, session_factory
     finally:
         app.dependency_overrides.clear()
@@ -80,7 +80,7 @@ def test_profile_create_read_patch_and_conflict(api_database) -> None:
 
 def test_job_create_list_get_and_user_isolation(api_database) -> None:
     client, _ = api_database
-    headers = {"X-User-Email": "owner@example.test"}
+    headers = {"Authorization": "Bearer test-token-owner"}
 
     created = client.post(
         "/api/v1/jobs",
@@ -105,7 +105,7 @@ def test_job_create_list_get_and_user_isolation(api_database) -> None:
     assert fetched.status_code == 200
     assert fetched.json()["description"] == "Build reliable APIs"
 
-    other_headers = {"X-User-Email": "other@example.test"}
+    other_headers = {"Authorization": "Bearer test-token-other"}
     assert client.get(f"/api/v1/jobs/{job_id}", headers=other_headers).status_code == 404
     assert client.get("/api/v1/jobs", headers=other_headers).json() == []
 
@@ -194,8 +194,8 @@ def test_job_patch_recomputes_fingerprint_and_enforces_user_isolation(
     api_database,
 ) -> None:
     client, _ = api_database
-    owner = {"X-User-Email": "owner@example.test"}
-    other = {"X-User-Email": "other@example.test"}
+    owner = {"Authorization": "Bearer test-token-owner"}
+    other = {"Authorization": "Bearer test-token-other"}
     first = client.post(
         "/api/v1/jobs",
         headers=owner,
@@ -291,16 +291,16 @@ def test_job_delete_is_user_scoped(api_database) -> None:
     client, _ = api_database
     job = client.post(
         "/api/v1/jobs",
-        headers={"X-User-Email": "owner@example.test"},
+        headers={"Authorization": "Bearer test-token-owner"},
         json={"title": "Owned", "description": "Private"},
     ).json()
     assert client.delete(
         f"/api/v1/jobs/{job['id']}",
-        headers={"X-User-Email": "other@example.test"},
+        headers={"Authorization": "Bearer test-token-other"},
     ).status_code == 404
     assert client.get(
         f"/api/v1/jobs/{job['id']}",
-        headers={"X-User-Email": "owner@example.test"},
+        headers={"Authorization": "Bearer test-token-owner"},
     ).status_code == 200
 
 
@@ -336,7 +336,7 @@ def test_analysis_create_list_and_relationship_validation(api_database) -> None:
 
     foreign_attempt = client.post(
         "/api/v1/analyses",
-        headers={"X-User-Email": "other@example.test"},
+        headers={"Authorization": "Bearer test-token-other"},
         json=payload,
     )
     assert foreign_attempt.status_code == 404

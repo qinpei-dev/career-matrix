@@ -14,13 +14,14 @@ from sqlalchemy.orm import Session
 from sqlalchemy.pool import StaticPool
 
 from ..agents.career_copilot.tools import ALLOWED_ANALYSIS_TOOL_NAMES
-from ..api.dependencies import get_agent_run_service, get_db_session
+from ..api.dependencies import get_agent_run_service, get_current_user, get_db_session
 from ..api.v1.agent_runs import router as agent_runs_router
 from ..api.v1.jobs import router as jobs_router
 from ..api.v1.profiles import router as profiles_router
 from ..core.security import REDACTED
 from ..infrastructure.database.base import Base
 from ..infrastructure.database.models import Document, DocumentChunk, User
+from ..infrastructure.database.repositories import UserRepository
 from ..infrastructure.database.session import create_session_factory
 from ..infrastructure.database.vector import BGE_M3_DIMENSION
 from ..infrastructure.llm.deepseek import build_messages
@@ -201,7 +202,13 @@ def _regression_app(
             ),
         )
 
+    def override_current_user(
+        session: Session = Depends(get_db_session),
+    ) -> User:
+        return UserRepository(session).get_or_create_by_email(DEFAULT_USER_EMAIL)
+
     app.dependency_overrides[get_db_session] = override_session
+    app.dependency_overrides[get_current_user] = override_current_user
     app.dependency_overrides[get_agent_run_service] = override_agent_service
     return app
 

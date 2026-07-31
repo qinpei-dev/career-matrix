@@ -59,7 +59,7 @@ def workflow_database(
 
     app.dependency_overrides[get_db_session] = override_session
     try:
-        with TestClient(app) as client:
+        with TestClient(app, headers={"Authorization": "Bearer test-token-demo"}) as client:
             yield client, session_factory
     finally:
         app.dependency_overrides.clear()
@@ -199,7 +199,7 @@ def test_analyze_requires_owned_job_and_profile(workflow_database, monkeypatch) 
     monkeypatch.setattr(AnalysisService, "analyze_job", fake_analyze)
     response = client.post(
         f"/api/v1/jobs/{job['id']}/analyze",
-        headers={"X-User-Email": "other@example.test"},
+        headers={"Authorization": "Bearer test-token-other"},
     )
 
     assert response.status_code == 404
