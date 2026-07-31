@@ -31,3 +31,16 @@ class LLMProvider(Protocol):
     ) -> str:
         """Return the provider's raw structured-analysis content."""
         ...
+
+
+class ResumeTailoringProvider(Protocol):
+    """Provider contract restricted to selecting existing evidence."""
+
+    def tailor_resume(
+        self,
+        job_title: str,
+        job_description: str,
+        resume_evidence: str,
+    ) -> str:
+        """Return evidence ids, ordering, and keyword classifications as JSON."""
+        ...

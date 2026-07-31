@@ -11,16 +11,22 @@ from ..application.crud_service import DEFAULT_USER_EMAIL, CrudService
 from ..application.document_service import DocumentService
 from ..application.retrieval_service import RetrievalService
 from ..application.workspace_service import WorkspaceService
+from ..application.tailored_resume_service import TailoredResumeService
 from ..core.config import get_settings
 from ..infrastructure.database.session import get_db_session
 from ..infrastructure.embedding import create_embedding_provider
 from ..infrastructure.embedding.provider import EmbeddingProvider
 from ..infrastructure.llm.deepseek import DeepSeekProvider
+from ..infrastructure.llm.provider import ResumeTailoringProvider
 
 
 def get_embedding_provider() -> EmbeddingProvider:
     """Build the configured embedding adapter without making a network call."""
     return create_embedding_provider(get_settings())
+
+
+def get_resume_tailoring_provider() -> ResumeTailoringProvider:
+    return DeepSeekProvider()
 
 
 def get_crud_service(
@@ -148,4 +154,27 @@ def get_analysis_task_service(
         x_user_email,
         analyzer=AnalysisService(DeepSeekProvider()),
         retrieval_service=RetrievalService(session, x_user_email, embedding_provider),
+    )
+
+
+def get_tailored_resume_service(
+    session: Session = Depends(get_db_session),
+    embedding_provider: EmbeddingProvider = Depends(get_embedding_provider),
+    provider: ResumeTailoringProvider = Depends(get_resume_tailoring_provider),
+    x_user_email: str = Header(
+        default=DEFAULT_USER_EMAIL,
+        alias="X-User-Email",
+        min_length=3,
+        max_length=320,
+        pattern=r"^[^\s@]+@[^\s@]+$",
+    ),
+) -> TailoredResumeService:
+    """Build the evidence-gated resume tailoring workflow."""
+    return TailoredResumeService(
+        session,
+        x_user_email,
+        provider=provider,
+        retrieval_service=RetrievalService(
+            session, x_user_email, embedding_provider
+        ),
     )

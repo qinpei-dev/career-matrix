@@ -13,6 +13,7 @@ from ..base import Base, TimestampMixin
 from ..vector import BGE_M3_DIMENSION, EmbeddingVector
 
 if TYPE_CHECKING:
+    from .tailored_resume import TailoredResume
     from .user import User
 
 
@@ -39,6 +40,9 @@ class Document(TimestampMixin, Base):
         back_populates="document",
         cascade="all, delete-orphan",
         order_by="DocumentChunk.chunk_index",
+    )
+    tailored_resumes: Mapped[list["TailoredResume"]] = relationship(
+        back_populates="source_document", cascade="all, delete-orphan"
     )
 
 

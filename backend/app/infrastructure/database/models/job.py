@@ -14,6 +14,7 @@ if TYPE_CHECKING:
     from .agent import AgentRun
     from .analysis import Analysis
     from .user import User
+    from .tailored_resume import TailoredResume
 
 
 class Job(TimestampMixin, Base):
@@ -47,4 +48,7 @@ class Job(TimestampMixin, Base):
     agent_runs: Mapped[list["AgentRun"]] = relationship(
         back_populates="job",
         cascade="all, delete-orphan",
+    )
+    tailored_resumes: Mapped[list["TailoredResume"]] = relationship(
+        back_populates="job", cascade="all, delete-orphan"
     )

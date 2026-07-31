@@ -36,7 +36,12 @@ class RetrievalService:
         self.users = UserRepository(session)
         self.retrieval = RetrievalRepository(session)
 
-    def search(self, query: str, top_k: int) -> list[RetrievalResult]:
+    def search(
+        self,
+        query: str,
+        top_k: int,
+        document_id: uuid.UUID | None = None,
+    ) -> list[RetrievalResult]:
         if self.embedding_provider.dimension != BGE_M3_DIMENSION:
             raise EmbeddingResponseError(
                 "embedding provider dimension does not match the database schema"
@@ -45,7 +50,9 @@ class RetrievalService:
         if len(query_embedding) != BGE_M3_DIMENSION:
             raise EmbeddingResponseError("query embedding has an invalid dimension")
         user = self.users.get_or_create_by_email(self.user_email)
-        matches = self.retrieval.search_for_user(user.id, query_embedding, top_k)
+        matches = self.retrieval.search_for_user(
+            user.id, query_embedding, top_k, document_id=document_id
+        )
         self.session.commit()
         return [
             RetrievalResult(

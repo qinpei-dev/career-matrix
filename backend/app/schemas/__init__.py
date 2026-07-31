@@ -13,6 +13,14 @@ from .document import (
 from .job import JobCreate, JobCreateResponse, JobRead
 from .profile import ProfileCreate, ProfileRead, ProfileUpdate
 from .retrieval import RetrievalSearchRequest, RetrievalSearchResult
+from .tailored_resume import (
+    TailoredItem,
+    TailoredResumeCreate,
+    TailoredResumeListItem,
+    TailoredResumeRead,
+    TailoredResumeStarted,
+    TailoredResumeUpdate,
+)
 
 __all__ = [
     "AnalysisCreate",
@@ -36,4 +44,10 @@ __all__ = [
     "ProfileUpdate",
     "RetrievalSearchRequest",
     "RetrievalSearchResult",
+    "TailoredItem",
+    "TailoredResumeCreate",
+    "TailoredResumeListItem",
+    "TailoredResumeRead",
+    "TailoredResumeStarted",
+    "TailoredResumeUpdate",
 ]

@@ -11,6 +11,7 @@ from .profiles import router as profiles_router
 from .retrieval import router as retrieval_router
 from .security_tests import router as security_tests_router
 from .workspace import router as workspace_router
+from .tailored_resumes import router as tailored_resumes_router
 
 router = APIRouter(prefix="/api/v1")
 router.include_router(profiles_router)
@@ -22,3 +23,4 @@ router.include_router(retrieval_router)
 router.include_router(agent_runs_router)
 router.include_router(security_tests_router)
 router.include_router(workspace_router)
+router.include_router(tailored_resumes_router)
