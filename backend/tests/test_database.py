@@ -23,6 +23,7 @@ from backend.app.infrastructure.database.models import (
     Job,
     User,
     UserSettings,
+    TailoredResume,
 )
 from backend.app.infrastructure.database import session as database_session
 from backend.app.infrastructure.database.session import (
@@ -41,6 +42,7 @@ TABLE_NAMES = {
     "documents",
     "document_chunks",
     "user_settings",
+    "tailored_resumes",
 }
 
 
@@ -141,6 +143,10 @@ def test_models_define_required_tables_and_postgresql_jsonb() -> None:
     )
     assert isinstance(
         Analysis.__table__.c.evidence_json.type.dialect_impl(postgresql.dialect()),
+        JSONB,
+    )
+    assert isinstance(
+        TailoredResume.__table__.c.evidence_json.type.dialect_impl(postgresql.dialect()),
         JSONB,
     )
     assert set(AgentRun.__table__.columns.keys()) == {
@@ -291,6 +297,48 @@ def test_user_settings_migration_round_trip(monkeypatch, tmp_path) -> None:
     command.upgrade(config, "head")
     engine = create_engine(database_url)
     assert "user_settings" in inspect(engine).get_table_names()
+    engine.dispose()
+    get_settings.cache_clear()
+
+
+def test_tailored_resume_migration_round_trip(monkeypatch, tmp_path) -> None:
+    database_url = _sqlite_url(tmp_path / "tailored-resumes.db")
+    monkeypatch.setenv("DATABASE_URL", database_url)
+    get_settings.cache_clear()
+    config = _alembic_config()
+
+    command.upgrade(config, "20260730_0011")
+    engine = create_engine(database_url)
+    assert "tailored_resumes" not in inspect(engine).get_table_names()
+    engine.dispose()
+
+    command.upgrade(config, "20260730_0012")
+    engine = create_engine(database_url)
+    columns = {
+        column["name"] for column in inspect(engine).get_columns("tailored_resumes")
+    }
+    assert {
+        "id", "user_id", "job_id", "source_document_id", "title", "status",
+        "summary", "skills_json", "experience_json", "projects_json",
+        "education_json", "evidence_json", "warnings_json",
+        "generated_content_json", "user_edited_content_json", "error_message",
+        "generation_key", "is_generating", "version", "finalized_at",
+        "created_at", "updated_at",
+    } == columns
+    foreign_keys = {
+        tuple(item["constrained_columns"]): item["options"].get("ondelete")
+        for item in inspect(engine).get_foreign_keys("tailored_resumes")
+    }
+    assert foreign_keys == {
+        ("user_id",): "CASCADE",
+        ("job_id",): "CASCADE",
+        ("source_document_id",): "CASCADE",
+    }
+    engine.dispose()
+
+    command.downgrade(config, "20260730_0011")
+    engine = create_engine(database_url)
+    assert "tailored_resumes" not in inspect(engine).get_table_names()
     engine.dispose()
     get_settings.cache_clear()
 
