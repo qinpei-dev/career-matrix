@@ -41,6 +41,15 @@ export default async function JobDetailPage({ params }: { params: Promise<{ id: 
         </div>
         <JobActions job={job} />
       </div>
+      <div className="mt-5 border-t border-[#edf0eb] pt-5">
+        <Link
+          href={`/jobs/${encodeURIComponent(job.id)}/tailored-resumes/new`}
+          className="inline-flex items-center gap-2 rounded-xl bg-[#315d4f] px-4 py-3 text-sm font-bold text-white transition hover:bg-[#284d42]"
+        >
+          定制简历 <Icon name="arrow" className="h-4 w-4" />
+        </Link>
+        <p className="mt-2 text-xs text-[#7a8580]">基于原始简历与当前岗位 JD，生成可追溯、可编辑的新版本。</p>
+      </div>
     </section>
     <div className="mt-5 grid gap-5 xl:grid-cols-[1.5fr_1fr]">
       <div className="space-y-5">
