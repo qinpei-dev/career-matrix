@@ -11,6 +11,7 @@ const nav = [
   { href: "/", label: "工作台", icon: "grid" },
   { href: "/jobs", label: "岗位管理", icon: "briefcase" },
   { href: "/resumes", label: "简历管理", icon: "file" },
+  { href: "/profile", label: "候选人资料", icon: "check" },
   { href: "/agents", label: "Agent 工作流", icon: "spark" },
   { href: "/settings", label: "设置", icon: "settings" },
 ];

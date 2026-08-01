@@ -136,6 +136,20 @@ export interface Profile {
   updated_at: string;
 }
 
+export interface ProfileDraftEvidence {
+  chunk_id: string;
+  excerpt: string;
+}
+
+export interface ProfileDraft {
+  name: { value: string; evidence: ProfileDraftEvidence } | null;
+  target_role: { value: string; evidence: ProfileDraftEvidence } | null;
+  summary: { value: string; evidence: ProfileDraftEvidence[] } | null;
+  skills: Array<{ value: string; evidence: ProfileDraftEvidence }>;
+}
+
+export type ProfilePayload = Pick<Profile, "name" | "target_role" | "summary" | "skills">;
+
 export interface ResumeDocument {
   id: string;
   filename: string;
@@ -434,6 +448,30 @@ export const api = {
     `/api/v1/agent/runs/${encodeURIComponent(runId)}`,
   ),
   getMyProfile: () => apiFetch<Profile>("/api/v1/profiles/me"),
+  draftProfileFromDocument: (documentId: string) => apiFetch<ProfileDraft>(
+    "/api/v1/profiles/draft-from-document",
+    {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ document_id: documentId }),
+    },
+  ),
+  createProfile: (payload: ProfilePayload) => apiFetch<Profile>(
+    "/api/v1/profiles",
+    {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload),
+    },
+  ),
+  updateMyProfile: (payload: Partial<ProfilePayload>) => apiFetch<Profile>(
+    "/api/v1/profiles/me",
+    {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload),
+    },
+  ),
   getDocuments: () => apiFetch<ResumeDocument[]>("/api/v1/documents"),
   uploadDocument: (file: File) => {
     const body = new FormData();

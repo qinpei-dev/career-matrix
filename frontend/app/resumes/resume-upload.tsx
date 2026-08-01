@@ -27,7 +27,11 @@ export function ResumeUpload() {
       setTone(notice.tone);
       setMessage(notice.message);
       form.reset();
-      router.refresh();
+      if (document.status === "ready") {
+        router.push(`/profile?document_id=${encodeURIComponent(document.id)}`);
+      } else {
+        router.refresh();
+      }
     } catch (caught) {
       setTone("error");
       setMessage(caught instanceof Error ? caught.message : "简历上传失败");
