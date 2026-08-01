@@ -85,3 +85,65 @@ class ProfileRead(ProfileFields):
     user_id: uuid.UUID
     created_at: datetime
     updated_at: datetime
+
+
+class ProfileDraftFromDocumentRequest(BaseModel):
+    """Select the current user's parsed resume document as draft evidence."""
+
+    document_id: uuid.UUID
+
+
+class ProfileDraftEvidence(BaseModel):
+    """A verbatim source excerpt tied to one document chunk."""
+
+    model_config = ConfigDict(extra="forbid", strict=True)
+
+    chunk_id: str = Field(min_length=1, max_length=100)
+    excerpt: str = Field(min_length=1, max_length=4000)
+
+    @field_validator("chunk_id", "excerpt")
+    @classmethod
+    def strip_evidence_text(cls, value: str) -> str:
+        stripped = value.strip()
+        if not stripped:
+            raise ValueError("evidence values must not be blank")
+        return stripped
+
+
+class ProfileDraftName(BaseModel):
+    model_config = ConfigDict(extra="forbid", strict=True)
+
+    value: str = Field(min_length=1, max_length=200)
+    evidence: ProfileDraftEvidence
+
+
+class ProfileDraftTargetRole(BaseModel):
+    model_config = ConfigDict(extra="forbid", strict=True)
+
+    value: str = Field(min_length=1, max_length=200)
+    evidence: ProfileDraftEvidence
+
+
+class ProfileDraftSummary(BaseModel):
+    model_config = ConfigDict(extra="forbid", strict=True)
+
+    value: str = Field(min_length=1, max_length=4000)
+    evidence: list[ProfileDraftEvidence] = Field(min_length=1, max_length=20)
+
+
+class ProfileDraftSkill(BaseModel):
+    model_config = ConfigDict(extra="forbid", strict=True)
+
+    value: str = Field(min_length=1, max_length=200)
+    evidence: ProfileDraftEvidence
+
+
+class ProfileDraftRead(BaseModel):
+    """Unpersisted candidate profile fields extracted from resume evidence."""
+
+    model_config = ConfigDict(extra="forbid", strict=True)
+
+    name: ProfileDraftName | None
+    target_role: ProfileDraftTargetRole | None
+    summary: ProfileDraftSummary | None
+    skills: list[ProfileDraftSkill] = Field(max_length=100)

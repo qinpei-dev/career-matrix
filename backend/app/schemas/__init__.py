@@ -11,7 +11,18 @@ from .document import (
     DocumentUploadRead,
 )
 from .job import JobCreate, JobCreateResponse, JobRead
-from .profile import ProfileCreate, ProfileRead, ProfileUpdate
+from .profile import (
+    ProfileCreate,
+    ProfileDraftEvidence,
+    ProfileDraftFromDocumentRequest,
+    ProfileDraftName,
+    ProfileDraftRead,
+    ProfileDraftSkill,
+    ProfileDraftSummary,
+    ProfileDraftTargetRole,
+    ProfileRead,
+    ProfileUpdate,
+)
 from .retrieval import RetrievalSearchRequest, RetrievalSearchResult
 from .tailored_resume import (
     TailoredItem,
@@ -40,6 +51,13 @@ __all__ = [
     "JobCreateResponse",
     "JobRead",
     "ProfileCreate",
+    "ProfileDraftEvidence",
+    "ProfileDraftFromDocumentRequest",
+    "ProfileDraftName",
+    "ProfileDraftRead",
+    "ProfileDraftSkill",
+    "ProfileDraftSummary",
+    "ProfileDraftTargetRole",
     "ProfileRead",
     "ProfileUpdate",
     "RetrievalSearchRequest",

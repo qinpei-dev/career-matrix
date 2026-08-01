@@ -9,6 +9,7 @@ from ..application.analysis_task_service import AnalysisTaskService
 from ..application.agent_service import AgentRunService
 from ..application.crud_service import CrudService
 from ..application.document_service import DocumentService
+from ..application.profile_draft_service import ProfileDraftService
 from ..application.retrieval_service import RetrievalService
 from ..application.workspace_service import WorkspaceService
 from ..application.tailored_resume_service import TailoredResumeService
@@ -96,6 +97,14 @@ def get_document_service(
         get_settings().document_storage_path,
         embedding_provider,
     )
+
+
+def get_profile_draft_service(
+    session: Session = Depends(get_db_session),
+    current_user: User = Depends(get_current_user),
+) -> ProfileDraftService:
+    """Build the user-scoped, non-persisting profile draft workflow."""
+    return ProfileDraftService(session, current_user.email, DeepSeekProvider())
 
 
 def get_retrieval_service(

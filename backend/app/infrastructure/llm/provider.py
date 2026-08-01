@@ -44,3 +44,13 @@ class ResumeTailoringProvider(Protocol):
     ) -> str:
         """Return evidence ids, ordering, and keyword classifications as JSON."""
         ...
+
+
+class ProfileDraftProvider(Protocol):
+    """Provider contract for extracting an unpersisted profile draft."""
+
+    def extract_profile_draft(
+        self, resume_chunks: list[dict[str, str | int]]
+    ) -> str:
+        """Return candidate profile fields as strict JSON."""
+        ...
