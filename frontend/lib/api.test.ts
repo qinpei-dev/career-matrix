@@ -222,6 +222,49 @@ test("workspace APIs search safely and persist settings", async () => {
   );
 });
 
+test("profile APIs generate a draft and create or update the current profile", async () => {
+  const requests: Array<{ url: string; init?: RequestInit }> = [];
+  globalThis.fetch = async (input, init) => {
+    requests.push({ url: String(input), init });
+    return new Response(JSON.stringify({ id: "profile-1", name: "Candidate" }), {
+      status: String(input).endsWith("/api/v1/profiles") ? 201 : 200,
+      headers: { "Content-Type": "application/json" },
+    });
+  };
+  const payload = {
+    name: "Candidate",
+    target_role: "Platform Engineer",
+    summary: "Builds reliable services",
+    skills: ["Python", "FastAPI"],
+  };
+
+  await api.draftProfileFromDocument("document-1");
+  await api.createProfile(payload);
+  await api.updateMyProfile(payload);
+
+  assert.deepEqual(requests.map((request) => ({
+    url: request.url,
+    method: request.init?.method,
+    body: request.init?.body,
+  })), [
+    {
+      url: `${API_BASE_URL}/api/v1/profiles/draft-from-document`,
+      method: "POST",
+      body: JSON.stringify({ document_id: "document-1" }),
+    },
+    {
+      url: `${API_BASE_URL}/api/v1/profiles`,
+      method: "POST",
+      body: JSON.stringify(payload),
+    },
+    {
+      url: `${API_BASE_URL}/api/v1/profiles/me`,
+      method: "PATCH",
+      body: JSON.stringify(payload),
+    },
+  ]);
+});
+
 test("document APIs use encoded user-scoped document paths", async () => {
   const requestedUrls: string[] = [];
   globalThis.fetch = async (input) => {
