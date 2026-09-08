@@ -308,7 +308,7 @@ function errorMessage(body: unknown, status: number): string {
 
 export function demoAuthorizationHeader(): string {
   const token = process.env.NEXT_PUBLIC_DEMO_AUTH_TOKEN?.trim();
-  if (!token) throw new ApiError("Demo auth token is not configured", 0);
+  if (!token) throw new ApiError("Local authentication token is not configured", 0);
   return `Bearer ${token}`;
 }
 

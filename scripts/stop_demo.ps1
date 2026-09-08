@@ -20,10 +20,10 @@ try {
         Write-Host "==> Containers removed; $volumeName is preserved." -ForegroundColor Green
     }
     else {
-        Write-Host "==> Containers removed; the Demo volume does not exist yet." -ForegroundColor Yellow
+        Write-Host "==> Containers removed; the local data volume does not exist yet." -ForegroundColor Yellow
     }
 }
 catch {
-    Write-Host "Demo shutdown failed: $($_.Exception.Message)" -ForegroundColor Red
+    Write-Host "Local environment shutdown failed: $($_.Exception.Message)" -ForegroundColor Red
     exit 1
 }

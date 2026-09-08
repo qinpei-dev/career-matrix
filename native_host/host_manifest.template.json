@@ -1,6 +1,6 @@
 {
   "name": "com.ai_job_copilot.service_control",
-  "description": "AI Job Copilot local service control",
+  "description": "CareerMatrix local service control",
   "path": "__HOST_PATH__",
   "type": "stdio",
   "allowed_origins": [

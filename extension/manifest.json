@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
-  "name": "AI Job Copilot",
-  "description": "面向 Microsoft Edge 并兼容 Google Chrome 的 AI 求职助手原型。",
+  "name": "CareerMatrix",
+  "description": "AI-Powered Career Intelligence & Decision System：采集岗位并提供可解释的职业决策支持。",
   "version": "0.1.2",
   "permissions": [
     "activeTab",
@@ -14,7 +14,7 @@
   ],
   "action": {
     "default_popup": "popup.html",
-    "default_title": "AI Job Copilot"
+    "default_title": "CareerMatrix"
   },
   "background": {
     "service_worker": "background.js"
@@ -25,7 +25,7 @@
         "default": "Alt+J",
         "windows": "Alt+J"
       },
-      "description": "打开 AI Job Copilot"
+      "description": "打开 CareerMatrix"
     }
   }
 }

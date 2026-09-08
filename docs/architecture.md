@@ -1,4 +1,6 @@
-# AI Job Copilot 2.0 架构
+# CareerMatrix 架构
+
+> AI-Powered Career Intelligence & Decision System
 
 ## 全栈拓扑
 
@@ -102,10 +104,10 @@ flowchart LR
     API --> APIHealth{"backend healthy?"}
     APIHealth -->|yes| UI["Start frontend"]
     UI --> UIHealth{"frontend HTTP 200?"}
-    UIHealth -->|yes| Ready["Demo Ready"]
+    UIHealth -->|yes| Ready["CareerMatrix Ready"]
 ```
 
-Compose 不自动执行 migration。命令行用户显式运行 Alembic；`start_demo.bat` 是面向本地 Demo 的明确初始化入口，会在服务启动后执行 `upgrade head`，并仅在 Demo 用户表为空时 Seed。
+Compose 不自动执行 migration。命令行用户显式运行 Alembic；`start_demo.bat` 是为兼容保留名称的本地初始化入口，会在服务启动后执行 `upgrade head`，并仅在本地开发用户表为空时 Seed。
 
 ## 数据与安全边界
 
@@ -115,4 +117,4 @@ Compose 不自动执行 migration。命令行用户显式运行 Alembic；`start
 - PostgreSQL 宿主机端口仅绑定 `127.0.0.1`。
 - Backend 与 Frontend 使用非开发启动命令；两个服务都有 healthcheck。
 - Extension / Native Host 只负责浏览器采集与本地控制，不承担 RAG、Agent 或评分职责。
-- 当前是本地 Demo 架构，没有公网 TLS、正式鉴权、密钥托管、备份策略或高可用设计。
+- 当前是本地运行架构，没有公网 TLS、正式鉴权、密钥托管、备份策略或高可用设计。

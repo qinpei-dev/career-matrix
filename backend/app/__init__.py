@@ -1,1 +1,1 @@
-"""AI Job Copilot backend application package."""
+"""CareerMatrix backend application package."""

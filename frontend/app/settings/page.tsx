@@ -12,7 +12,7 @@ export default async function SettingsPage() {
       api.getProviderStatuses(),
     ]);
     return <AppShell><div className="animate-rise pb-20 lg:pb-0">
-      <PageHeading eyebrow="Local preferences" title="工作区设置" description="设置按当前 Demo 用户保存在后端数据库；Provider 凭据始终脱敏。" />
+      <PageHeading eyebrow="Local preferences" title="工作区设置" description="设置按当前本地用户保存在后端数据库；Provider 凭据始终脱敏。" />
       <SettingsForm initial={settings} />
       <section className="soft-shadow mt-5 rounded-2xl border border-[#e4e9e2] bg-white p-5 md:p-6">
         <h2 className="text-sm font-bold">Provider 状态</h2>

@@ -221,16 +221,16 @@ try {
         exit 1
     }
 
-    Write-Host '正在启动 AI Job Copilot 后端...'
+    Write-Host '正在启动 CareerMatrix 后端...'
     Write-Host '将打开一个后端日志窗口；此窗口必须保持打开。' -ForegroundColor Yellow
     Write-Host '关闭该窗口后，AI 分析会停止。' -ForegroundColor Yellow
 
     $escapedRoot = $ProjectRoot.Replace("'", "''")
     $escapedPython = $pythonCommand.Source.Replace("'", "''")
     $childCommand = @"
-`$Host.UI.RawUI.WindowTitle = 'AI Job Copilot Backend'
+`$Host.UI.RawUI.WindowTitle = 'CareerMatrix Backend'
 Set-Location -LiteralPath '$escapedRoot'
-Write-Host 'AI Job Copilot 后端日志窗口。此窗口必须保持打开；关闭后 AI 分析会停止。' -ForegroundColor Yellow
+Write-Host 'CareerMatrix 后端日志窗口。此窗口必须保持打开；关闭后 AI 分析会停止。' -ForegroundColor Yellow
 & '$escapedPython' -m uvicorn backend.app.main:app --host 127.0.0.1 --port 8000
 `$backendExitCode = `$LASTEXITCODE
 Write-Host "后端进程已退出，退出码：`$backendExitCode" -ForegroundColor Yellow

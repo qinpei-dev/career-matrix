@@ -5,18 +5,18 @@ $desktopPath = [Environment]::GetFolderPath([Environment+SpecialFolder]::Desktop
 
 try {
     if (-not (Test-Path -LiteralPath $launcherPath -PathType Leaf)) {
-        throw "Demo launcher was not found: $launcherPath"
+        throw "CareerMatrix launcher was not found: $launcherPath"
     }
     if ([string]::IsNullOrWhiteSpace($desktopPath) -or -not (Test-Path -LiteralPath $desktopPath -PathType Container)) {
         throw "Windows Desktop directory could not be resolved."
     }
 
-    $shortcutPath = Join-Path $desktopPath "AI Job Copilot Demo.lnk"
+    $shortcutPath = Join-Path $desktopPath "CareerMatrix.lnk"
     $shell = New-Object -ComObject WScript.Shell
     $shortcut = $shell.CreateShortcut($shortcutPath)
     $shortcut.TargetPath = $launcherPath
     $shortcut.WorkingDirectory = $projectRoot
-    $shortcut.Description = "Start the local AI Job Copilot Docker Demo"
+    $shortcut.Description = "Start the CareerMatrix local Docker environment"
     $shortcut.WindowStyle = 1
 
     $iconCandidates = @(

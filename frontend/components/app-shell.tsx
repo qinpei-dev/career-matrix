@@ -53,9 +53,9 @@ export function AppShell({ children }: { children: React.ReactNode }) {
         <div className="flex items-center justify-between lg:block">
           <Link href="/" className="flex items-center gap-3 px-2">
             <span className="grid h-10 w-10 place-items-center rounded-xl bg-[#234e43] text-[#d9ef84] shadow-lg shadow-[#234e43]/15"><Icon name="spark" /></span>
-            <span><strong className="block text-[15px] tracking-[-.02em]">AI Job Copilot</strong><small className="text-[10px] font-bold tracking-[.18em] text-[#79827f]">WORKSPACE 2.0</small></span>
+            <span><strong className="block text-[15px] tracking-[-.02em]">CareerMatrix</strong><small className="text-[10px] font-bold tracking-[.18em] text-[#79827f]">CAREER INTELLIGENCE</small></span>
           </Link>
-          <span className="rounded-full bg-white px-3 py-1.5 text-xs font-semibold text-[#426058] ring-1 ring-[#dfe5dd] lg:hidden">Demo</span>
+          <span className="rounded-full bg-white px-3 py-1.5 text-xs font-semibold text-[#426058] ring-1 ring-[#dfe5dd] lg:hidden">CareerMatrix</span>
         </div>
 
         <nav className="mt-0 hidden gap-1 lg:mt-12 lg:grid">

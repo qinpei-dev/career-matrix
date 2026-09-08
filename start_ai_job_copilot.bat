@@ -1,7 +1,7 @@
 @echo off
 setlocal
 chcp 65001 >nul
-title AI Job Copilot Launcher
+title CareerMatrix Launcher
 
 powershell.exe -NoLogo -NoProfile -ExecutionPolicy Bypass -File "%~dp0scripts\start_backend.ps1"
 set "exit_code=%ERRORLEVEL%"

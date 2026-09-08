@@ -2,8 +2,8 @@ import type { Metadata } from "next";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "AI Job Copilot 2.0",
-  description: "你的 AI 求职工作台",
+  title: "CareerMatrix | AI-Powered Career Intelligence & Decision System",
+  description: "AI-Powered Career Intelligence & Decision System",
 };
 
 export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {

@@ -1,5 +1,6 @@
 {
-  "name": "ai-job-copilot-frontend",
+  "name": "career-matrix-frontend",
+  "description": "CareerMatrix — AI-Powered Career Intelligence & Decision System",
   "version": "0.1.0",
   "private": true,
   "type": "module",

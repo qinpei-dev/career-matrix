@@ -1,3 +1,3 @@
-Alembic migration environment for the AI Job Copilot backend.
+Alembic migration environment for the CareerMatrix backend.
 
 The database URL is loaded from DATABASE_URL through app.core.config.Settings.

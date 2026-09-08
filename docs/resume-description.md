@@ -4,11 +4,11 @@
 
 ## 一句话版本
 
-AI Job Copilot｜基于 Manifest V3、FastAPI 与 DeepSeek 的本地求职助手 MVP，实现招聘页 JD 提取、候选人证据提取、后端确定性评分和可解释结果展示。
+CareerMatrix｜AI-Powered Career Intelligence & Decision System，基于 Manifest V3、FastAPI 与 DeepSeek，实现招聘页 JD 提取、候选人证据提取、后端确定性评分和可解释结果展示。
 
 ## 标准版本
 
-**AI Job Copilot｜个人项目｜JavaScript / Manifest V3 / FastAPI / Pydantic / DeepSeek**
+**CareerMatrix｜个人项目｜JavaScript / Manifest V3 / FastAPI / Pydantic / DeepSeek**
 
 - 开发 Edge 优先、兼容 Chrome 的 Manifest V3 扩展，实现 popup 自动读取岗位、`Alt+J` 快捷唤起、选中文字优先及 `main/article/role-main/body` 多级回退。
 - 设计通用岗位详情启发式提取，根据关键词、文本结构、交互占比与父子节点关系筛选正文，并清理部分按钮和尾部推荐职位噪声。

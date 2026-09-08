@@ -1,6 +1,6 @@
 # Docker Compose 部署指南
 
-本指南用于在 Windows + Docker Desktop 上复现 AI Job Copilot 本地 Demo。Compose 管理 PostgreSQL 16 + pgvector、FastAPI Backend 和 Next.js Frontend；它不是公网生产部署方案。
+本指南用于在 Windows + Docker Desktop 上运行 CareerMatrix。本项目的产品定位是 **AI-Powered Career Intelligence & Decision System**；Compose 管理 PostgreSQL 16 + pgvector、FastAPI Backend 和 Next.js Frontend，不是公网生产部署方案。
 
 ## 部署拓扑
 
@@ -27,7 +27,7 @@ docker compose version
 docker compose config --quiet
 ```
 
-## 方式一：一键启动 Demo
+## 方式一：一键启动本地环境
 
 双击根目录的 `start_demo.bat`，或在 PowerShell 中执行：
 
@@ -41,7 +41,7 @@ docker compose config --quiet
 2. 执行 `docker compose up --build -d`。
 3. 等待 Backend healthy。
 4. 显式执行 Alembic `upgrade head` 并核对当前 revision。
-5. 仅在 Demo 用户表为空时导入幂等 Seed。
+5. 仅在本地开发用户表为空时导入幂等 Seed。
 6. 等待 Frontend healthy，验证两个 HTTP 端点并打开浏览器。
 
 启动成功后访问：
@@ -58,11 +58,11 @@ docker compose config --quiet
 powershell.exe -NoProfile -ExecutionPolicy Bypass -File scripts/create_desktop_shortcut.ps1
 ```
 
-之后双击 **AI Job Copilot Demo** 即可。快捷方式始终以仓库根目录为工作目录，不依赖当前 CMD / PowerShell 路径。
+之后双击 **CareerMatrix** 即可。快捷方式始终以仓库根目录为工作目录，不依赖当前 CMD / PowerShell 路径。
 
 如果仓库被移动或重命名，请在新根目录重新运行上面的
 `scripts/create_desktop_shortcut.ps1` 命令，以当前路径重新创建桌面快捷方式。
-Edge Native Messaging 的安装与路径更新不属于 Docker Demo 启动流程，应按对应安装说明单独处理。
+Edge Native Messaging 的安装与路径更新不属于 Docker 本地启动流程，应按对应安装说明单独处理。
 
 ## 方式二：开发者手动启动
 
@@ -74,7 +74,7 @@ Edge Native Messaging 的安装与路径更新不属于 Docker Demo 启动流程
 Copy-Item .env.example .env.docker
 ```
 
-按需填写 LLM / Embedding Provider 配置和 Demo Token。不要提交 `.env`、`.env.docker`、密码、API Key 或 Token。
+按需填写 LLM / Embedding Provider 配置和本地开发 Token。不要提交 `.env`、`.env.docker`、密码、API Key 或 Token。
 
 Compose 会覆盖 Backend 容器内的 `DATABASE_URL`，使其指向内部 `postgres` 服务。浏览器可见的 `NEXT_PUBLIC_*` 值会进入 Frontend bundle，不能存放生产秘密。
 
@@ -87,7 +87,7 @@ docker compose ps
 
 ### 3. 初始化或升级数据库
 
-Compose 服务启动本身不会自动运行 migration 或 Seed。确认目标是本地 Demo 数据库后，显式执行：
+Compose 服务启动本身不会自动运行 migration 或 Seed。确认目标是本地开发数据库后，显式执行：
 
 ```powershell
 docker compose exec backend python -m alembic -c alembic.ini upgrade head
@@ -95,7 +95,7 @@ docker compose exec backend python -m alembic -c alembic.ini current
 docker compose exec backend python backend/scripts/seed_demo.py
 ```
 
-当前仓库唯一 Alembic head 为 `20260730_0012`。在非一次性数据库上升级前，应先备份并审查待执行 migration。Seed 是幂等的，但已有 Demo 数据时通常不需要重复运行。
+当前仓库唯一 Alembic head 为 `20260730_0012`。在非一次性数据库上升级前，应先备份并审查待执行 migration。Seed 是幂等的，但已有本地数据时通常不需要重复运行。
 
 ### 4. 验证部署
 
@@ -145,9 +145,9 @@ docker compose up -d frontend
 docker compose down
 ```
 
-该命令删除容器和 Compose network，但保留 `postgres_data` named volume。下次启动仍可读取本地 Demo 数据。
+该命令删除容器和 Compose network，但保留 `postgres_data` named volume。下次启动仍可读取本地数据。
 
-### 重置本地 Demo 数据
+### 重置本地数据
 
 `docker compose down -v` 会删除数据库卷及其中数据。该操作不可由普通停止流程恢复；仅在确认数据不再需要或已备份时手动执行。
 
@@ -167,7 +167,7 @@ docker compose down
 
 - PostgreSQL 端口默认仅绑定 `127.0.0.1`；Backend 和 Frontend 端口面向本机开放。
 - `.env` 与 `.env.docker` 不应进入版本控制或截图；API Key 只属于 Backend 运行环境。
-- Demo Token 是本地演示机制，不适用于公网认证。
+- 本地开发 Token 是本地运行机制，不适用于公网认证。
 - 当前 Compose 不包含 TLS、反向代理、密钥托管、备份、监控、高可用或横向扩容。
 - 外部 JD、网页和简历都是不可信输入；不要将其中内容当作运维指令。
 - 部署不会授权系统自动投递或发送消息。

@@ -142,9 +142,9 @@ Docker Desktop is not running or Engine failed to start.
 
     Wait-ForHealthyService "backend"
 
-    # This launcher is an explicit local Demo initialization command. Compose
+    # This launcher is an explicit local environment initialization command. Compose
     # itself intentionally does not run migrations during container startup.
-    Invoke-DockerCommand "Upgrade local Demo database to Alembic head" {
+    Invoke-DockerCommand "Upgrade local database to Alembic head" {
         docker compose exec -T backend python -m alembic -c alembic.ini upgrade head
     }
 
@@ -155,22 +155,22 @@ Docker Desktop is not running or Engine failed to start.
     $postgresUser = (docker compose exec -T postgres printenv POSTGRES_USER | Select-Object -Last 1).Trim()
     $postgresDatabase = (docker compose exec -T postgres printenv POSTGRES_DB | Select-Object -Last 1).Trim()
     if ([string]::IsNullOrWhiteSpace($postgresUser) -or [string]::IsNullOrWhiteSpace($postgresDatabase)) {
-        throw "Unable to resolve the Demo database name or user."
+        throw "Unable to resolve the local database name or user."
     }
 
     $userCountOutput = docker compose exec -T postgres psql -U $postgresUser -d $postgresDatabase -Atc "SELECT count(*) FROM users;"
     if ($LASTEXITCODE -ne 0) {
-        throw "Unable to inspect Demo data."
+        throw "Unable to inspect local data."
     }
     $userCount = [int]($userCountOutput | Select-Object -Last 1)
 
     if ($userCount -eq 0 -and -not $NoSeed) {
-        Invoke-DockerCommand "Seed local Demo data" {
+        Invoke-DockerCommand "Seed local development data" {
             docker compose exec -T backend python backend/scripts/seed_demo.py
         }
     }
     elseif ($userCount -gt 0) {
-        Write-Host "`n==> Demo data already exists; seed skipped." -ForegroundColor DarkGreen
+        Write-Host "`n==> Local data already exists; seed skipped." -ForegroundColor DarkGreen
     }
     else {
         Write-Host "`n==> Empty database detected; seed skipped because -NoSeed was supplied." -ForegroundColor Yellow
@@ -188,7 +188,7 @@ Docker Desktop is not running or Engine failed to start.
         throw "Frontend returned HTTP $($frontend.StatusCode)."
     }
 
-    Write-Host "`n==> Demo is ready" -ForegroundColor Green
+    Write-Host "`n==> CareerMatrix is ready" -ForegroundColor Green
     docker compose ps
     Write-Host "`nFrontend: http://localhost:3000"
     Write-Host "Backend:  http://localhost:8000"
@@ -200,7 +200,7 @@ Docker Desktop is not running or Engine failed to start.
     }
 }
 catch {
-    Write-Host "`nDemo startup failed: $($_.Exception.Message)" -ForegroundColor Red
+    Write-Host "`nCareerMatrix startup failed: $($_.Exception.Message)" -ForegroundColor Red
     if ($dockerReady) {
         Write-Host "Run 'docker compose ps' and 'docker compose logs' for details." -ForegroundColor Yellow
     }

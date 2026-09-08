@@ -133,7 +133,7 @@ try {
     $parentMatches = Test-ParentReferencesProject $details
 
     if (-not $hasExpectedCommand -or (-not $stateMatches -and -not $hostMatches -and -not $parentMatches)) {
-        Write-Host "无法确认 PID $listenerProcessId（进程 $processName）属于当前 AI Job Copilot 后端。" -ForegroundColor Red
+        Write-Host "无法确认 PID $listenerProcessId（进程 $processName）属于当前 CareerMatrix 后端。" -ForegroundColor Red
         if (-not $hasExpectedCommand) {
             Write-Host '命令行未同时包含 uvicorn 和 backend.app.main:app。'
         }
@@ -144,7 +144,7 @@ try {
         exit 1
     }
 
-    Write-Host "正在停止 AI Job Copilot 后端（PID $listenerProcessId，进程 $processName）..."
+    Write-Host "正在停止 CareerMatrix 后端（PID $listenerProcessId，进程 $processName）..."
     Stop-Process -Id $listenerProcessId -ErrorAction Stop
 
     $deadline = (Get-Date).AddSeconds(5)
@@ -172,7 +172,7 @@ try {
         }
     }
 
-    Write-Host 'AI Job Copilot 后端已安全停止。' -ForegroundColor Green
+    Write-Host 'CareerMatrix 后端已安全停止。' -ForegroundColor Green
     exit 0
 }
 catch {

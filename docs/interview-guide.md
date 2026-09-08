@@ -2,7 +2,7 @@
 
 ## 30 秒项目介绍
 
-AI Job Copilot 是我完成的一个本地 AI 求职助手 MVP，采用 Manifest V3 浏览器扩展加 FastAPI 后端。扩展读取 JD 并保存候选人资料；Windows + Edge 下通过白名单 Native Messaging 按需启动本地后端，点击一次分析即可等待健康检查并继续请求。后端隔离 DeepSeek API Key，让模型提取证据，再按固定权重计算可解释分数。项目有 pytest 与 Node 测试，并完成过真实本地启停验收。
+CareerMatrix 是一个 **AI-Powered Career Intelligence & Decision System**，采用 Manifest V3 浏览器扩展加 FastAPI 后端，提供岗位发现、多维岗位/候选人匹配、RAG 证据检索、申请规划和人工确认的决策支持。扩展读取 JD 并保存候选人资料；Windows + Edge 下通过白名单 Native Messaging 按需启动本地后端，点击一次分析即可等待健康检查并继续请求。后端隔离 DeepSeek API Key，让模型提取证据，再按固定权重计算可解释分数。项目有 pytest 与 Node 测试，并完成过真实本地启停验收。
 
 ## 2 分钟项目介绍
 

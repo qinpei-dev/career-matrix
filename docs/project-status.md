@@ -2,7 +2,7 @@
 
 ## 当前结论
 
-AI Job Copilot 已完成本地 MVP 的核心闭环：Edge 优先、Chrome 兼容的 Manifest V3 扩展读取岗位内容和候选人资料，本地 FastAPI 调用 DeepSeek 提取岗位要求与候选人证据，再由后端按固定权重计算结构化匹配结果，API Key 只保留在后端。仓库提供 Windows 一键启动/停止入口，并包含 pytest 和 Node 测试。项目没有数据库或云端部署，未进行大规模用户验证；评分仅供参考，不等于录用概率。当前也没有自动投递或自动聊天，不具备生产系统所需的账号、鉴权、云端存储和运维能力。
+CareerMatrix 是 **AI-Powered Career Intelligence & Decision System**。它已具备本地 MVP 的核心闭环：Edge 优先、Chrome 兼容的 Manifest V3 扩展读取岗位内容和候选人资料，本地 FastAPI 提取岗位要求与候选人证据，再由后端按固定权重计算多维结构化匹配结果。系统覆盖 job discovery、application planning、RAG、受控 Agent workflow、application tracking 与 human-in-the-loop 决策支持；API Key 只保留在后端。仓库提供 Windows 一键启动/停止入口，并包含 pytest 和 Node 测试。项目没有云端部署，未进行大规模用户验证；评分仅供参考，不等于录用概率。当前也没有自动投递或自动聊天，不具备生产系统所需的账号、鉴权、云端存储和运维能力。
 
 ## Native service workflow（v1.2）
 
@@ -64,7 +64,7 @@ Host 每次只处理一条 `status`、`start` 或 `stop` 白名单消息，且�
 
 推荐说法：
 
-> 已完成一个 Edge 优先的本地 AI 求职助手 MVP，实现岗位提取、候选人资料保存、DeepSeek 证据提取、固定权重评分、结构化结果 UI，以及 Windows + Edge Native Messaging 按需启停；扩展点击分析可自动启动本地后端并续接一次请求，自动化回归与本地启停验收已通过。
+> CareerMatrix 是一个 AI-Powered Career Intelligence & Decision System：它结合岗位发现、多维岗位/候选人匹配、RAG 证据检索、受控 Agent workflow、申请规划与人工确认，提供可解释的职业决策支持；扩展可按需启动本地后端并续接一次分析请求。
 
 不推荐说法：
 

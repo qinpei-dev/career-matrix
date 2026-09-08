@@ -1,4 +1,4 @@
-"""FastAPI entry point for AI Job Copilot."""
+"""FastAPI entry point for CareerMatrix."""
 
 import logging
 from contextlib import asynccontextmanager
@@ -24,7 +24,8 @@ from .infrastructure.llm.parser import JobAnalysis
 from .infrastructure.llm.provider import LLMServiceError
 from sqlalchemy.exc import SQLAlchemyError
 
-APP_NAME = "AI Job Copilot API"
+APP_NAME = "CareerMatrix API"
+APP_DESCRIPTION = "AI-Powered Career Intelligence & Decision System"
 logger = logging.getLogger(__name__)
 
 
@@ -45,7 +46,7 @@ async def lifespan(application: FastAPI):
     yield
 
 
-app = FastAPI(title=APP_NAME, lifespan=lifespan)
+app = FastAPI(title=APP_NAME, description=APP_DESCRIPTION, lifespan=lifespan)
 
 app.add_middleware(
     CORSMiddleware,

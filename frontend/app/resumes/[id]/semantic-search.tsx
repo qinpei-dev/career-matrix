@@ -28,7 +28,7 @@ export function SemanticSearch({ currentDocumentId }: { currentDocumentId: strin
 
   return <section className="mt-5 rounded-2xl bg-[#d9ef84] p-5 md:p-6">
     <div className="flex flex-col justify-between gap-3 md:flex-row md:items-start">
-      <div><p className="text-[9px] font-black uppercase tracking-[.14em] text-[#55705d]">Vector search demo</p><h2 className="mt-1 text-[17px] font-bold text-[#234e43]">语义检索测试</h2><p className="mt-1 text-xs text-[#55705d]">搜索当前用户的全部简历文本块，结果按余弦相似度排序。</p></div>
+      <div><p className="text-[9px] font-black uppercase tracking-[.14em] text-[#55705d]">Vector search</p><h2 className="mt-1 text-[17px] font-bold text-[#234e43]">语义检索</h2><p className="mt-1 text-xs text-[#55705d]">搜索当前用户的全部简历文本块，结果按余弦相似度排序。</p></div>
     </div>
     <form onSubmit={submit} className="mt-4 flex flex-col gap-2 sm:flex-row">
       <input

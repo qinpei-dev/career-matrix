@@ -1,7 +1,7 @@
 @echo off
 setlocal
 chcp 65001 >nul
-title AI Job Copilot 2.0 - Docker Demo
+title CareerMatrix - Local Docker Environment
 
 set "project_root=%~dp0"
 pushd "%project_root%" >nul 2>&1

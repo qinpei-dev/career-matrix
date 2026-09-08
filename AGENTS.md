@@ -4,7 +4,7 @@
 
 ## 1. 项目简介
 
-AI Job Copilot 2.0 是一个基于 FastAPI、Next.js、RAG 和 Agent 工作流的 AI 求职助手。项目面向可复现的本地 Demo：浏览器扩展采集岗位信息，后端管理岗位、候选人资料、简历解析与向量检索，并通过受控 Agent 工作流和确定性评分生成可解释分析。它不自动投递，也不代替用户判断。
+CareerMatrix 是一个基于 FastAPI、Next.js、RAG 和 Agent 工作流的 AI-Powered Career Intelligence & Decision System。项目提供可复现的本地运行环境：浏览器扩展采集岗位信息，后端管理岗位、候选人资料、简历解析与向量检索，并通过受控 Agent 工作流和确定性评分生成可解释分析。它不自动投递，也不代替用户判断。
 
 ## 2. 主要目录
 

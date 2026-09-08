@@ -1,12 +1,14 @@
-# AI Job Copilot 2.0
+# CareerMatrix
 
-AI Job Copilot 是一个面向本地可复现 Demo 的 AI 求职工作台。它把岗位采集、简历知识库、RAG 证据检索、受控 Agent Workflow、确定性评分和定制简历串成一条可解释的求职分析链路。
+> AI-Powered Career Intelligence & Decision System
+
+CareerMatrix 是一个 AI career intelligence 与决策支持系统，围绕多维岗位/候选人匹配、岗位发现、申请规划、RAG 证据检索、受控 Agent workflow、申请跟踪与人工确认，提供可解释的职业决策支持。
 
 > 项目边界：不自动投递，不自动发送招聘消息，不替代用户判断；匹配分数用于解释候选人与岗位要求的覆盖情况，不等于录用概率。
 
-[Showcase 总览](docs/showcase.md) · [架构说明](docs/architecture.md) · [Docker 部署](DOCKER.md) · [3 分钟演示脚本](docs/demo-script.md) · [历史验收报告](docs/demo-acceptance-report-2026-07-24.md)
+[项目主页](https://github.com/qinpei-dev/career-matrix) · [文档入口](docs/README.md) · [架构说明](docs/architecture.md) · [本地部署](DOCKER.md)
 
-## Demo 预览
+## 产品预览
 
 | Dashboard | Jobs |
 | --- | --- |
@@ -18,7 +20,7 @@ AI Job Copilot 是一个面向本地可复现 Demo 的 AI 求职工作台。它�
 
 ## 项目解决什么问题
 
-传统的岗位收藏、简历修改和面试准备通常分散在多个工具中，而且模型生成的“匹配分”很难追溯。AI Job Copilot 将这些动作收敛到同一个本地工作区：
+传统的岗位收藏、简历修改和面试准备通常分散在多个工具中，而且模型生成的“匹配分”很难追溯。CareerMatrix 将这些动作收敛到同一个职业决策工作区：
 
 - 从浏览器扩展或表单保存岗位，并通过 fingerprint 保证重复保存幂等。
 - 上传 PDF / DOCX 简历，完成解析、分块、Embedding 和 pgvector 检索。
@@ -88,7 +90,7 @@ Backend 延续 `API → Application Service → Repository / Infrastructure` 分
 | 受控 Agent | 固定工作流节点、步骤持久化、运行状态恢复，避免无限自主操作 |
 | 文档工程 | PDF / DOCX 解析、内容哈希去重、失败重试、向量检索和证据回溯 |
 | 安全边界 | 外部 JD / 简历按不可信文本处理；密钥只进入 Backend；不自动投递或发送 |
-| 可复现 Demo | Compose healthcheck、Alembic、幂等 Seed、Windows 启停脚本和 named volume |
+| 本地可复现环境 | Compose healthcheck、Alembic、幂等 Seed、Windows 启停脚本和 named volume |
 
 ## 技术栈
 
@@ -105,7 +107,7 @@ Backend 延续 `API → Application Service → Repository / Infrastructure` 分
 
 前置条件：Windows、Docker Desktop，以及可拉取项目镜像依赖的网络环境。
 
-直接双击根目录的 `start_demo.bat`。启动器会构建并启动 PostgreSQL、Backend、Frontend，等待健康检查，执行 Alembic migration，在空库时导入 Demo Seed，最后打开 <http://localhost:3000>。
+直接双击根目录的 `start_demo.bat`（为兼容保留的文件名）。启动器会构建并启动 PostgreSQL、Backend、Frontend，等待健康检查，执行 Alembic migration，在空库时导入本地 Seed，最后打开 <http://localhost:3000>。
 
 需要桌面快捷方式时，在项目根目录执行一次：
 
@@ -113,7 +115,7 @@ Backend 延续 `API → Application Service → Repository / Infrastructure` 分
 powershell.exe -NoProfile -ExecutionPolicy Bypass -File scripts/create_desktop_shortcut.ps1
 ```
 
-如果移动或重命名项目目录，请在新根目录重新运行上述命令，以当前路径重新创建桌面快捷方式。Edge Native Messaging 的安装与路径更新不属于 Docker Demo 启动流程，应按对应安装说明单独处理。
+如果移动或重命名项目目录，请在新根目录重新运行上述命令，以当前路径重新创建桌面快捷方式。Edge Native Messaging 的安装与路径更新不属于 Docker 本地启动流程，应按对应安装说明单独处理。
 
 访问地址：
 
@@ -121,7 +123,7 @@ powershell.exe -NoProfile -ExecutionPolicy Bypass -File scripts/create_desktop_s
 - Backend：<http://localhost:8000>
 - Health：<http://localhost:8000/health>
 
-停止 Demo 时双击 `stop_demo.bat`。它会删除容器和 Compose network，但保留数据库卷。开发者命令、配置说明、升级步骤与排障见 [DOCKER.md](DOCKER.md)。
+停止本地环境时双击 `stop_demo.bat`。它会删除容器和 Compose network，但保留数据库卷。开发者命令、配置说明、升级步骤与排障见 [DOCKER.md](DOCKER.md)。
 
 ## 测试结果
 
@@ -137,18 +139,12 @@ powershell.exe -NoProfile -ExecutionPolicy Bypass -File scripts/create_desktop_s
 | Extension | `node --test extension/tests/content.test.js extension/tests/popup.test.js` | PASS — 2 passed |
 | Compose 配置 | `docker compose config --quiet` | PASS |
 
-自动化测试合计 **274 passed，1 skipped**。当前 Alembic 唯一 head 为 `20260730_0012`。本表不代表本次重新执行了真实 Provider、浏览器人工 E2E 或完整 Docker 运行态验收；相关历史证据与 NOT VERIFIED 项见 [验收报告](docs/demo-acceptance-report-2026-07-24.md)。
-
-## Showcase 路线
-
-推荐现场按“Dashboard → Jobs → Job Detail → Resumes → 定制简历 → Architecture”演示，重点说明：数据不是写死的、证据可以回溯、模型不能绕过评分规则、所有外部发送都需要用户自行确认。
-
-完整展示页见 [docs/showcase.md](docs/showcase.md)，逐分钟话术与故障兜底见 [docs/demo-script.md](docs/demo-script.md)。
+自动化测试合计 **274 passed，1 skipped**。当前 Alembic 唯一 head 为 `20260730_0012`。本表不代表本次重新执行了真实 Provider、浏览器人工 E2E 或完整 Docker 运行态验收；历史材料仅为追溯保留，不作为当前产品入口。
 
 ## 已知限制
 
-- 当前目标是单机本地 Demo，不是公网生产部署。
-- Demo Token 会进入前端 bundle，不等同于生产鉴权；公网部署前必须替换为正式身份认证。
+- 当前目标是单机本地部署，不是公网生产部署。
+- 本地开发认证 Token 会进入前端 bundle，不等同于生产鉴权；公网部署前必须替换为正式身份认证。
 - LLM / Embedding 的可用性、延迟和质量取决于本地配置与外部 Provider。
 - Extension 使用通用启发式提取，不承诺适配所有招聘网站。
 - 当前没有正式账号体系、RBAC、云同步、多人协作、备份和高可用方案。

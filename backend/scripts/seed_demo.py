@@ -25,7 +25,7 @@ from backend.app.infrastructure.database.session import create_database_engine
 DEMO_EMAIL = "demo@example.com"
 DEMO_PROFILE_NAME = "Demo Candidate"
 DEMO_SKILLS = ["Python", "FastAPI", "LLM", "RAG", "Git", "Docker"]
-DEMO_SUMMARY = "项目经历：AI论文格式修改Agent；AI Job Copilot"
+DEMO_SUMMARY = "项目经历：AI论文格式修改Agent；CareerMatrix"
 
 
 @dataclass(frozen=True)
@@ -95,7 +95,7 @@ def seed_demo(session: Session) -> tuple[User, CandidateProfile, list[Job]]:
             job = Job(user_id=user.id, source_url=demo_job.source_url)
             session.add(job)
         job.title = demo_job.title
-        job.company = "AI Job Copilot Demo"
+        job.company = "CareerMatrix"
         job.description = demo_job.description
         job.source_type = "demo"
         jobs.append(job)

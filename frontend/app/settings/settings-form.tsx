@@ -37,11 +37,11 @@ export function SettingsForm({ initial }: { initial: UserSettings }) {
 
     <section className="soft-shadow rounded-2xl border border-[#e4e9e2] bg-white p-5 md:p-6">
       <h2 className="text-sm font-bold">默认用户信息</h2>
-      <p className="mt-1 text-xs text-[#7f8985]">用于本地工作区显示；Demo 身份邮箱由请求头隔离，不在此修改。</p>
+      <p className="mt-1 text-xs text-[#7f8985]">用于本地工作区显示；本地开发身份邮箱由请求头隔离，不在此修改。</p>
       <div className="mt-5 grid gap-4 md:grid-cols-2">
         <label className="text-xs font-bold text-[#58645f]">显示名称<input required maxLength={100} value={settings.display_name} onChange={(event) => setSettings({ ...settings, display_name: event.target.value })} className="mt-2 w-full rounded-xl border border-[#dfe5dd] px-4 py-3 text-sm font-normal" /></label>
         <label className="text-xs font-bold text-[#58645f]">目标岗位<input maxLength={200} value={settings.target_role || ""} onChange={(event) => setSettings({ ...settings, target_role: event.target.value || null })} className="mt-2 w-full rounded-xl border border-[#dfe5dd] px-4 py-3 text-sm font-normal" placeholder="例如：平台工程师" /></label>
-        <label className="text-xs font-bold text-[#58645f]">Demo 用户邮箱<input readOnly value={settings.email} className="mt-2 w-full rounded-xl border border-[#e5e9e3] bg-[#f4f6f3] px-4 py-3 text-sm font-normal text-[#7f8985]" /></label>
+        <label className="text-xs font-bold text-[#58645f]">本地用户邮箱<input readOnly value={settings.email} className="mt-2 w-full rounded-xl border border-[#e5e9e3] bg-[#f4f6f3] px-4 py-3 text-sm font-normal text-[#7f8985]" /></label>
         <label className="text-xs font-bold text-[#58645f]">每页数量<select value={settings.page_size} onChange={(event) => setSettings({ ...settings, page_size: Number(event.target.value) as UserSettings["page_size"] })} className="mt-2 w-full rounded-xl border border-[#dfe5dd] bg-white px-4 py-3 text-sm font-normal"><option value={10}>10 条</option><option value={20}>20 条</option><option value={50}>50 条</option><option value={100}>100 条</option></select></label>
       </div>
     </section>
