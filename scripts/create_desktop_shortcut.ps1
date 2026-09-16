@@ -3,6 +3,15 @@ $projectRoot = Split-Path -Parent $PSScriptRoot
 $launcherPath = Join-Path $projectRoot "start_demo.bat"
 $desktopPath = [Environment]::GetFolderPath([Environment+SpecialFolder]::DesktopDirectory)
 
+if (-not [string]::IsNullOrWhiteSpace($env:AI_JOB_COPILOT_TEST_DESKTOP_PATH)) {
+    $testDesktopPath = [System.IO.Path]::GetFullPath($env:AI_JOB_COPILOT_TEST_DESKTOP_PATH)
+    $tempRoot = [System.IO.Path]::GetFullPath([System.IO.Path]::GetTempPath()).TrimEnd('\') + '\'
+    if (-not $testDesktopPath.StartsWith($tempRoot, [System.StringComparison]::OrdinalIgnoreCase)) {
+        throw 'The test Desktop path must be inside the system temporary directory.'
+    }
+    $desktopPath = $testDesktopPath
+}
+
 try {
     if (-not (Test-Path -LiteralPath $launcherPath -PathType Leaf)) {
         throw "CareerMatrix launcher was not found: $launcherPath"

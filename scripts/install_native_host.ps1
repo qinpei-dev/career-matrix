@@ -1,5 +1,5 @@
 param(
-    [Parameter(Mandatory = $true, Position = 0)]
+    [Parameter(Position = 0)]
     [string]$ExtensionId
 )
 
@@ -12,10 +12,50 @@ $ManifestPath = Join-Path $NativeHostDirectory 'host_manifest.json'
 $HostLauncher = Join-Path $NativeHostDirectory 'run_host.bat'
 $RegistryPath = "HKCU:\Software\Microsoft\Edge\NativeMessagingHosts\$HostName"
 
+if (-not [string]::IsNullOrWhiteSpace($env:AI_JOB_COPILOT_TEST_REGISTRY_PATH)) {
+    $testRegistryPath = $env:AI_JOB_COPILOT_TEST_REGISTRY_PATH
+    if ($testRegistryPath -cnotmatch '^HKCU:\\Software\\AIJobCopilot\\Tests\\[A-Za-z0-9._-]+(?:\\[A-Za-z0-9._-]+)*$') {
+        throw 'The test Registry path must be inside HKCU:\Software\AIJobCopilot\Tests.'
+    }
+    $RegistryPath = $testRegistryPath
+}
+
 function ConvertTo-JsonStringContent {
     param([string]$Value)
     $json = ConvertTo-Json $Value -Compress
     return $json.Substring(1, $json.Length - 2)
+}
+
+function Get-ExtensionIdFromManifest {
+    param([string]$Path)
+
+    if (-not (Test-Path -LiteralPath $Path -PathType Leaf)) {
+        return $null
+    }
+    try {
+        $existingManifest = Get-Content -LiteralPath $Path -Raw -Encoding UTF8 | ConvertFrom-Json
+    }
+    catch {
+        return $null
+    }
+    if ($existingManifest.name -ne $HostName -or
+        $existingManifest.type -ne 'stdio' -or
+        $existingManifest.allowed_origins.Count -ne 1) {
+        return $null
+    }
+    $origin = [string]$existingManifest.allowed_origins[0]
+    if ($origin -cnotmatch '^chrome-extension://([a-p]{32})/$') {
+        return $null
+    }
+    return $Matches[1]
+}
+
+if ([string]::IsNullOrWhiteSpace($ExtensionId)) {
+    $ExtensionId = Get-ExtensionIdFromManifest -Path $ManifestPath
+    if ([string]::IsNullOrWhiteSpace($ExtensionId)) {
+        throw 'Extension ID is required. Copy it from edge://extensions and run install_native_host.bat <EDGE_EXTENSION_ID>.'
+    }
+    Write-Host 'Reusing the extension ID from the existing generated manifest.' -ForegroundColor Yellow
 }
 
 if ($ExtensionId -cnotmatch '^[a-p]{32}$') {
@@ -39,7 +79,10 @@ if (Test-Path -LiteralPath $RegistryPath) {
             throw 'The existing Native Host registration has an invalid path; refusing to overwrite it.'
         }
         if ($resolvedExistingPath -ne $resolvedManifestPath) {
-            throw 'The Native Host name belongs to another project; refusing to overwrite it.'
+            if (Test-Path -LiteralPath $resolvedExistingPath -PathType Leaf) {
+                throw 'The Native Host name belongs to another active project directory; refusing to overwrite it.'
+            }
+            Write-Host 'Repairing a stale Native Host registration left by a moved project folder.' -ForegroundColor Yellow
         }
     }
 }
