@@ -69,7 +69,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
         <div className="absolute bottom-7 left-4 right-4 hidden lg:block">
           <div className="fine-grid rounded-2xl border border-[#dce3da] bg-[#f7f9f5] p-4">
             <span className="mb-3 grid h-8 w-8 place-items-center rounded-lg bg-[#e4eedf] text-[#315d4f]"><Icon name="spark" className="h-4 w-4" /></span>
-            <p className="text-xs font-bold">扩展已连接</p><p className="mt-1 text-[11px] leading-5 text-[#76807c]">从浏览器采集的岗位会自动进入待评估列表。</p>
+            <p className="text-xs font-bold">浏览器扩展</p><p className="mt-1 text-[11px] leading-5 text-[#76807c]">在扩展中保存岗位后，可在岗位管理中查看。</p>
           </div>
           <Link href="/settings" className="mt-4 flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-semibold text-[#66706d] transition hover:bg-white/60 hover:text-[#234e43]"><Icon name="settings" className="h-[18px] w-[18px]" />工作区设置</Link>
         </div>

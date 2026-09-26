@@ -3,6 +3,7 @@ const readJobButton = document.querySelector("#read-job");
 const analyzeJobButton = document.querySelector("#analyze-job");
 const saveJobButton = document.querySelector("#save-job");
 const saveAndAnalyzeButton = document.querySelector("#save-and-analyze");
+const demoToken = document.querySelector("#demo-token");
 const analyzeLabel = document.querySelector("#analyze-label");
 const analyzeSpinner = document.querySelector("#analyze-spinner");
 const backendStatus = document.querySelector("#backend-status");
@@ -254,6 +255,14 @@ function currentJobPayload() {
   };
 }
 
+function demoAuthorizationHeaders() {
+  const token = demoToken.value.trim();
+  if (!token || /\s/.test(token)) {
+    throw new Error("请先填写有效的本地 Demo Token");
+  }
+  return { Authorization: `Bearer ${token}` };
+}
+
 async function saveCurrentJob({ analyze = false } = {}) {
   if (saveInProgress || analysisInProgress) return;
   saveInProgress = true;
@@ -261,6 +270,7 @@ async function saveCurrentJob({ analyze = false } = {}) {
   saveAndAnalyzeButton.disabled = true;
   try {
     const payload = currentJobPayload();
+    const authHeaders = demoAuthorizationHeaders();
     if (!(await checkBackendHealth())) {
       showStatus("后端未连接，无法保存岗位", "error");
       return;
@@ -268,7 +278,7 @@ async function saveCurrentJob({ analyze = false } = {}) {
     showStatus(analyze ? "正在保存岗位并分析……" : "正在保存岗位……", "loading");
     const savedResponse = await fetch("http://127.0.0.1:8000/api/v1/jobs", {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
+      headers: { "Content-Type": "application/json", ...authHeaders },
       body: JSON.stringify(payload),
     });
     if (!savedResponse.ok) throw new Error(`保存岗位失败（HTTP ${savedResponse.status}）`);
@@ -283,7 +293,7 @@ async function saveCurrentJob({ analyze = false } = {}) {
     }
     const analysisResponse = await fetch(
       `http://127.0.0.1:8000/api/v1/jobs/${encodeURIComponent(savedJob.job_id)}/analyze`,
-      { method: "POST" },
+      { method: "POST", headers: authHeaders },
     );
     if (!analysisResponse.ok) throw new Error(`岗位已保存，但分析失败（HTTP ${analysisResponse.status}）`);
     const savedAnalysis = await analysisResponse.json();
@@ -556,6 +566,13 @@ analyzeJobButton.addEventListener("click", async () => {
     showStatus("请先填写真实的个人技能或简历简介", "warning");
     return;
   }
+  let authHeaders;
+  try {
+    authHeaders = demoAuthorizationHeaders();
+  } catch {
+    showStatus("请先填写有效的本地 Demo Token", "warning");
+    return;
+  }
 
   setLoadingState(true);
   analysisResult.hidden = true;
@@ -575,7 +592,7 @@ analyzeJobButton.addEventListener("click", async () => {
     showStatus("正在分析岗位……", "loading");
     const response = await fetch("http://127.0.0.1:8000/api/analyze-job", {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
+      headers: { "Content-Type": "application/json", ...authHeaders },
       body: JSON.stringify({
         job_title: jobTitle,
         job_description: description,

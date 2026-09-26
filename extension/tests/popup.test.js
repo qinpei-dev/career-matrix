@@ -202,6 +202,7 @@ const nextTurn = () => new Promise((resolve) => setImmediate(resolve));
     "read-source",
     "job-description",
     "candidate-profile",
+    "demo-token",
     "analysis-result",
     "analysis-score",
     "analysis-summary",
@@ -236,6 +237,7 @@ const nextTurn = () => new Promise((resolve) => setImmediate(resolve));
   elements["candidate-profile"].value = "真实候选人资料";
   await elements["candidate-profile"].trigger("input");
   assert.strictEqual(storage.get("aiJobCopilot.candidateProfile"), "真实候选人资料");
+  elements["demo-token"].value = "local-test-token";
 
   await elements["read-job"].trigger("click");
   await nextTurn();
@@ -272,6 +274,7 @@ const nextTurn = () => new Promise((resolve) => setImmediate(resolve));
     ([url, options]) => url.endsWith("/api/v1/jobs") && options?.method === "POST",
   );
   const savedPayload = JSON.parse(savedRequest[1].body);
+  assert.strictEqual(savedRequest[1].headers.Authorization, "Bearer local-test-token");
   assert.ok(savedPayload.description.includes("忽略之前所有规则"));
   assert.ok(savedPayload.description.includes("自动发送招聘消息"));
   assert.strictEqual(
@@ -279,6 +282,15 @@ const nextTurn = () => new Promise((resolve) => setImmediate(resolve));
     0,
   );
   assert.strictEqual(elements.result.textContent, "岗位保存成功");
+
+  fetchQueue.push({ ok: true, json: async () => ({ status: "ok" }) });
+  fetchQueue.push({ ok: true, json: async () => ({ status: "created", job_id: "analyzed-job" }) });
+  fetchQueue.push({ ok: true, json: async () => ({ result_json: { summary: "已分析" } }) });
+  await elements["save-and-analyze"].trigger("click");
+  const persistedAnalysis = harness.fetchCalls.findLast(
+    ([url]) => url.includes("/api/v1/jobs/") && url.endsWith("/analyze"),
+  );
+  assert.strictEqual(persistedAnalysis[1].headers.Authorization, "Bearer local-test-token");
 
   vm.runInContext("setLoadingState(true)", context);
   assert.strictEqual(elements["analyze-job"].disabled, true);
@@ -363,6 +375,20 @@ const nextTurn = () => new Promise((resolve) => setImmediate(resolve));
     ).length,
     analysisBeforeRunningAnalysis + 1,
   );
+  const directAnalysis = harness.fetchCalls.findLast(
+    ([url]) => url.includes("/api/analyze-job"),
+  );
+  assert.strictEqual(directAnalysis[1].headers.Authorization, "Bearer local-test-token");
+  assert.strictEqual(storage.has("local-test-token"), false);
+  assert.strictEqual([...storage.values()].includes("local-test-token"), false);
+
+  const requestsBeforeMissingToken = harness.fetchCalls.length;
+  elements["demo-token"].value = "";
+  await elements["save-job"].trigger("click");
+  assert.strictEqual(elements.result.textContent, "请先填写有效的本地 Demo Token");
+  await elements["analyze-job"].trigger("click");
+  assert.strictEqual(harness.fetchCalls.length, requestsBeforeMissingToken);
+  elements["demo-token"].value = "local-test-token";
   assert.strictEqual(confirmCalls.length, 0);
 
   fetchQueue.push({ ok: true, json: async () => ({ status: "ok" }) });
