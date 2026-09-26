@@ -27,7 +27,7 @@ flowchart TB
     end
 
     Web --> Frontend --> Backend
-    Extension --> Backend
+    Extension -->|Demo Bearer Token| Backend
     Backend --> CRUD
     Backend --> RAG
     Backend --> Agent
@@ -94,6 +94,8 @@ sequenceDiagram
     API-->>UI: 状态、步骤、结果与证据
 ```
 
+Agent Run 会保存各步骤状态，页面刷新可重新读取当前运行；服务重启后超时的旧运行会标记失败。工作流从头开始执行新运行，不会从上次已完成步骤续跑，也不保证外部 LLM 调用 exactly once。AnalysisTask 另有 CAS/version、claim token、lease 和 retry 机制，两者的恢复语义不可混用。
+
 ## Docker 启动顺序
 
 ```mermaid
@@ -112,9 +114,10 @@ Compose 不自动执行 migration。命令行用户显式运行 Alembic；`start
 ## 数据与安全边界
 
 - `.env` 与 `.env.docker` 被 Git 和 Docker build context 排除。
-- API Key 只进入 Backend 运行环境，不写入 Frontend、Extension 或镜像层。
+- Provider API Key 只进入 Backend 运行环境，不写入 Frontend、Extension 或镜像层。Demo Auth Token 会经 `NEXT_PUBLIC_*` 进入前端 bundle；扩展用户需要在弹窗输入相同的本地 Demo Token，当前弹窗关闭后清除。
 - PostgreSQL 使用 named volume 持久化；`docker compose down` 不删除数据。
 - PostgreSQL 宿主机端口仅绑定 `127.0.0.1`。
 - Backend 与 Frontend 使用非开发启动命令；两个服务都有 healthcheck。
 - Extension / Native Host 只负责浏览器采集与本地控制，不承担 RAG、Agent 或评分职责。
 - 当前是本地运行架构，没有公网 TLS、正式鉴权、密钥托管、备份策略或高可用设计。
+- 定制简历支持证据约束编辑和 DOCX 导出；PDF 路由目前返回 501。

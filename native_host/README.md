@@ -12,3 +12,5 @@ Host 不接受命令、脚本文本、路径、URL 或参数拼接。`start` 与
 
 安装与卸载请从项目根目录运行 `install_native_host.bat <扩展ID>` 与
 `uninstall_native_host.bat`。安装器仅写入当前用户的 Edge 注册表位置。
+
+移动项目目录后，`repair_after_move.bat` 调用 `scripts/repair_after_move.ps1`：先修复桌面快捷方式；仅在已有生成的 Host manifest 时，调用安装器复用原扩展 ID。没有 manifest 时需手动重新安装。`.bat` 是用户入口，`scripts/*.ps1` 是实际实现，均予保留。修复脚本不会代替 Demo Auth；扩展弹窗中的 API 请求还需输入与后端配置相符的本地 Demo Token。
