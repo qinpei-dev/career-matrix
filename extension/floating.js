@@ -23,6 +23,9 @@
     if (host) return;
     const { [STATE_KEY]: state } = await chrome.storage.local.get({ [STATE_KEY]: {} });
     if (host) return;
+    // Reloading the extension leaves the old window on the page, cut off from
+    // the new code. Keep exactly one window: drop any left-over ones.
+    document.querySelectorAll("#careermatrix-floating-host").forEach((old) => old.remove());
 
     host = document.createElement("div");
     host.id = "careermatrix-floating-host";
@@ -140,7 +143,11 @@
     saveState({ open: false });
   }
 
-  window.__careerMatrixFloating = { toggle: () => (host ? hide() : show()) };
+  window.__careerMatrixFloating = {
+    // A left-over window from before an extension reload counts as closed:
+    // show() replaces it with a working one.
+    toggle: () => (host ? hide() : show()),
+  };
 
   // Reopen after a reload on the job site if the user left the window open.
   if (location.hostname === "www.zhipin.com") {
