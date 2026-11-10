@@ -16,6 +16,10 @@ export interface Job {
   description: string;
   source_url: string | null;
   source_type: string;
+  salary?: string | null;
+  location?: string | null;
+  experience?: string | null;
+  education?: string | null;
   created_at: string;
   updated_at: string;
 }

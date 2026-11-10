@@ -79,6 +79,7 @@ export default async function JobsPage({
         <option value="">全部来源</option>
         <option value="manual">手动添加</option>
         <option value="extension">浏览器扩展</option>
+        <option value="zhipin">BOSS 直聘采集</option>
       </select>
       <select name="analysis_status" defaultValue={analysisStatus || ""} className="rounded-xl border border-[#dfe5dd] px-3 py-2.5 text-sm">
         <option value="">全部状态</option>

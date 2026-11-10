@@ -20,6 +20,9 @@ export default async function JobDetailPage({ params }: { params: Promise<{ id: 
   const analyses = await api.getAnalyses();
   const analysis: Analysis | undefined = latestAnalysesByJob(analyses).get(job.id);
   const company = job.company || "未填写公司";
+  const listingFacts = [job.salary, job.location, job.experience, job.education]
+    .filter(Boolean)
+    .join(" · ");
   const accent = (job.company ? company : job.title).slice(0, 2);
 
   return <AppShell><div className="animate-rise pb-20 lg:pb-0">
@@ -34,6 +37,7 @@ export default async function JobDetailPage({ params }: { params: Promise<{ id: 
           <div>
             <h1 className="text-2xl font-semibold tracking-[-.04em]">{job.title}</h1>
             <p className="mt-2 text-sm text-[#6f7975]">{company} · 来源：{job.source_type}</p>
+            {listingFacts && <p className="mt-1 text-sm font-semibold text-[#315d4f]">{listingFacts}</p>}
             {job.source_url && <a href={job.source_url} target="_blank" rel="noreferrer" className="mt-2 inline-flex text-xs font-bold text-[#315d4f]">
               查看原始岗位 <Icon name="arrow" className="ml-1 h-3.5 w-3.5" />
             </a>}
