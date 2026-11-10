@@ -2,8 +2,8 @@
 
 from __future__ import annotations
 
-import json
 import hashlib
+import json
 import ntpath
 import os
 import re
@@ -12,8 +12,9 @@ import subprocess
 import sys
 import tempfile
 import urllib.request
+from collections.abc import Callable
 from pathlib import Path
-from typing import BinaryIO, Callable
+from typing import BinaryIO
 
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
 START_SCRIPT = PROJECT_ROOT / "scripts" / "start_backend.ps1"
@@ -348,7 +349,7 @@ def main() -> int:
         response = handle_message(read_message(sys.stdin.buffer))
     except NativeMessageError as exc:
         response = {"ok": False, "state": "error", "message": str(exc)}
-    except Exception:  # Never expose an internal traceback to the extension.
+    except Exception:  # noqa: BLE001 - last-resort reply; never expose a traceback.
         response = {"ok": False, "state": "error", "message": "本地连接组件发生安全错误"}
     write_message(sys.stdout.buffer, response)
     return 0
