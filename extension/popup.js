@@ -46,6 +46,12 @@ let localServiceState = "unknown";
 let nativeHostInstalled = null;
 let lastReadUrl = null;
 let followTimer;
+let readInProgress = false;
+// What the page looked like at the last read, and a change seen once but not
+// yet confirmed (the page may still be rendering).
+let lastPageFingerprint = null;
+let pendingPageFingerprint = null;
+const PAGE_POLL_INTERVAL = 1500;
 
 const HEALTH_URL = "http://127.0.0.1:8000/health";
 const NATIVE_INSTALL_MESSAGE =
@@ -570,7 +576,14 @@ function setReadSource(source, successful) {
   readSource.textContent = labels[source] || (successful ? "页面内容" : "读取失败");
 }
 
+// Digits and spacing are left out so ticking timers or counters on the page
+// do not look like a new job.
+function pageFingerprint(page) {
+  return page ? `${page.url}|${page.title}|${String(page.text).replace(/[\d\s]/g, "")}` : null;
+}
+
 async function readCurrentJob({ automatic = false } = {}) {
+  readInProgress = true;
   readJobButton.disabled = true;
   showStatus("正在读取当前网页……", "loading");
 
@@ -584,6 +597,7 @@ async function readCurrentJob({ automatic = false } = {}) {
     });
     let page = injectionResults[0]?.result;
     if (!page) throw new Error("The page did not return readable content");
+    lastPageFingerprint = pageFingerprint(page);
 
     currentListing = null;
     onListingSite = LISTING_URL_PATTERN.test(page.url || "");
@@ -655,6 +669,7 @@ async function readCurrentJob({ automatic = false } = {}) {
       "error",
     );
   } finally {
+    readInProgress = false;
     readJobButton.disabled = false;
     showGreeting();
   }
@@ -807,6 +822,41 @@ function followActiveTab() {
   chrome.runtime.onMessage?.addListener((message, sender) => {
     if (message?.type === "listing-changed" && sender.tab?.active) refresh();
   });
+  // Job sites change the selected job without loading a new page and their
+  // markup changes over time, so also watch the page content itself: when the
+  // job text on screen changes and stays changed, read it again.
+  setInterval(() => pollPageChange().catch(() => {}), PAGE_POLL_INTERVAL);
+}
+
+async function pollPageChange() {
+  if (
+    readInProgress ||
+    analysisInProgress ||
+    saveInProgress ||
+    lastPageFingerprint === null ||
+    document.visibilityState === "hidden"
+  ) {
+    return;
+  }
+  const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
+  if (!tab?.id) return;
+  const [{ result: page } = {}] = await chrome.scripting.executeScript({
+    target: { tabId: tab.id },
+    func: extractJobContent,
+  });
+  // Selecting text to copy it must not replace the JD.
+  if (!page || page.source === "selection") return;
+  const fingerprint = pageFingerprint(page);
+  if (fingerprint === lastPageFingerprint) {
+    pendingPageFingerprint = null;
+    return;
+  }
+  if (fingerprint !== pendingPageFingerprint) {
+    pendingPageFingerprint = fingerprint;
+    return;
+  }
+  pendingPageFingerprint = null;
+  await readCurrentJob({ automatic: true });
 }
 
 serviceControlButton.addEventListener("click", async (event) => {
