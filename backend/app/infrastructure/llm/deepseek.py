@@ -87,6 +87,7 @@ Rules:
 - Never infer a target role, skill, credential, employer, duration, or achievement.
 - Every non-null field and every skill must cite evidence from the supplied chunks.
 - Copy each evidence excerpt verbatim from the cited chunk.
+- Keep each excerpt short: the shortest verbatim span that contains the value.
 - Name evidence may only use General, Contact, 个人信息, or 基本信息 sections.
 - Target-role evidence may only use Objective or 求职意向 sections.
 - Summary evidence may only use Summary, Profile, About, or 个人简介 sections.
@@ -285,14 +286,14 @@ class DeepSeekProvider:
     ) -> str:
         api_key, base_url, model = _read_config(self.env_file)
         client_factory = self.client_factory or OpenAI
-        client = client_factory(api_key=api_key, base_url=base_url, timeout=30.0, max_retries=1)
+        client = client_factory(api_key=api_key, base_url=base_url, timeout=90.0, max_retries=1)
         try:
             response = client.chat.completions.create(
                 model=model,
                 messages=build_profile_draft_messages(resume_chunks),
                 response_format={"type": "json_object"},
                 temperature=0.0,
-                max_tokens=1000,
+                max_tokens=4000,
             )
             return response.choices[0].message.content or ""
         except APITimeoutError as exc:

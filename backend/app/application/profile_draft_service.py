@@ -83,6 +83,17 @@ PROFILE_INSTRUCTION_PATTERNS = tuple(
 NAME_EVIDENCE_SECTIONS = frozenset({"general", "contact", "个人信息", "基本信息"})
 TARGET_ROLE_EVIDENCE_SECTIONS = frozenset({"objective", "求职意向"})
 SUMMARY_EVIDENCE_SECTIONS = frozenset({"summary", "profile", "about", "个人简介"})
+# Sections that only list the candidate's own skills, where a plain list line
+# ("后端：Python、FastAPI") is a skill claim without a "熟悉/掌握" verb.
+DEDICATED_SKILL_SECTIONS = frozenset({"skills", "专业技能", "技能"})
+# A resume header puts the name, then the target role, on its own line at the
+# top of the document before any section heading.
+RESUME_HEADER_SECTIONS = frozenset({"general"})
+RESUME_HEADER_LINES = 3
+CJK_TEXT = re.compile(r"[一-鿿]")
+# Three lowercase English words in a row read as an English sentence, which
+# only the action/object parser may accept; tech names (FastAPI, pytest) pass.
+ENGLISH_PHRASE = re.compile(r"\b[a-z]+\s+[a-z]+\s+[a-z]+\b")
 SKILL_EVIDENCE_SECTIONS = frozenset(
     {
         "skills",
@@ -272,6 +283,49 @@ CONTROLLED_SKILLS = {
     "aws": "AWS",
     "machine learning": "Machine Learning",
     "natural language processing": "Natural Language Processing",
+    "java": "Java",
+    "go": "Go",
+    "golang": "Go",
+    "c++": "C++",
+    "javascript": "JavaScript",
+    "typescript": "TypeScript",
+    "node.js": "Node.js",
+    "vue": "Vue",
+    "next.js": "Next.js",
+    "flask": "Flask",
+    "django": "Django",
+    "spring boot": "Spring Boot",
+    "sql": "SQL",
+    "mysql": "MySQL",
+    "redis": "Redis",
+    "mongodb": "MongoDB",
+    "sqlalchemy": "SQLAlchemy",
+    "alembic": "Alembic",
+    "pgvector": "pgvector",
+    "elasticsearch": "Elasticsearch",
+    "rest api": "REST API",
+    "git": "Git",
+    "linux": "Linux",
+    "nginx": "Nginx",
+    "docker compose": "Docker Compose",
+    "ci/cd": "CI/CD",
+    "pytest": "pytest",
+    "pandas": "Pandas",
+    "numpy": "NumPy",
+    "scikit-learn": "scikit-learn",
+    "tensorflow": "TensorFlow",
+    "spark": "Spark",
+    "hadoop": "Hadoop",
+    "deep learning": "Deep Learning",
+    "llm": "LLM",
+    "llm api": "LLM API",
+    "prompt engineering": "Prompt Engineering",
+    "embedding": "Embedding",
+    "langgraph": "LangGraph",
+    "llamaindex": "LlamaIndex",
+    "agent": "Agent",
+    "agent workflow": "Agent Workflow",
+    "mcp": "MCP",
 }
 
 NAME_NON_NAME_TERMS = frozenset(CONTROLLED_SKILLS) | frozenset(
@@ -288,7 +342,7 @@ ROLE_HEADS = frozenset(
         "engineer", "developer", "manager", "analyst", "designer", "architect",
         "consultant", "scientist", "specialist", "administrator", "director",
         "工程师", "开发工程师", "经理", "分析师", "设计师", "架构师", "顾问",
-        "科学家", "专家", "管理员", "总监",
+        "科学家", "专家", "管理员", "总监", "intern", "实习生",
     }
 )
 
@@ -300,6 +354,7 @@ ROLE_MODIFIERS = frozenset(
         "staff", "principal", "lead", "mobile", "web", "qa", "test", "database",
         "systems", "site", "reliability", "solutions", "后端", "前端", "全栈",
         "软件", "平台", "数据", "机器学习", "人工智能", "云", "安全", "产品",
+        "开发", "研发", "算法", "测试", "运维", "应用", "大模型", "ai", "llm",
         "项目", "高级", "初级", "资深", "移动端", "测试", "数据库", "系统",
     }
 )
@@ -420,21 +475,38 @@ def _validated_name(value: str) -> str | None:
     return normalized
 
 
+def _is_role_modifier_run(text: str) -> bool:
+    """True when text is one or more known role modifiers written together."""
+    if not text:
+        return True
+    return any(
+        text.startswith(modifier) and _is_role_modifier_run(text[len(modifier) :])
+        for modifier in ROLE_MODIFIERS
+    )
+
+
 def _validated_target_role(value: str) -> str | None:
     normalized = re.sub(r"\s+", " ", unicodedata.normalize("NFKC", value)).strip()
-    tokens = normalized.split()
+    # "AI应用开发工程师": check the Latin and Chinese parts as separate words.
+    tokens = re.sub(r"(?<=[A-Za-z])(?=[㐀-鿿])", " ", normalized).split()
     if not normalized or len(tokens) > 5:
         return None
     if len(tokens) == 1 and re.fullmatch(r"[\u3400-\u9fff]+", normalized):
         for head in sorted(ROLE_HEADS, key=len, reverse=True):
             if normalized.endswith(head):
                 modifier = normalized[: -len(head)]
-                if not modifier or modifier in ROLE_MODIFIERS:
+                if not modifier or _is_role_modifier_run(modifier):
                     return normalized
         return None
     folded = [token.casefold() for token in tokens]
-    if folded[-1] not in ROLE_HEADS or any(
-        modifier not in ROLE_MODIFIERS for modifier in folded[:-1]
+    last_is_role = folded[-1] in ROLE_HEADS or (
+        re.fullmatch(r"[㐀-鿿]+", folded[-1]) is not None
+        and _validated_target_role(folded[-1]) is not None
+    )
+    # "Python 后端开发实习生": a known skill may lead a role name.
+    if not last_is_role or any(
+        modifier not in ROLE_MODIFIERS and modifier not in CONTROLLED_SKILLS
+        for modifier in folded[:-1]
     ):
         return None
     return normalized
@@ -626,6 +698,28 @@ def _name_evidence_has_candidate_context(
     )
 
 
+def _header_line_index(
+    value: str,
+    evidence: ProfileDraftEvidence,
+    chunks_by_id: dict[uuid.UUID, DocumentChunk],
+) -> int | None:
+    """Position of a header line that is exactly ``value``, counted from the top."""
+    chunk = chunks_by_id[uuid.UUID(evidence.chunk_id)]
+    if _normalized_text(chunk.section) not in RESUME_HEADER_SECTIONS:
+        return None
+    lines = [line.strip() for line in chunk.content.splitlines() if line.strip()]
+    target = _normalized_text(value)
+    for index, line in enumerate(lines):
+        if _normalized_text(line) != target or _is_instruction_line(line):
+            continue
+        # One line per chunk (PDF parsing) counts chunks; otherwise lines.
+        position = chunk.chunk_index if len(lines) == 1 else index
+        if chunk.chunk_index != 0 and len(lines) != 1:
+            return None
+        return position
+    return None
+
+
 def _target_role_evidence_has_goal_context(
     target_role: str,
     evidence: ProfileDraftEvidence,
@@ -651,6 +745,32 @@ def _target_role_evidence_has_goal_context(
         )
         for index, field_line in matching_fields
     )
+
+
+def _verbatim_summary_segments(
+    evidence: ProfileDraftEvidence,
+) -> list[tuple[ProfileDraftEvidence, str]]:
+    """Keep a short self-description sentence as written, when it is plainly safe.
+
+    Chinese resumes describe the candidate in full sentences that the English
+    action/object parser cannot read; those are kept verbatim instead.
+    """
+    lines = [line.strip() for line in evidence.excerpt.splitlines() if line.strip()]
+    if not lines or len(evidence.excerpt) > 400:
+        return []
+    if any(
+        not CJK_TEXT.search(line)
+        or ENGLISH_PHRASE.search(line)
+        or _is_instruction_line(line)
+        or _is_untrusted_summary_line(line)
+        or redact_sensitive_text(line) != line
+        for line in lines
+    ):
+        return []
+    return [
+        (ProfileDraftEvidence(chunk_id=evidence.chunk_id, excerpt=line), line)
+        for line in lines
+    ]
 
 
 def _summary_evidence_segments(
@@ -708,8 +828,15 @@ def _ground_draft(
         and _evidence_has_safe_context(
             draft.name.evidence, chunks_by_id, draft.name.value
         )
-        and _name_evidence_has_candidate_context(
-            draft.name.value, draft.name.evidence, chunks_by_id
+        and (
+            _name_evidence_has_candidate_context(
+                draft.name.value, draft.name.evidence, chunks_by_id
+            )
+            or (
+                not _has_rejected_name_context(draft.name.evidence.excerpt)
+                and _header_line_index(draft.name.value, draft.name.evidence, chunks_by_id)
+                == 0
+            )
         )
     ):
         value = _safe_scalar_value(draft.name.value, draft.name.evidence)
@@ -719,20 +846,30 @@ def _ground_draft(
                 grounded_name = draft.name.model_copy(update={"value": validated_name})
 
     grounded_role: ProfileDraftTargetRole | None = None
+    header_role_index = (
+        _header_line_index(draft.target_role.value, draft.target_role.evidence, chunks_by_id)
+        if draft.target_role is not None
+        else None
+    )
     if (
         draft.target_role is not None
-        and _evidence_section_allowed(
-            draft.target_role.evidence,
-            chunks_by_id,
-            TARGET_ROLE_EVIDENCE_SECTIONS,
-        )
         and _evidence_has_safe_context(
             draft.target_role.evidence, chunks_by_id, draft.target_role.value
         )
-        and _target_role_evidence_has_goal_context(
-            draft.target_role.value,
-            draft.target_role.evidence,
-            chunks_by_id,
+        and (
+            (
+                _evidence_section_allowed(
+                    draft.target_role.evidence,
+                    chunks_by_id,
+                    TARGET_ROLE_EVIDENCE_SECTIONS,
+                )
+                and _target_role_evidence_has_goal_context(
+                    draft.target_role.value,
+                    draft.target_role.evidence,
+                    chunks_by_id,
+                )
+            )
+            or (header_role_index is not None and 0 < header_role_index < RESUME_HEADER_LINES)
         )
     ):
         value = _safe_scalar_value(draft.target_role.value, draft.target_role.evidence)
@@ -750,10 +887,13 @@ def _ground_draft(
         summary_length = 0
         for evidence in draft.summary.evidence:
             if not _evidence_section_allowed(
-                evidence, chunks_by_id, SUMMARY_EVIDENCE_SECTIONS
+                evidence, chunks_by_id, SUMMARY_EVIDENCE_SECTIONS | RESUME_HEADER_SECTIONS
             ):
                 continue
-            for safe_segment, generated_fact in _summary_evidence_segments(evidence):
+            segments = _summary_evidence_segments(evidence) or _verbatim_summary_segments(
+                evidence
+            )
+            for safe_segment, generated_fact in segments:
                 separator_length = 1 if safe_evidence else 0
                 if summary_length + separator_length + len(generated_fact) > 4000:
                     break
@@ -789,7 +929,14 @@ def _ground_draft(
             if not _is_instruction_line(context)
             and not _is_negated_skill_line(context)
             and not _is_skill_requirement_line(context)
-            and _is_candidate_skill_context(context)
+            and (
+                _is_candidate_skill_context(context)
+                or (
+                    _normalized_text(chunk.section) in DEDICATED_SKILL_SECTIONS
+                    and not _has_non_candidate_skill_owner(context)
+                    and not _is_untrusted_summary_line(context)
+                )
+            )
         ]
         if (
             not value
