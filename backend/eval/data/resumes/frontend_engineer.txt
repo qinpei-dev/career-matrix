@@ -1,0 +1,39 @@
+Contact
+
+Wei Zhang, Shenzhen, open to remote work.
+
+Summary
+
+Frontend engineer with 4 years of experience building data-heavy dashboards and internal tools for B2B products.
+
+Skills
+
+Proficient in TypeScript and React, with production experience in the Next.js App Router and server components.
+
+Comfortable with state management using Zustand and TanStack Query, including cache invalidation and optimistic updates.
+
+Styling with Tailwind CSS and CSS Modules; built an accessible component library following WAI-ARIA practices.
+
+Testing with Vitest, React Testing Library and Playwright for end-to-end flows.
+
+Familiar with Node.js and Express for writing BFF layers, and with REST and GraphQL API integration.
+
+Experience
+
+2024.01 - present, Senior Frontend Engineer at Lumen Analytics. Led the migration of a legacy dashboard from Create React App to Next.js, cutting first contentful paint from 3.1s to 1.2s.
+
+2021.07 - 2023.12, Frontend Engineer at Pixelworks Studio. Built a drag-and-drop report builder and maintained the shared design system used by 5 product teams.
+
+Projects
+
+Realtime monitoring board: rendered 50k-point time series with ECharts and WebSocket streaming, using virtualization to keep scrolling at 60fps.
+
+Browser extension for page capture: a Manifest V3 extension with content scripts and a background service worker that extracts article text and sends it to a backend API.
+
+Education
+
+2017.09 - 2021.06, Shenzhen University, B.Eng. in Software Engineering.
+
+Languages
+
+Mandarin (native), English (fluent, IELTS 7.5).
