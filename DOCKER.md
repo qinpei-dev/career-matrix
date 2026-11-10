@@ -6,7 +6,7 @@
 
 | Service | 容器端口 | 宿主机地址 | 持久化 / 依赖 |
 | --- | --- | --- | --- |
-| `postgres` | `5432` | `127.0.0.1:${POSTGRES_PORT:-5432}` | `postgres_data` named volume |
+| `postgres` | `5432` | `127.0.0.1:${POSTGRES_PORT:-5432}` | 项目目录 `data/postgres`（bind mount） |
 | `backend` | `8000` | <http://localhost:8000> | 等待 PostgreSQL healthy |
 | `frontend` | `3000` | <http://localhost:3000> | 等待 Backend healthy |
 
@@ -148,11 +148,11 @@ docker compose up -d frontend
 docker compose down
 ```
 
-该命令删除容器和 Compose network，但保留 `postgres_data` named volume。下次启动仍可读取本地数据。
+该命令删除容器和 Compose network，数据库文件保存在项目目录 `data/postgres`（上传的文档在 `data/documents`），不受影响，下次启动仍可读取本地数据。`data/` 已加入 `.gitignore`。
 
 ### 重置本地数据
 
-`docker compose down -v` 会删除数据库卷及其中数据。该操作不可由普通停止流程恢复；仅在确认数据不再需要或已备份时手动执行。
+删除 `data/postgres` 目录会清空数据库，且无法由普通停止流程恢复；仅在确认数据不再需要或已备份时手动执行。
 
 ## 排障
 

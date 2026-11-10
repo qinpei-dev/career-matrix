@@ -41,7 +41,7 @@
 stop_demo.bat
 ```
 
-说明容器和 network 会删除，但 `aijobcopilot_postgres_data` 保留，因此下次启动仍有 Demo 数据。
+说明容器和 network 会删除，但项目目录 `data/postgres` 中的数据库文件保留，因此下次启动仍有 Demo 数据。
 
 ## 失败兜底
 

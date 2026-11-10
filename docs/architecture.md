@@ -15,7 +15,7 @@ flowchart TB
         Frontend["frontend<br/>Next.js :3000"]
         Backend["backend<br/>FastAPI :8000"]
         Postgres[("postgres<br/>PostgreSQL 16 + pgvector")]
-        Volume[("postgres_data<br/>named volume")]
+        Volume[("data/postgres<br/>bind mount")]
     end
 
     subgraph Intelligence["Application Pipeline"]
@@ -115,7 +115,7 @@ Compose 不自动执行 migration。命令行用户显式运行 Alembic；`start
 
 - `.env` 与 `.env.docker` 被 Git 和 Docker build context 排除。
 - Provider API Key 只进入 Backend 运行环境，不写入 Frontend、Extension 或镜像层。Demo Auth Token 会经 `NEXT_PUBLIC_*` 进入前端 bundle；扩展用户需要在弹窗输入相同的本地 Demo Token，当前弹窗关闭后清除。
-- PostgreSQL 使用 named volume 持久化；`docker compose down` 不删除数据。
+- PostgreSQL 数据保存在项目目录 `data/postgres`（bind mount）；`docker compose down` 不删除数据。
 - PostgreSQL 宿主机端口仅绑定 `127.0.0.1`。
 - Backend 与 Frontend 使用非开发启动命令；两个服务都有 healthcheck。
 - Extension / Native Host 只负责浏览器采集与本地控制，不承担 RAG、Agent 或评分职责。

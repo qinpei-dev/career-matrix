@@ -8,7 +8,8 @@ services:
     ports:
       - "127.0.0.1:${POSTGRES_PORT:-5432}:5432"
     volumes:
-      - postgres_data:/var/lib/postgresql/data
+      # Kept inside the project folder (data/ is git-ignored).
+      - ./data/postgres:/var/lib/postgresql/data
     healthcheck:
       test:
         - CMD-SHELL
@@ -30,6 +31,8 @@ services:
     environment:
       DATABASE_URL: postgresql+psycopg://${POSTGRES_USER:-ai_job_copilot}:${POSTGRES_PASSWORD:-change-me}@postgres:5432/ai_job_copilot
       DOCUMENT_STORAGE_PATH: /app/data/documents
+    volumes:
+      - ./data/documents:/app/data/documents
     ports:
       - "8000:8000"
     depends_on:
@@ -70,6 +73,3 @@ services:
       timeout: 3s
       retries: 12
       start_period: 10s
-
-volumes:
-  postgres_data:

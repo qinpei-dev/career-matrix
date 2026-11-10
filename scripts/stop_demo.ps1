@@ -3,11 +3,7 @@ $projectRoot = Split-Path -Parent $PSScriptRoot
 Set-Location -LiteralPath $projectRoot
 
 try {
-    $composeConfig = docker compose config --format json | ConvertFrom-Json
-    if ($LASTEXITCODE -ne 0) {
-        throw "Unable to resolve the Compose volume name."
-    }
-    $volumeName = $composeConfig.volumes.postgres_data.name
+    $dataDirectory = Join-Path $projectRoot "data\postgres"
 
     Write-Host "==> Stop Docker Compose services" -ForegroundColor Cyan
     docker compose down
@@ -15,12 +11,11 @@ try {
         throw "docker compose down failed with exit code $LASTEXITCODE."
     }
 
-    docker volume inspect $volumeName *> $null
-    if ($LASTEXITCODE -eq 0) {
-        Write-Host "==> Containers removed; $volumeName is preserved." -ForegroundColor Green
+    if (Test-Path -LiteralPath (Join-Path $dataDirectory "PG_VERSION")) {
+        Write-Host "==> Containers removed; database files in data\postgres are preserved." -ForegroundColor Green
     }
     else {
-        Write-Host "==> Containers removed; the local data volume does not exist yet." -ForegroundColor Yellow
+        Write-Host "==> Containers removed; the local database folder does not exist yet." -ForegroundColor Yellow
     }
 }
 catch {

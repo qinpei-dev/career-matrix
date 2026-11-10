@@ -36,3 +36,6 @@ native_host/host_manifest.json
 
 # Retrieval eval outputs
 /eval-*.json
+
+# Local database files, uploaded documents and backups
+/data/
