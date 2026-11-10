@@ -30,9 +30,7 @@ html {
 }
 
 body {
-  width: 440px;
   max-width: 100%;
-  max-height: 720px;
   margin: 0;
   overflow-x: hidden;
   overflow-y: auto;

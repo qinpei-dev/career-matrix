@@ -1,3 +1,7 @@
+// Clicking the toolbar icon (or Alt+J) opens a side panel that stays open while
+// the user browses, instead of a popup that closes on every page click.
+chrome.sidePanel?.setPanelBehavior({ openPanelOnActionClick: true }).catch(() => {});
+
 const NATIVE_HOST_NAME = "com.ai_job_copilot.service_control";
 const ALLOWED_ACTIONS = new Set(["status", "start", "stop"]);
 

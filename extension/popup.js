@@ -36,6 +36,8 @@ let serviceControlInProgress = false;
 let copyFeedbackTimer;
 let localServiceState = "unknown";
 let nativeHostInstalled = null;
+let lastReadUrl = null;
+let followTimer;
 
 const HEALTH_URL = "http://127.0.0.1:8000/health";
 const NATIVE_INSTALL_MESSAGE =
@@ -567,6 +569,15 @@ async function readCurrentJob({ automatic = false } = {}) {
       score: page.debug?.score ?? null,
       textLength: page.debug?.textLength ?? page.text.length,
     });
+    if (page.url !== lastReadUrl) {
+      // Another job: drop the previous job's edits and analysis.
+      if (lastReadUrl !== null) {
+        jobDescriptionEdited = false;
+        generatedGreeting = "";
+        analysisResult.hidden = true;
+      }
+      lastReadUrl = page.url;
+    }
     pageTitle.textContent = page.title || "未获取到页面标题";
     pageUrl.textContent = page.url || "未获取到页面 URL";
     pageUrl.title = page.url || "";
@@ -595,7 +606,12 @@ async function readCurrentJob({ automatic = false } = {}) {
   } catch (error) {
     console.error("Reading the active page failed:", error);
     setReadSource("", false);
-    showStatus("无法读取当前网页，请确认页面允许扩展访问后重试", "error");
+    showStatus(
+      automatic
+        ? "当前页面无法自动读取，可点击工具栏图标后再点“读取当前岗位”"
+        : "无法读取当前网页，请确认页面允许扩展访问后重试",
+      "error",
+    );
   } finally {
     readJobButton.disabled = false;
     showGreeting();
@@ -649,6 +665,27 @@ saveAndAnalyzeButton.addEventListener("click", () => saveCurrentJob({ analyze: t
 readJobButton.addEventListener("click", () => readCurrentJob());
 readCurrentJob({ automatic: true });
 detectServiceStatus();
+followActiveTab();
+
+// The side panel stays open while the user browses: re-read the page whenever
+// they switch tabs, load another page, or open another job on a job site.
+function followActiveTab() {
+  if (!chrome.tabs?.onActivated) return;
+  const refresh = () => {
+    clearTimeout(followTimer);
+    followTimer = setTimeout(() => {
+      if (analysisInProgress || saveInProgress) return;
+      readCurrentJob({ automatic: true });
+    }, 300);
+  };
+  chrome.tabs.onActivated.addListener(refresh);
+  chrome.tabs.onUpdated.addListener((_tabId, changeInfo, tab) => {
+    if (tab.active && changeInfo.status === "complete") refresh();
+  });
+  chrome.runtime.onMessage?.addListener((message, sender) => {
+    if (message?.type === "listing-changed" && sender.tab?.active) refresh();
+  });
+}
 
 serviceControlButton.addEventListener("click", async (event) => {
   event.preventDefault();

@@ -177,7 +177,7 @@ assert.ok(securityPage.text.includes("自动发送招聘消息"));
 assert.ok(!/<script[\s>]/i.test(securityFixture));
 assert.ok(!/\b(fetch|XMLHttpRequest|WebSocket)\s*\(/.test(securityFixture));
 
-assert.deepStrictEqual(manifest.permissions, ["activeTab", "scripting", "nativeMessaging", "storage"]);
+assert.deepStrictEqual(manifest.permissions, ["activeTab", "scripting", "nativeMessaging", "storage", "sidePanel"]);
 // The only always-on content script is the opt-in job capture for one job site.
 assert.deepStrictEqual(manifest.content_scripts, [
   { matches: ["https://www.zhipin.com/*"], js: ["boss.js"], run_at: "document_idle" },

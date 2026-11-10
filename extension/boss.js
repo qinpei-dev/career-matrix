@@ -104,7 +104,17 @@ if (
   location.hostname === "www.zhipin.com"
 ) {
   let lastReportedUrl = null;
+  let lastSeenUrl = null;
   let timer = null;
+
+  // Tell the side panel (if open) that the user opened another job, so it can
+  // re-read the page. Sent regardless of auto capture; carries no page data.
+  const notifyChange = () => {
+    const job = extractBossJob();
+    if (!job || job.source_url === lastSeenUrl) return;
+    lastSeenUrl = job.source_url;
+    chrome.runtime.sendMessage({ type: "listing-changed" }).catch(() => {});
+  };
 
   const report = async () => {
     const { bossAutoCapture } = await chrome.storage.local.get({ bossAutoCapture: false });
@@ -120,7 +130,10 @@ if (
   const schedule = () => {
     clearTimeout(timer);
     // Wait for the detail panel to settle after the user opens another job.
-    timer = setTimeout(() => report().catch(() => {}), 1200);
+    timer = setTimeout(() => {
+      notifyChange();
+      report().catch(() => {});
+    }, 1200);
   };
 
   new MutationObserver(schedule).observe(document.documentElement, {
