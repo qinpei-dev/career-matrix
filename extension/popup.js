@@ -4,6 +4,7 @@ const analyzeJobButton = document.querySelector("#analyze-job");
 const saveJobButton = document.querySelector("#save-job");
 const saveAndAnalyzeButton = document.querySelector("#save-and-analyze");
 const demoToken = document.querySelector("#demo-token");
+const demoTokenHelp = document.querySelector("#demo-token-help");
 const analyzeLabel = document.querySelector("#analyze-label");
 const analyzeSpinner = document.querySelector("#analyze-spinner");
 const backendStatus = document.querySelector("#backend-status");
@@ -309,8 +310,14 @@ async function loadDemoTokenFromProject() {
       resolve(chrome.runtime.lastError ? null : reply);
     });
   });
-  if (!response?.ok) return "";
+  if (!response?.ok) {
+    demoTokenHelp.textContent = `未能自动读取 Token：${response?.error || "后台无响应"}。可手动填写。`;
+    demoTokenHelp.className = "field-help status-warning";
+    return "";
+  }
   const { demoToken: token } = await extensionStorage.get({ demoToken: "" });
+  demoTokenHelp.textContent = "已自动从项目 .env 读取 Token。";
+  demoTokenHelp.className = "field-help";
   return token;
 }
 
@@ -343,6 +350,7 @@ async function saveAutoCaptureSettings() {
     showAutoCaptureStatus(0);
     return;
   }
+  if (!demoToken.value.trim()) demoToken.value = await loadDemoTokenFromProject();
   try {
     demoAuthorizationHeaders();
   } catch {

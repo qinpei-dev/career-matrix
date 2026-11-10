@@ -52,9 +52,11 @@ chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
 chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
   if (message?.type !== "load-demo-token" || sender.id !== chrome.runtime.id) return false;
   chrome.runtime.sendNativeMessage(NATIVE_HOST_NAME, { action: "demo_token" }, async (response) => {
-    const token = chrome.runtime.lastError ? null : response?.token;
+    const nativeError = chrome.runtime.lastError?.message;
+    const token = nativeError ? null : response?.token;
     if (response?.ok !== true || typeof token !== "string" || !token || /\s/.test(token)) {
-      sendResponse({ ok: false });
+      // Reason only (never the token) so the user can see what went wrong.
+      sendResponse({ ok: false, error: nativeError || response?.message || "本地连接组件返回无效结果" });
       return;
     }
     await chrome.storage.local.set({ demoToken: token });
