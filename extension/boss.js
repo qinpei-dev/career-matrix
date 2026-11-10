@@ -104,41 +104,121 @@ if (
   location.hostname === "www.zhipin.com"
 ) {
   let lastReportedUrl = null;
-  let lastSeenUrl = null;
-  let timer = null;
+  let lastNotifiedUrl = null;
+  let seenKey = null;
+  let pendingKey = null;
 
-  // Tell the side panel (if open) that the user opened another job, so it can
-  // re-read the page. Sent regardless of auto capture; carries no page data.
-  const notifyChange = () => {
-    const job = extractBossJob();
-    if (!job || job.source_url === lastSeenUrl) return;
-    lastSeenUrl = job.source_url;
+  // Tell the floating window (if open) that the user opened another job, so
+  // it re-reads the page. Sent regardless of auto capture; carries no data.
+  const notifyChange = (job) => {
+    if (job.source_url === lastNotifiedUrl) return;
+    lastNotifiedUrl = job.source_url;
     chrome.runtime.sendMessage({ type: "listing-changed" }).catch(() => {});
   };
 
-  const report = async () => {
+  const report = async (job) => {
     const { bossAutoCapture } = await chrome.storage.local.get({ bossAutoCapture: false });
-    if (!bossAutoCapture) return;
-    const job = extractBossJob();
-    if (!job || job.truncated || job.source_url === lastReportedUrl) return;
+    if (!bossAutoCapture || job.truncated || job.source_url === lastReportedUrl) return;
     lastReportedUrl = job.source_url;
     chrome.runtime.sendMessage({ type: "boss-job-captured", job }).catch(() => {
       lastReportedUrl = null;
     });
   };
 
-  const schedule = () => {
-    clearTimeout(timer);
-    // Wait for the detail panel to settle after the user opens another job.
-    timer = setTimeout(() => {
-      notifyChange();
-      report().catch(() => {});
-    }, 1200);
-  };
+  // Cheap fingerprint of the job on screen. The site keeps mutating the DOM
+  // (timers, ads), so instead of waiting for it to go quiet we poll and act
+  // once the selected job has stayed the same for two checks in a row.
+  const jobKey = () =>
+    [
+      location.href,
+      document.querySelector(".job-card-wrap.active a.job-name")?.getAttribute("href"),
+      document.querySelector(".job-detail-info .job-name, .job-banner .name h1")?.textContent,
+    ].join("|");
 
-  new MutationObserver(schedule).observe(document.documentElement, {
-    childList: true,
-    subtree: true,
-  });
-  schedule();
+  setInterval(() => {
+    const key = jobKey();
+    if (key === seenKey) return;
+    if (key !== pendingKey) {
+      pendingKey = key;
+      return;
+    }
+    const job = extractBossJob();
+    if (!job) return; // Detail still loading; try again on the next tick.
+    seenKey = key;
+    notifyChange(job);
+    report(job).catch(() => {});
+  }, 700);
+
+  // One-click greeting, second half: the floating window stored the text and
+  // opened the chat. Put it into the chat box and stop; the user presses send.
+  const fillPendingGreeting = async () => {
+    const { pendingGreeting } = await chrome.storage.local.get({ pendingGreeting: null });
+    if (!pendingGreeting) return;
+    if (Date.now() - pendingGreeting.createdAt > 60_000) {
+      chrome.storage.local.remove("pendingGreeting");
+      return;
+    }
+    const input = findChatInput();
+    if (!input) return;
+    chrome.storage.local.remove("pendingGreeting");
+    fillChatInput(input, pendingGreeting.text);
+  };
+  setInterval(() => fillPendingGreeting().catch(() => {}), 800);
+}
+
+function findChatInput(doc = document) {
+  const selectors = [
+    "#chat-input",
+    ".chat-input[contenteditable='true']",
+    ".chat-input textarea",
+    ".chat-editor [contenteditable='true']",
+    ".chat-conversation [contenteditable='true']",
+    ".chat-conversation textarea",
+  ];
+  for (const selector of selectors) {
+    const element = doc.querySelector(selector);
+    if (element) return element;
+  }
+  return null;
+}
+
+// Insert text the way typing would, so the site's own editor notices it.
+// Never presses Enter or clicks send.
+function fillChatInput(input, text) {
+  input.focus();
+  if ("value" in input && input.tagName === "TEXTAREA") {
+    input.value = text;
+    input.dispatchEvent(new Event("input", { bubbles: true }));
+    return;
+  }
+  const selection = window.getSelection();
+  selection.selectAllChildren(input);
+  selection.collapseToEnd();
+  if (!document.execCommand("insertText", false, text)) {
+    input.textContent = text;
+    input.dispatchEvent(new Event("input", { bubbles: true }));
+  }
+}
+
+// One-click greeting, first half: injected by the floating window into the
+// job page. Clicks the site's own chat button that the user would click.
+function openBossChat(doc = document) {
+  const isButton = (element) =>
+    ["立即沟通", "继续沟通"].includes(element.textContent.trim()) &&
+    element.offsetParent !== null;
+  const scope = doc.querySelector(".job-detail-box, .job-banner, .job-detail") || doc;
+  const button = [...scope.querySelectorAll("a, button, .btn")].find(isButton);
+  if (!button) return { ok: false, reason: "no_button" };
+  const text = button.textContent.trim();
+  button.click();
+  return { ok: true, clicked: text };
+}
+
+// After "立即沟通" the site may show a dialog; follow its "继续沟通" link to the chat.
+function clickContinueChat(doc = document) {
+  const button = [...doc.querySelectorAll("a, button, .btn")].find(
+    (element) => element.textContent.trim() === "继续沟通" && element.offsetParent !== null,
+  );
+  button?.click();
+  return Boolean(button);
 }

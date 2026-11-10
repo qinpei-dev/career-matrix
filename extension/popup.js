@@ -27,8 +27,15 @@ const autoAnalyze = document.querySelector("#auto-analyze");
 const autoCaptureStatus = document.querySelector("#auto-capture-status");
 const greetingMode = document.querySelector("#greeting-mode");
 const greetingTemplate = document.querySelector("#greeting-template");
+const greetingCustom = document.querySelector("#greeting-custom");
+const greetingTemplateBox = document.querySelector("#greeting-template-box");
+const greetingCustomBox = document.querySelector("#greeting-custom-box");
+const oneClickGreetButton = document.querySelector("#one-click-greet");
+const profileSource = document.querySelector("#profile-source");
 // Structured fields (company, salary, ...) when the page is a supported job site.
 let currentListing = null;
+// True when the active tab is on the job site, where one-click greeting works.
+let onListingSite = false;
 let generatedGreeting = "";
 let jobDescriptionEdited = false;
 let analysisInProgress = false;
@@ -284,8 +291,12 @@ function currentJobPayload() {
 }
 
 function showGreeting() {
+  greetingTemplateBox.hidden = greetingMode.value !== "fixed";
+  greetingCustomBox.hidden = greetingMode.value !== "custom";
   let text = generatedGreeting;
-  if (greetingMode.value === "fixed") {
+  if (greetingMode.value === "custom") {
+    text = greetingCustom.value.trim();
+  } else if (greetingMode.value === "fixed") {
     text = greetingTemplate.value
       .replaceAll("{岗位}", currentListing?.title || pageTitle.textContent.trim())
       .replaceAll("{公司}", currentListing?.company || "贵公司")
@@ -294,6 +305,7 @@ function showGreeting() {
   greetingTextarea.value = text;
   greetingSection.hidden = !text;
   copyGreetingButton.disabled = !text;
+  oneClickGreetButton.disabled = !text || !onListingSite;
 }
 
 function showAutoCaptureStatus(count) {
@@ -331,6 +343,7 @@ async function loadExtensionSettings() {
     demoToken: "",
     greetingMode: "generated",
     greetingTemplate: DEFAULT_GREETING_TEMPLATE,
+    customGreeting: "",
   });
   autoCapture.checked = settings.bossAutoCapture;
   autoAnalyze.checked = settings.bossAutoAnalyze;
@@ -338,6 +351,7 @@ async function loadExtensionSettings() {
   if (settings.demoToken && !demoToken.value) demoToken.value = settings.demoToken;
   greetingMode.value = settings.greetingMode;
   greetingTemplate.value = settings.greetingTemplate;
+  greetingCustom.value = settings.customGreeting;
   showAutoCaptureStatus(settings.bossCapturedCount);
   showGreeting();
 }
@@ -572,7 +586,8 @@ async function readCurrentJob({ automatic = false } = {}) {
     if (!page) throw new Error("The page did not return readable content");
 
     currentListing = null;
-    if (LISTING_URL_PATTERN.test(page.url || "") && page.source !== "selection") {
+    onListingSite = LISTING_URL_PATTERN.test(page.url || "");
+    if (onListingSite && page.source !== "selection") {
       const listingResults = await chrome.scripting.executeScript({
         target: { tabId: tab.id },
         func: extractBossJob,
@@ -645,6 +660,75 @@ async function readCurrentJob({ automatic = false } = {}) {
   }
 }
 
+function formatProfile(profile) {
+  return [
+    profile.target_role && `目标岗位：${profile.target_role}`,
+    profile.summary,
+    asArray(profile.skills).length && `技能：${asArray(profile.skills).join("、")}`,
+  ]
+    .filter(Boolean)
+    .join("\n");
+}
+
+// Use the candidate profile kept in the web workspace (built from the uploaded
+// resume) instead of the hand-written default text.
+async function syncCandidateProfile() {
+  let headers;
+  try {
+    headers = demoAuthorizationHeaders();
+  } catch {
+    return;
+  }
+  try {
+    const response = await fetch("http://127.0.0.1:8000/api/v1/profiles/me", { headers });
+    if (response.status === 404) {
+      profileSource.textContent = "Web 工作台里还没有候选人资料，可在工作台上传简历生成；暂用下方文字。";
+      return;
+    }
+    if (!response.ok) return;
+    const text = formatProfile(await response.json());
+    if (!text) return;
+    candidateProfile.value = text;
+    profileSource.textContent = "已同步 Web 工作台里的候选人资料（来自你上传的简历）；在这里改动只影响本次分析。";
+  } catch {
+    // Backend not running yet; keep the local text.
+  }
+}
+
+// Open the chat for the job on screen and put the greeting in the chat box.
+// The user reviews it and presses send; nothing is sent from here.
+async function oneClickGreet() {
+  const text = greetingTextarea.value.trim();
+  if (!text || !extensionStorage) return;
+  oneClickGreetButton.disabled = true;
+  try {
+    await navigator.clipboard.writeText(text).catch(() => {});
+    await extensionStorage.set({ pendingGreeting: { text, createdAt: Date.now() } });
+    const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
+    const [{ result } = {}] = await chrome.scripting.executeScript({
+      target: { tabId: tab.id },
+      func: openBossChat,
+    });
+    if (!result?.ok) {
+      await extensionStorage.remove("pendingGreeting");
+      showStatus("没找到“立即沟通”按钮，文案已复制，请手动打开聊天后按 Ctrl+V", "warning");
+      return;
+    }
+    if (result.clicked === "立即沟通") {
+      await wait(1500);
+      await chrome.scripting
+        .executeScript({ target: { tabId: tab.id }, func: clickContinueChat })
+        .catch(() => {});
+    }
+    showStatus("正在打开聊天并填入文案，请检查后自己按发送（文案也已复制，可 Ctrl+V）", "success");
+  } catch (error) {
+    console.error("One-click greeting failed:", error);
+    showStatus("一键打招呼失败，文案已复制，可手动打开聊天后按 Ctrl+V", "error");
+  } finally {
+    showGreeting();
+  }
+}
+
 async function copyGreeting() {
   const text = greetingTextarea.value.trim();
   if (!text) {
@@ -676,6 +760,11 @@ greetingTextarea.addEventListener("input", () => {
   copyGreetingButton.disabled = !greetingTextarea.value.trim();
 });
 copyGreetingButton.addEventListener("click", copyGreeting);
+oneClickGreetButton.addEventListener("click", oneClickGreet);
+greetingCustom.addEventListener("input", () => {
+  extensionStorage?.set({ customGreeting: greetingCustom.value });
+  showGreeting();
+});
 autoCapture.addEventListener("change", saveAutoCaptureSettings);
 // Remember the token in this browser's extension storage so it is typed once.
 demoToken.addEventListener("change", () => {
@@ -692,7 +781,7 @@ greetingTemplate.addEventListener("input", () => {
   extensionStorage?.set({ greetingTemplate: greetingTemplate.value });
   showGreeting();
 });
-loadExtensionSettings();
+loadExtensionSettings().then(syncCandidateProfile);
 saveJobButton.addEventListener("click", () => saveCurrentJob());
 saveAndAnalyzeButton.addEventListener("click", () => saveCurrentJob({ analyze: true }));
 readJobButton.addEventListener("click", () => readCurrentJob());

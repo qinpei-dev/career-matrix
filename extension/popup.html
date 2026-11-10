@@ -104,7 +104,7 @@
         <label id="profile-heading" class="field-title" for="candidate-profile">
           我的技能 / 简历简介
         </label>
-        <p class="field-help">分析结果仅基于此处填写的真实信息，内容保存在本地浏览器。</p>
+        <p id="profile-source" class="field-help">分析结果仅基于此处填写的真实信息，内容保存在本地浏览器。</p>
         <textarea
           id="candidate-profile"
           rows="6"
@@ -185,11 +185,19 @@
         <label id="greeting-settings-heading" class="field-title" for="greeting-mode">打招呼语来源</label>
         <select id="greeting-mode">
           <option value="generated">AI 生成（分析岗位后给出）</option>
-          <option value="fixed">固定模板</option>
+          <option value="fixed">固定模板（自动替换岗位、公司）</option>
+          <option value="custom">自己写（固定一段话）</option>
         </select>
-        <label for="greeting-template">固定模板</label>
-        <textarea id="greeting-template" rows="4" maxlength="2000"></textarea>
-        <p class="field-help">可用占位符：{岗位}、{公司}。文案由你复制后自行发送，扩展不会代发。</p>
+        <div id="greeting-template-box" hidden>
+          <label for="greeting-template">固定模板</label>
+          <textarea id="greeting-template" rows="4" maxlength="2000"></textarea>
+          <p class="field-help">可用占位符：{岗位}、{公司}。</p>
+        </div>
+        <div id="greeting-custom-box" hidden>
+          <label for="greeting-custom">我的打招呼语</label>
+          <textarea id="greeting-custom" rows="4" maxlength="2000" placeholder="写一段你想发给招聘方的话"></textarea>
+        </div>
+        <p class="field-help">“一键打招呼”会在 BOSS 直聘打开聊天并填好文案，最后由你自己检查并按发送，扩展不会代发。</p>
       </section>
 
       <section id="greeting-section" class="card greeting-section" aria-labelledby="greeting-heading" hidden>
@@ -200,6 +208,9 @@
           </div>
           <button id="copy-greeting" class="button button-secondary button-small" type="button">
             复制打招呼文案
+          </button>
+          <button id="one-click-greet" class="button button-primary button-small" type="button" disabled>
+            一键打招呼
           </button>
         </div>
         <label class="visually-hidden" for="analysis-greeting">可编辑的打招呼文案</label>
