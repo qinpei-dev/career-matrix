@@ -5,6 +5,7 @@ const saveJobButton = document.querySelector("#save-job");
 const saveAndAnalyzeButton = document.querySelector("#save-and-analyze");
 const demoToken = document.querySelector("#demo-token");
 const demoTokenHelp = document.querySelector("#demo-token-help");
+const settingsPanel = document.querySelector("#settings-panel");
 const analyzeLabel = document.querySelector("#analyze-label");
 const analyzeSpinner = document.querySelector("#analyze-spinner");
 const backendStatus = document.querySelector("#backend-status");
@@ -331,6 +332,7 @@ async function loadDemoTokenFromProject() {
   if (!response?.ok) {
     demoTokenHelp.textContent = `未能自动读取 Token：${response?.error || "后台无响应"}。可手动填写。`;
     demoTokenHelp.className = "field-help status-warning";
+    settingsPanel.open = true;
     return "";
   }
   const { demoToken: token } = await extensionStorage.get({ demoToken: "" });
@@ -377,8 +379,9 @@ async function saveAutoCaptureSettings() {
     autoCapture.checked = false;
     // Explain right under the checkbox and jump to the token field; the shared
     // status line sits far below and is easy to miss.
-    autoCaptureStatus.textContent = "勾选失败：请先在下方“本地 Demo Token”填写 Token，再勾选";
+    autoCaptureStatus.textContent = "勾选失败：请先在下方“设置”里填写本地 Demo Token，再勾选";
     autoCaptureStatus.className = "field-help status-warning";
+    settingsPanel.open = true;
     demoToken.scrollIntoView?.({ behavior: "smooth", block: "center" });
     demoToken.focus?.();
     showStatus("请先填写有效的本地 Demo Token，再开启自动采集", "warning");

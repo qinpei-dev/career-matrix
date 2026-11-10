@@ -1,23 +1,23 @@
 :root {
   color-scheme: light;
-  font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-  --color-bg: #f4f6f9;
+  font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", "PingFang SC", "Microsoft YaHei UI", sans-serif;
+  --color-bg: #f5f7fa;
   --color-surface: #ffffff;
-  --color-text: #172033;
-  --color-muted: #667085;
-  --color-subtle: #8a94a6;
-  --color-border: #dce2ea;
-  --color-primary: #2457d6;
-  --color-primary-hover: #1c46b3;
-  --color-primary-soft: #edf2ff;
-  --color-success: #147a50;
-  --color-success-soft: #eaf7f0;
-  --color-warning: #98600b;
-  --color-warning-soft: #fff6df;
-  --color-error: #b42318;
-  --color-error-soft: #fff0ee;
-  --shadow-card: 0 1px 2px rgb(16 24 40 / 5%);
-  --radius: 12px;
+  --color-text: #0f172a;
+  --color-muted: #64748b;
+  --color-subtle: #94a3b8;
+  --color-border: #e2e8f0;
+  --color-primary: #2563eb;
+  --color-primary-hover: #1d4ed8;
+  --color-primary-soft: #eff6ff;
+  --color-success: #047857;
+  --color-success-soft: #ecfdf5;
+  --color-warning: #b45309;
+  --color-warning-soft: #fffbeb;
+  --color-error: #b91c1c;
+  --color-error-soft: #fef2f2;
+  --shadow-card: none;
+  --radius: 10px;
   --radius-small: 8px;
 }
 
@@ -646,4 +646,105 @@ summary:focus-visible {
   clip: rect(0, 0, 0, 0);
   white-space: nowrap;
   border: 0;
+}
+
+
+/* Floating-window layout: compact status bar, flat settings groups. */
+.panel {
+  gap: 10px;
+  padding: 12px;
+}
+
+.status-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 2px 2px 0;
+}
+
+.card {
+  padding: 12px;
+}
+
+.card-title {
+  margin: 0;
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.button-ghost {
+  border: 1px solid transparent;
+  color: var(--color-primary);
+  background: transparent;
+  box-shadow: none;
+}
+
+.button-ghost:hover {
+  background: var(--color-primary-soft);
+}
+
+.settings-panel {
+  padding: 0;
+}
+
+.settings-panel > summary {
+  padding: 11px 12px;
+  color: var(--color-muted);
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  list-style: none;
+}
+
+.settings-panel > summary::-webkit-details-marker {
+  display: none;
+}
+
+.settings-panel > summary::before {
+  content: "▸";
+  display: inline-block;
+  width: 14px;
+  transition: transform 0.15s;
+}
+
+.settings-panel[open] > summary::before {
+  transform: rotate(90deg);
+}
+
+.settings-body {
+  display: grid;
+  gap: 0;
+  border-top: 1px solid var(--color-border);
+}
+
+.settings-group {
+  display: grid;
+  gap: 6px;
+  padding: 12px;
+  border: 0;
+  border-bottom: 1px solid #f1f5f9;
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
+}
+
+.settings-group:last-child {
+  border-bottom: 0;
+}
+
+.action-section {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1.4fr;
+  gap: 6px;
+}
+
+.action-section > .button {
+  width: 100%;
+  margin: 0;
+}
+
+.action-section > p {
+  grid-column: 1 / -1;
+  margin: 0;
 }

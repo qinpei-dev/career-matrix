@@ -46,41 +46,43 @@
           max-height: 100vh;
           overflow: hidden;
           resize: both;
-          border: 1px solid #d0d7de;
-          border-radius: 10px;
-          background: #fff;
-          box-shadow: 0 12px 32px rgba(0, 0, 0, 0.22);
+          border: 1px solid #e2e8f0;
+          border-radius: 12px;
+          background: #f5f7fa;
+          box-shadow: 0 1px 3px rgba(15, 23, 42, 0.08), 0 16px 40px rgba(15, 23, 42, 0.16);
           font: 13px/1.4 system-ui, "Microsoft YaHei", sans-serif;
         }
         .bar {
           display: flex;
           align-items: center;
           gap: 8px;
-          padding: 6px 8px 6px 12px;
-          background: #1f2937;
-          color: #fff;
+          padding: 7px 8px 7px 12px;
+          border-bottom: 1px solid #e2e8f0;
+          background: #fff;
+          color: #0f172a;
           cursor: move;
           user-select: none;
           touch-action: none;
         }
-        .title { flex: 1; font-weight: 600; }
+        .title { display: flex; flex: 1; align-items: center; gap: 8px; font-weight: 600; }
+        .logo { width: 18px; height: 18px; border-radius: 5px; background: #2563eb; }
         button {
           border: 0;
           border-radius: 6px;
           padding: 2px 8px;
           background: transparent;
-          color: inherit;
+          color: #64748b;
           font: inherit;
           cursor: pointer;
         }
-        button:hover { background: rgba(255, 255, 255, 0.15); }
-        iframe { flex: 1; width: 100%; border: 0; background: #fff; }
+        button:hover { background: #f1f5f9; color: #0f172a; }
+        iframe { flex: 1; width: 100%; border: 0; background: #f5f7fa; }
         .collapsed { height: auto !important; min-height: 0; resize: none; }
         .collapsed iframe { display: none; }
       </style>
       <div class="window">
         <div class="bar" title="拖动这里移动窗口">
-          <span class="title">CareerMatrix</span>
+          <span class="title"><span class="logo"></span>CareerMatrix</span>
           <button class="collapse" type="button" title="收起 / 展开">—</button>
           <button class="close" type="button" title="关闭">✕</button>
         </div>

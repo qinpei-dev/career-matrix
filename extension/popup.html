@@ -8,68 +8,17 @@
   </head>
   <body>
     <main class="panel">
-      <header class="app-header">
-        <div class="brand-row">
-          <div>
-            <div class="title-row">
-              <h1>CareerMatrix</h1>
-              <span class="badge">CAREER AI</span>
-            </div>
-            <p class="subtitle">AI-Powered Career Intelligence</p>
-          </div>
-          <div id="backend-status" class="backend-status status-idle" aria-live="polite">
-            <span class="status-dot" aria-hidden="true"></span>
-            <span>后端未检查</span>
-          </div>
+      <header class="status-bar">
+        <div id="backend-status" class="backend-status status-idle" aria-live="polite">
+          <span class="status-dot" aria-hidden="true"></span>
+          <span>后端未检查</span>
         </div>
-        <div class="header-actions">
-          <p class="shortcut-hint">打开岗位详情页后按 Alt+J，可自动读取岗位内容</p>
-          <button id="health-check" class="button button-secondary button-small" type="button">
-            检查后端连接
-          </button>
-        </div>
+        <button id="health-check" class="button button-ghost button-small" type="button">检查连接</button>
       </header>
-
-      <section class="card service-section" aria-labelledby="service-heading">
-        <div class="service-row">
-          <div>
-            <p class="eyebrow">本地服务</p>
-            <h2 id="service-heading">FastAPI 后端</h2>
-            <p id="service-status" class="service-status" aria-live="polite">未检测</p>
-          </div>
-          <button id="service-control" class="button button-secondary" type="button" disabled>
-            <span id="service-spinner" class="spinner spinner-dark" aria-hidden="true" hidden></span>
-            <span id="service-control-label">检测中</span>
-          </button>
-        </div>
-        <p id="native-install-hint" class="service-help">
-          首次使用需要运行 <code>install_native_host.bat &lt;扩展ID&gt;</code> 完成一次本地连接安装。
-        </p>
-      </section>
-
-      <section class="card capture-section" aria-labelledby="capture-heading">
-        <p class="eyebrow">自动采集</p>
-        <h2 id="capture-heading">BOSS 直聘网页端</h2>
-        <label class="checkbox-row" for="auto-capture">
-          <input id="auto-capture" type="checkbox">
-          浏览岗位时自动保存到本地
-        </label>
-        <label class="checkbox-row" for="auto-analyze">
-          <input id="auto-analyze" type="checkbox">
-          保存后自动分析匹配度
-        </label>
-        <p id="auto-capture-status" class="field-help" aria-live="polite"></p>
-        <p class="field-help">
-          只读取你已打开的岗位页面，不会替你点击、沟通或投递。需先在下方填写 Demo Token。
-        </p>
-      </section>
 
       <section class="card job-section" aria-labelledby="job-heading">
         <div class="section-heading">
-          <div>
-            <p class="eyebrow">岗位内容</p>
-            <h2 id="job-heading">当前岗位</h2>
-          </div>
+          <h2 id="job-heading" class="card-title">当前岗位</h2>
           <button id="read-job" class="button button-secondary button-small" type="button">
             重新读取岗位
           </button>
@@ -93,30 +42,13 @@
         <label for="job-description">岗位 JD</label>
         <textarea
           id="job-description"
-          rows="9"
+          rows="7"
           maxlength="8000"
           placeholder="打开扩展后会自动读取，也可以在此手动输入或修改。"
         ></textarea>
       </section>
 
-      <section class="card profile-section" aria-labelledby="profile-heading">
-        <p class="eyebrow">候选人资料</p>
-        <label id="profile-heading" class="field-title" for="candidate-profile">
-          我的技能 / 简历简介
-        </label>
-        <p id="profile-source" class="field-help">分析结果仅基于此处填写的真实信息，内容保存在本地浏览器。</p>
-        <textarea
-          id="candidate-profile"
-          rows="6"
-          maxlength="8000"
-          placeholder="请填写真实技能、项目经历、教育背景与工作经历。"
-        ></textarea>
-      </section>
-
       <section class="action-section" aria-label="分析操作">
-        <label for="demo-token">本地 Demo Token</label>
-        <input id="demo-token" type="password" autocomplete="off" spellcheck="false" placeholder="与后端 DEMO_AUTH_TOKENS 配置一致">
-        <p id="demo-token-help" class="field-help">本地后端的访问口令。已安装本地连接组件时会自动从项目 .env 读取并填好；也可手动填写，会记在本机浏览器的扩展存储里。</p>
         <button id="save-job" class="button button-secondary" type="button">保存岗位</button>
         <button id="save-and-analyze" class="button button-secondary" type="button">保存并分析</button>
         <button id="analyze-job" class="button button-primary" type="button">
@@ -180,7 +112,54 @@
         </details>
       </section>
 
-      <section class="card greeting-settings" aria-labelledby="greeting-settings-heading">
+      <section id="greeting-section" class="card greeting-section" aria-labelledby="greeting-heading" hidden>
+        <div class="section-heading">
+          <div>
+            <p class="eyebrow">沟通文案</p>
+            <h2 id="greeting-heading">打招呼文案</h2>
+          </div>
+          <button id="copy-greeting" class="button button-secondary button-small" type="button">
+            复制打招呼文案
+          </button>
+          <button id="one-click-greet" class="button button-primary button-small" type="button" disabled>
+            一键打招呼
+          </button>
+        </div>
+        <label class="visually-hidden" for="analysis-greeting">可编辑的打招呼文案</label>
+        <textarea id="analysis-greeting" rows="6" maxlength="4000"></textarea>
+      </section>
+      <section class="card capture-section" aria-labelledby="capture-heading">
+        <h2 id="capture-heading" class="card-title">BOSS 直聘自动采集</h2>
+        <label class="checkbox-row" for="auto-capture">
+          <input id="auto-capture" type="checkbox">
+          浏览岗位时自动保存到本地
+        </label>
+        <label class="checkbox-row" for="auto-analyze">
+          <input id="auto-analyze" type="checkbox">
+          保存后自动分析匹配度
+        </label>
+        <p id="auto-capture-status" class="field-help" aria-live="polite"></p>
+      </section>
+      <details id="settings-panel" class="card settings-panel">
+        <summary>设置（本地服务、Token、招呼语、候选人资料）</summary>
+        <div class="settings-body">
+      <section class="settings-group service-section" aria-labelledby="service-heading">
+        <div class="service-row">
+          <div>
+            <p class="eyebrow">本地服务</p>
+            <h2 id="service-heading">FastAPI 后端</h2>
+            <p id="service-status" class="service-status" aria-live="polite">未检测</p>
+          </div>
+          <button id="service-control" class="button button-secondary" type="button" disabled>
+            <span id="service-spinner" class="spinner spinner-dark" aria-hidden="true" hidden></span>
+            <span id="service-control-label">检测中</span>
+          </button>
+        </div>
+        <p id="native-install-hint" class="service-help">
+          首次使用需要运行 <code>install_native_host.bat &lt;扩展ID&gt;</code> 完成一次本地连接安装。
+        </p>
+      </section>
+      <section class="settings-group greeting-settings" aria-labelledby="greeting-settings-heading">
         <p class="eyebrow">沟通文案</p>
         <label id="greeting-settings-heading" class="field-title" for="greeting-mode">打招呼语来源</label>
         <select id="greeting-mode">
@@ -199,23 +178,26 @@
         </div>
         <p class="field-help">“一键打招呼”会在 BOSS 直聘打开聊天并填好文案，最后由你自己检查并按发送，扩展不会代发。</p>
       </section>
-
-      <section id="greeting-section" class="card greeting-section" aria-labelledby="greeting-heading" hidden>
-        <div class="section-heading">
-          <div>
-            <p class="eyebrow">沟通文案</p>
-            <h2 id="greeting-heading">打招呼文案</h2>
-          </div>
-          <button id="copy-greeting" class="button button-secondary button-small" type="button">
-            复制打招呼文案
-          </button>
-          <button id="one-click-greet" class="button button-primary button-small" type="button" disabled>
-            一键打招呼
-          </button>
-        </div>
-        <label class="visually-hidden" for="analysis-greeting">可编辑的打招呼文案</label>
-        <textarea id="analysis-greeting" rows="6" maxlength="4000"></textarea>
+      <section class="settings-group profile-section" aria-labelledby="profile-heading">
+        <p class="eyebrow">候选人资料</p>
+        <label id="profile-heading" class="field-title" for="candidate-profile">
+          我的技能 / 简历简介
+        </label>
+        <p id="profile-source" class="field-help">分析结果仅基于此处填写的真实信息，内容保存在本地浏览器。</p>
+        <textarea
+          id="candidate-profile"
+          rows="5"
+          maxlength="8000"
+          placeholder="请填写真实技能、项目经历、教育背景与工作经历。"
+        ></textarea>
       </section>
+          <section class="settings-group" aria-label="Demo Token">
+        <label for="demo-token">本地 Demo Token</label>
+        <input id="demo-token" type="password" autocomplete="off" spellcheck="false" placeholder="与后端 DEMO_AUTH_TOKENS 配置一致">
+        <p id="demo-token-help" class="field-help">本地后端的访问口令。已安装本地连接组件时会自动从项目 .env 读取并填好；也可手动填写，会记在本机浏览器的扩展存储里。</p>
+          </section>
+        </div>
+      </details>
     </main>
     <script src="content.js"></script>
     <script src="boss.js"></script>
