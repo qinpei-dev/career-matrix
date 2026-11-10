@@ -2,7 +2,7 @@
   "manifest_version": 3,
   "name": "CareerMatrix",
   "description": "AI-Powered Career Intelligence & Decision System：采集岗位并提供可解释的职业决策支持。",
-  "version": "0.1.4",
+  "version": "0.1.5",
   "permissions": [
     "activeTab",
     "scripting",

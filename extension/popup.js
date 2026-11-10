@@ -33,6 +33,8 @@ const greetingTemplateBox = document.querySelector("#greeting-template-box");
 const greetingCustomBox = document.querySelector("#greeting-custom-box");
 const oneClickGreetButton = document.querySelector("#one-click-greet");
 const profileSource = document.querySelector("#profile-source");
+const openWorkspaceButton = document.querySelector("#open-workspace");
+const openJobDetailButton = document.querySelector("#open-job-detail");
 // Structured fields (company, salary, ...) when the page is a supported job site.
 let currentListing = null;
 // True when the active tab is on the job site, where one-click greeting works.
@@ -53,6 +55,14 @@ let readInProgress = false;
 let lastPageFingerprint = null;
 let pendingPageFingerprint = null;
 const PAGE_POLL_INTERVAL = 1500;
+const WORKSPACE_URL = "http://localhost:3000";
+const API_BASE = "http://127.0.0.1:8000";
+// Auto capture analyses in the background; check back for the result this
+// often, this many times, while the same job stays on screen.
+const SAVED_RESULT_POLL_INTERVAL = 5000;
+const SAVED_RESULT_POLL_ATTEMPTS = 12;
+let currentJobId = null;
+let savedResultTimer;
 
 const HEALTH_URL = "http://127.0.0.1:8000/health";
 const NATIVE_INSTALL_MESSAGE =
@@ -425,14 +435,24 @@ async function saveCurrentJob({ analyze = false } = {}) {
     });
     if (!savedResponse.ok) throw new Error(`保存岗位失败（HTTP ${savedResponse.status}）`);
     const savedJob = await savedResponse.json();
+    currentJobId = savedJob.job_id;
+    rememberSavedJob(payload.source_url, savedJob.job_id);
     if (savedJob.status === "duplicate") {
-      showStatus("该岗位已保存", "info");
-      return;
-    }
-    if (!analyze) {
+      const existing = await fetchLatestAnalysis(savedJob.job_id, authHeaders);
+      if (existing) {
+        renderAnalysis(existing.result_json);
+        showStatus("该岗位已保存过，下面是已有的分析结果", "success");
+        return;
+      }
+      if (!analyze) {
+        showStatus("该岗位已保存，还没有分析结果", "info");
+        return;
+      }
+    } else if (!analyze) {
       showStatus("岗位保存成功", "success");
       return;
     }
+    showStatus("正在分析岗位……", "loading");
     const analysisResponse = await fetch(
       `http://127.0.0.1:8000/api/v1/jobs/${encodeURIComponent(savedJob.job_id)}/analyze`,
       { method: "POST", headers: authHeaders },
@@ -440,7 +460,8 @@ async function saveCurrentJob({ analyze = false } = {}) {
     if (!analysisResponse.ok) throw new Error(`岗位已保存，但分析失败（HTTP ${analysisResponse.status}）`);
     const savedAnalysis = await analysisResponse.json();
     renderAnalysis(savedAnalysis.result_json || {});
-    showStatus("岗位已保存，分析结果已写入数据库", "success");
+    showStatus("分析完成，结果见下方", "success");
+    analysisResult.scrollIntoView?.({ behavior: "smooth", block: "start" });
   } catch (error) {
     showStatus(error instanceof Error ? error.message : "保存岗位失败", "error");
   } finally {
@@ -563,7 +584,67 @@ function renderAnalysis(analysis = {}) {
 
   generatedGreeting = safeText(analysis.greeting).trim();
   showGreeting();
+  openJobDetailButton.hidden = !currentJobId;
   analysisResult.hidden = false;
+}
+
+function openWorkspace(path = "") {
+  const url = `${WORKSPACE_URL}${path}`;
+  if (chrome.tabs?.create) chrome.tabs.create({ url });
+  else window.open(url, "_blank");
+}
+
+// Job URL -> saved job id, shared with the background auto capture, so the
+// window can show a job's saved analysis as soon as the job is on screen.
+async function rememberSavedJob(url, jobId) {
+  if (!extensionStorage || !url || !jobId) return;
+  const { savedJobIds } = await extensionStorage.get({ savedJobIds: {} });
+  const entries = Object.entries({ ...savedJobIds, [url]: jobId }).slice(-200);
+  await extensionStorage.set({ savedJobIds: Object.fromEntries(entries) });
+}
+
+async function fetchLatestAnalysis(jobId, authHeaders) {
+  const response = await fetch(`${API_BASE}/api/v1/analyses`, { headers: authHeaders });
+  if (!response.ok) return null;
+  const analyses = await response.json();
+  const done = asArray(analyses).filter(
+    (item) => item.job_id === jobId && item.status === "completed" && item.result_json,
+  );
+  done.sort((a, b) => Date.parse(b.created_at) - Date.parse(a.created_at));
+  return done[0] || null;
+}
+
+async function showSavedAnalysis(url, attempt = 0) {
+  clearTimeout(savedResultTimer);
+  if (!extensionStorage || url !== lastReadUrl) return;
+  const { savedJobIds, bossAutoAnalyze } = await extensionStorage.get({
+    savedJobIds: {},
+    bossAutoAnalyze: true,
+  });
+  const jobId = savedJobIds[url];
+  if (!jobId) return;
+  let authHeaders;
+  try {
+    authHeaders = demoAuthorizationHeaders();
+  } catch {
+    return;
+  }
+  const existing = await fetchLatestAnalysis(jobId, authHeaders).catch(() => null);
+  // The user may have moved on, or run an analysis by hand, meanwhile.
+  if (url !== lastReadUrl || !analysisResult.hidden || analysisInProgress || saveInProgress) return;
+  currentJobId = jobId;
+  if (existing) {
+    renderAnalysis(existing.result_json);
+    showStatus("该岗位已保存过，下面是已有的分析结果", "success");
+    return;
+  }
+  if (bossAutoAnalyze && attempt < SAVED_RESULT_POLL_ATTEMPTS) {
+    if (attempt === 0) showStatus("岗位已自动保存，正在后台分析，结果出来会显示在这里……", "loading");
+    savedResultTimer = setTimeout(
+      () => showSavedAnalysis(url, attempt + 1),
+      SAVED_RESULT_POLL_INTERVAL,
+    );
+  }
 }
 
 function setReadSource(source, successful) {
@@ -635,7 +716,10 @@ async function readCurrentJob({ automatic = false } = {}) {
         generatedGreeting = "";
         analysisResult.hidden = true;
       }
+      currentJobId = null;
       lastReadUrl = page.url;
+      // Looked up after this read finishes so its status line is not overwritten.
+      setTimeout(() => showSavedAnalysis(page.url).catch(() => {}), 0);
     }
     pageTitle.textContent = page.title || "未获取到页面标题";
     pageUrl.textContent = page.url || "未获取到页面 URL";
@@ -802,6 +886,10 @@ greetingTemplate.addEventListener("input", () => {
 loadExtensionSettings().then(syncCandidateProfile);
 saveJobButton.addEventListener("click", () => saveCurrentJob());
 saveAndAnalyzeButton.addEventListener("click", () => saveCurrentJob({ analyze: true }));
+openWorkspaceButton.addEventListener("click", () => openWorkspace());
+openJobDetailButton.addEventListener("click", () => {
+  if (currentJobId) openWorkspace(`/jobs/${encodeURIComponent(currentJobId)}`);
+});
 readJobButton.addEventListener("click", () => readCurrentJob());
 readCurrentJob({ automatic: true });
 detectServiceStatus();
@@ -936,6 +1024,7 @@ analyzeJobButton.addEventListener("click", async () => {
     if (!response.ok) throw new Error(`Unexpected HTTP status: ${response.status}`);
 
     const analysis = await response.json();
+    currentJobId = null;
     renderAnalysis(analysis);
     showStatus("AI 岗位分析完成", "success");
     if (typeof analysisResult.scrollIntoView === "function") {

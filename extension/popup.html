@@ -13,7 +13,10 @@
           <span class="status-dot" aria-hidden="true"></span>
           <span>后端未检查</span>
         </div>
-        <button id="health-check" class="button button-ghost button-small" type="button">检查连接</button>
+        <div class="status-actions">
+          <button id="health-check" class="button button-ghost button-small" type="button">检查连接</button>
+          <button id="open-workspace" class="button button-secondary button-small" type="button" title="在新标签页打开 Web 工作台">打开工作台</button>
+        </div>
       </header>
 
       <section class="card job-section" aria-labelledby="job-heading">
@@ -55,7 +58,7 @@
           <span id="analyze-spinner" class="spinner" aria-hidden="true" hidden></span>
           <span id="analyze-label">分析岗位</span>
         </button>
-        <p class="field-help">“保存并分析”使用 Web 工作台中已保存的候选人资料，并将结果写入数据库。</p>
+        <p class="field-help">“保存并分析”使用 Web 工作台中已保存的候选人资料，结果直接显示在下方；已保存过的岗位会直接显示上次的分析结果。</p>
         <p id="result" class="status-message" role="status" aria-live="polite"></p>
       </section>
 
@@ -110,6 +113,9 @@
           <summary>评分依据</summary>
           <div id="score-breakdown" class="breakdown-list"></div>
         </details>
+        <button id="open-job-detail" class="button button-ghost button-small" type="button" hidden>
+          在工作台查看完整分析 / 定制简历 →
+        </button>
       </section>
 
       <section id="greeting-section" class="card greeting-section" aria-labelledby="greeting-heading" hidden>

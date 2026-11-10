@@ -115,6 +115,10 @@ async function captureBossJob(job) {
     });
     if (!response.ok) throw new Error(`HTTP ${response.status}`);
     const saved = await response.json();
+    // Lets the floating window show this job's analysis when it is on screen.
+    const { savedJobIds } = await chrome.storage.local.get({ savedJobIds: {} });
+    const entries = Object.entries({ ...savedJobIds, [job.source_url]: saved.job_id }).slice(-200);
+    await chrome.storage.local.set({ savedJobIds: Object.fromEntries(entries) });
     if (saved.status === "created") {
       const count = settings.bossCapturedCount + 1;
       await chrome.storage.local.set({ bossCapturedCount: count });

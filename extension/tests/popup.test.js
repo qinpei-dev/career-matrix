@@ -254,12 +254,23 @@ const nextTurn = () => new Promise((resolve) => setImmediate(resolve));
   const analysesBeforeDuplicateSave = harness.fetchCalls.filter(
     ([url]) => url.includes("/analyze"),
   ).length;
+  fetchQueue.push({
+    ok: true,
+    json: async () => [
+      { job_id: "other-job", status: "completed", created_at: "2026-11-10T09:00:00Z", result_json: { score: 10 } },
+      { job_id: "existing-job", status: "completed", created_at: "2026-11-09T09:00:00Z", result_json: { score: 40 } },
+      { job_id: "existing-job", status: "completed", created_at: "2026-11-10T08:00:00Z", result_json: { score: 77, summary: "已有结果" } },
+    ],
+  });
   await elements["save-and-analyze"].trigger("click");
-  assert.strictEqual(elements.result.textContent, "该岗位已保存");
+  assert.strictEqual(elements.result.textContent, "该岗位已保存过，下面是已有的分析结果");
+  assert.strictEqual(elements["analysis-summary"].textContent, "已有结果");
+  assert.strictEqual(elements["analysis-result"].hidden, false);
+  assert.strictEqual(elements["open-job-detail"].hidden, false);
   assert.strictEqual(
     harness.fetchCalls.filter(([url]) => url.includes("/analyze")).length,
     analysesBeforeDuplicateSave,
-    "duplicate saves must not continue to analysis",
+    "a duplicate save with a saved analysis shows it instead of analysing again",
   );
 
   fetchQueue.push({ ok: true, json: async () => ({ status: "ok" }) });
@@ -362,8 +373,9 @@ const nextTurn = () => new Promise((resolve) => setImmediate(resolve));
   ).length;
   fetchQueue.push({ ok: true, json: async () => ({ status: "ok" }) });
   fetchQueue.push({ ok: true, json: async () => fullResponse });
+  const scrollsBeforeAnalysis = elements["analysis-result"].scrollCalls.length;
   await elements["analyze-job"].trigger("click");
-  assert.strictEqual(elements["analysis-result"].scrollCalls.length, 1);
+  assert.strictEqual(elements["analysis-result"].scrollCalls.length, scrollsBeforeAnalysis + 1);
   assert.strictEqual(elements["analyze-job"].disabled, false);
   assert.strictEqual(
     nativeCalls.filter(({ action }) => action === "start").length,

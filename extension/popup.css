@@ -748,3 +748,13 @@ summary:focus-visible {
   grid-column: 1 / -1;
   margin: 0;
 }
+
+.status-actions {
+  display: flex;
+  gap: 6px;
+}
+
+#open-job-detail {
+  margin-top: 10px;
+  width: 100%;
+}
