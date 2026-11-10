@@ -6,7 +6,8 @@
   "permissions": [
     "activeTab",
     "scripting",
-    "nativeMessaging"
+    "nativeMessaging",
+    "storage"
   ],
   "host_permissions": [
     "http://localhost:8000/*",
@@ -27,5 +28,16 @@
       },
       "description": "打开 CareerMatrix"
     }
-  }
+  },
+  "content_scripts": [
+    {
+      "matches": [
+        "https://www.zhipin.com/*"
+      ],
+      "js": [
+        "boss.js"
+      ],
+      "run_at": "document_idle"
+    }
+  ]
 }

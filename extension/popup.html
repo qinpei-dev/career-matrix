@@ -47,6 +47,24 @@
         </p>
       </section>
 
+      <section class="card capture-section" aria-labelledby="capture-heading">
+        <p class="eyebrow">自动采集</p>
+        <h2 id="capture-heading">BOSS 直聘网页端</h2>
+        <label class="checkbox-row" for="auto-capture">
+          <input id="auto-capture" type="checkbox">
+          浏览岗位时自动保存到本地
+        </label>
+        <label class="checkbox-row" for="auto-analyze">
+          <input id="auto-analyze" type="checkbox">
+          保存后自动分析匹配度
+        </label>
+        <p id="auto-capture-status" class="field-help" aria-live="polite"></p>
+        <p class="field-help">
+          只读取你已打开的岗位页面，不会替你点击、沟通或投递。需先在下方填写 Demo Token；
+          开启后 Token 会保存在本机浏览器中，关闭即清除。
+        </p>
+      </section>
+
       <section class="card job-section" aria-labelledby="job-heading">
         <div class="section-heading">
           <div>
@@ -99,7 +117,7 @@
       <section class="action-section" aria-label="分析操作">
         <label for="demo-token">本地 Demo Token</label>
         <input id="demo-token" type="password" autocomplete="off" spellcheck="false" placeholder="与后端 DEMO_AUTH_TOKENS 配置一致">
-        <p class="field-help">仅用于当前弹窗的 API 请求，关闭后需重新输入。</p>
+        <p class="field-help">默认仅用于当前弹窗；开启自动采集后会保存在本机浏览器中。</p>
         <button id="save-job" class="button button-secondary" type="button">保存岗位</button>
         <button id="save-and-analyze" class="button button-secondary" type="button">保存并分析</button>
         <button id="analyze-job" class="button button-primary" type="button">
@@ -163,6 +181,18 @@
         </details>
       </section>
 
+      <section class="card greeting-settings" aria-labelledby="greeting-settings-heading">
+        <p class="eyebrow">沟通文案</p>
+        <label id="greeting-settings-heading" class="field-title" for="greeting-mode">打招呼语来源</label>
+        <select id="greeting-mode">
+          <option value="generated">AI 生成（分析岗位后给出）</option>
+          <option value="fixed">固定模板</option>
+        </select>
+        <label for="greeting-template">固定模板</label>
+        <textarea id="greeting-template" rows="4" maxlength="2000"></textarea>
+        <p class="field-help">可用占位符：{岗位}、{公司}。文案由你复制后自行发送，扩展不会代发。</p>
+      </section>
+
       <section id="greeting-section" class="card greeting-section" aria-labelledby="greeting-heading" hidden>
         <div class="section-heading">
           <div>
@@ -178,6 +208,7 @@
       </section>
     </main>
     <script src="content.js"></script>
+    <script src="boss.js"></script>
     <script src="popup.js"></script>
   </body>
 </html>

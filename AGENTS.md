@@ -73,7 +73,7 @@ npm run build
 Extension 当前没有独立 `package.json`，测试使用 Node 内置 test runner。在仓库根目录运行：
 
 ```powershell
-node --test extension/tests/content.test.js extension/tests/popup.test.js
+node --test extension/tests/content.test.js extension/tests/popup.test.js extension/tests/boss.test.js
 ```
 
 不要虚构 `npm`、lint 或打包命令。

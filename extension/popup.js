@@ -21,6 +21,14 @@ const serviceStatus = document.querySelector("#service-status");
 const serviceControlButton = document.querySelector("#service-control");
 const serviceControlLabel = document.querySelector("#service-control-label");
 const serviceSpinner = document.querySelector("#service-spinner");
+const autoCapture = document.querySelector("#auto-capture");
+const autoAnalyze = document.querySelector("#auto-analyze");
+const autoCaptureStatus = document.querySelector("#auto-capture-status");
+const greetingMode = document.querySelector("#greeting-mode");
+const greetingTemplate = document.querySelector("#greeting-template");
+// Structured fields (company, salary, ...) when the page is a supported job site.
+let currentListing = null;
+let generatedGreeting = "";
 let jobDescriptionEdited = false;
 let analysisInProgress = false;
 let saveInProgress = false;
@@ -37,6 +45,12 @@ const CANDIDATE_PROFILE_STORAGE_KEY = "aiJobCopilot.candidateProfile";
 const DEFAULT_CANDIDATE_PROFILE =
   "大数据专业学生，掌握 Python、FastAPI、Git，使用过 Linux，完成过 AI Agent 项目。" +
   "了解 SQL，Docker 处于基础学习阶段，暂无正式开发实习经历。";
+
+const LISTING_URL_PATTERN = /^https:\/\/www\.zhipin\.com\//;
+const DEFAULT_GREETING_TEMPLATE =
+  "您好，我对贵司的{岗位}岗位很感兴趣，我的技能和项目经历与岗位要求比较匹配，方便的话希望能进一步沟通，谢谢！";
+// chrome.storage is shared with the background worker and the capture script.
+const extensionStorage = typeof chrome !== "undefined" ? chrome.storage?.local : undefined;
 
 const SCORE_BREAKDOWN_LABELS = {
   core_skills: "核心技能",
@@ -246,13 +260,89 @@ function currentJobPayload() {
   const description = jobDescription.value.trim();
   if (!title || title === "尚未读取") throw new Error("岗位标题为空，请先读取当前岗位");
   if (!description) throw new Error("岗位内容为空，请先读取或填写 JD");
-  return {
+  const payload = {
     title,
     company: null,
     description,
     source_url: pageUrl.textContent.trim() || null,
     source_type: "extension",
   };
+  if (currentListing) {
+    Object.assign(payload, {
+      company: currentListing.company,
+      salary: currentListing.salary,
+      location: currentListing.location,
+      experience: currentListing.experience,
+      education: currentListing.education,
+      source_type: "zhipin",
+    });
+  }
+  return payload;
+}
+
+function showGreeting() {
+  let text = generatedGreeting;
+  if (greetingMode.value === "fixed") {
+    text = greetingTemplate.value
+      .replaceAll("{岗位}", currentListing?.title || pageTitle.textContent.trim())
+      .replaceAll("{公司}", currentListing?.company || "贵公司")
+      .trim();
+  }
+  greetingTextarea.value = text;
+  greetingSection.hidden = !text;
+  copyGreetingButton.disabled = !text;
+}
+
+function showAutoCaptureStatus(count) {
+  autoCaptureStatus.textContent = autoCapture.checked
+    ? `自动采集已开启，已保存 ${count} 个岗位`
+    : "自动采集未开启";
+}
+
+async function loadExtensionSettings() {
+  greetingTemplate.value = DEFAULT_GREETING_TEMPLATE;
+  if (!extensionStorage) return;
+  const settings = await extensionStorage.get({
+    bossAutoCapture: false,
+    bossAutoAnalyze: true,
+    bossCapturedCount: 0,
+    demoToken: "",
+    greetingMode: "generated",
+    greetingTemplate: DEFAULT_GREETING_TEMPLATE,
+  });
+  autoCapture.checked = settings.bossAutoCapture;
+  autoAnalyze.checked = settings.bossAutoAnalyze;
+  if (settings.demoToken && !demoToken.value) demoToken.value = settings.demoToken;
+  greetingMode.value = settings.greetingMode;
+  greetingTemplate.value = settings.greetingTemplate;
+  showAutoCaptureStatus(settings.bossCapturedCount);
+  showGreeting();
+}
+
+async function saveAutoCaptureSettings() {
+  if (!extensionStorage) return;
+  if (!autoCapture.checked) {
+    await extensionStorage.set({ bossAutoCapture: false, bossAutoAnalyze: autoAnalyze.checked });
+    await extensionStorage.remove("demoToken");
+    chrome.action?.setBadgeText({ text: "" });
+    showAutoCaptureStatus(0);
+    return;
+  }
+  try {
+    demoAuthorizationHeaders();
+  } catch {
+    autoCapture.checked = false;
+    showStatus("请先填写有效的本地 Demo Token，再开启自动采集", "warning");
+    return;
+  }
+  await extensionStorage.set({
+    bossAutoCapture: true,
+    bossAutoAnalyze: autoAnalyze.checked,
+    demoToken: demoToken.value.trim(),
+  });
+  const { bossCapturedCount } = await extensionStorage.get({ bossCapturedCount: 0 });
+  showAutoCaptureStatus(bossCapturedCount);
+  showStatus("自动采集已开启，刷新招聘网站页面后生效", "success");
 }
 
 function demoAuthorizationHeaders() {
@@ -419,10 +509,8 @@ function renderAnalysis(analysis = {}) {
     ? `参考置信度 ${Math.round(confidence * 100)}%`
     : "";
 
-  const greeting = safeText(analysis.greeting).trim();
-  greetingTextarea.value = greeting;
-  greetingSection.hidden = !greeting;
-  copyGreetingButton.disabled = !greeting;
+  generatedGreeting = safeText(analysis.greeting).trim();
+  showGreeting();
   analysisResult.hidden = false;
 }
 
@@ -430,6 +518,7 @@ function setReadSource(source, successful) {
   const labels = {
     selection: "当前选中文本",
     "smart-job-detail": "智能岗位详情识别",
+    listing: "招聘网站岗位详情（含薪资、地点）",
     main: "页面主要内容",
     article: "页面主要内容",
     "role-main": "页面主要内容",
@@ -450,8 +539,27 @@ async function readCurrentJob({ automatic = false } = {}) {
       target: { tabId: tab.id },
       func: extractJobContent,
     });
-    const page = injectionResults[0]?.result;
+    let page = injectionResults[0]?.result;
     if (!page) throw new Error("The page did not return readable content");
+
+    currentListing = null;
+    if (LISTING_URL_PATTERN.test(page.url || "") && page.source !== "selection") {
+      const listingResults = await chrome.scripting.executeScript({
+        target: { tabId: tab.id },
+        func: extractBossJob,
+      });
+      const listing = listingResults[0]?.result;
+      if (listing && !listing.truncated) {
+        currentListing = listing;
+        page = {
+          ...page,
+          title: listing.title,
+          url: listing.source_url,
+          text: listing.description,
+          source: "listing",
+        };
+      }
+    }
 
     console.debug("Job content extraction", {
       source: page.source,
@@ -475,6 +583,8 @@ async function readCurrentJob({ automatic = false } = {}) {
       showStatus("岗位内容为空，请先读取或填写 JD", "warning");
     } else if (page.source === "selection") {
       showStatus("已读取当前选中的岗位内容", "success");
+    } else if (page.source === "listing") {
+      showStatus("已读取岗位详情及薪资、地点等信息", "success");
     } else if (page.source === "smart-job-detail") {
       showStatus("已智能识别岗位详情，请检查后再分析", "success");
     } else if (["main", "article", "role-main"].includes(page.source)) {
@@ -488,6 +598,7 @@ async function readCurrentJob({ automatic = false } = {}) {
     showStatus("无法读取当前网页，请确认页面允许扩展访问后重试", "error");
   } finally {
     readJobButton.disabled = false;
+    showGreeting();
   }
 }
 
@@ -522,6 +633,17 @@ greetingTextarea.addEventListener("input", () => {
   copyGreetingButton.disabled = !greetingTextarea.value.trim();
 });
 copyGreetingButton.addEventListener("click", copyGreeting);
+autoCapture.addEventListener("change", saveAutoCaptureSettings);
+autoAnalyze.addEventListener("change", saveAutoCaptureSettings);
+greetingMode.addEventListener("change", () => {
+  extensionStorage?.set({ greetingMode: greetingMode.value });
+  showGreeting();
+});
+greetingTemplate.addEventListener("input", () => {
+  extensionStorage?.set({ greetingTemplate: greetingTemplate.value });
+  showGreeting();
+});
+loadExtensionSettings();
 saveJobButton.addEventListener("click", () => saveCurrentJob());
 saveAndAnalyzeButton.addEventListener("click", () => saveCurrentJob({ analyze: true }));
 readJobButton.addEventListener("click", () => readCurrentJob());
