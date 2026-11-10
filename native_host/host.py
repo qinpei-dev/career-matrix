@@ -18,6 +18,7 @@ from typing import BinaryIO, Callable
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
 START_SCRIPT = PROJECT_ROOT / "scripts" / "start_backend.ps1"
 STOP_SCRIPT = PROJECT_ROOT / "scripts" / "stop_backend.ps1"
+ENV_FILE = PROJECT_ROOT / ".env"
 HEALTH_URL = "http://127.0.0.1:8000/health"
 BACKEND_PORT = 8000
 MAX_MESSAGE_BYTES = 64 * 1024
@@ -282,10 +283,47 @@ def stop_action() -> dict[str, object]:
     return {"ok": True, "state": "stopped", "message": "本地服务已停止"}
 
 
+def read_demo_token(env_file: Path = ENV_FILE) -> str | None:
+    """Return the first DEMO_AUTH_TOKENS key, read the same way as the backend."""
+    raw = os.environ.get("DEMO_AUTH_TOKENS")
+    if raw is None:
+        try:
+            lines = env_file.read_text(encoding="utf-8-sig").splitlines()
+        except OSError:
+            return None
+        for line in lines:
+            name, separator, value = line.partition("=")
+            if separator and name.strip() == "DEMO_AUTH_TOKENS":
+                raw = value.strip()
+        if raw is None:
+            return None
+    if len(raw) >= 2 and raw[0] == raw[-1] and raw[0] in "'\"":
+        raw = raw[1:-1]
+    try:
+        tokens = json.loads(raw)
+    except ValueError:
+        return None
+    if not isinstance(tokens, dict):
+        return None
+    for token in tokens:
+        if isinstance(token, str) and token and not any(c.isspace() for c in token):
+            return token
+    return None
+
+
+def demo_token_action() -> dict[str, object]:
+    # Only the extension listed in the host manifest can call this host.
+    token = read_demo_token()
+    if token is None:
+        return {"ok": False, "state": "error", "message": "未在 .env 中找到 DEMO_AUTH_TOKENS"}
+    return {"ok": True, "state": "running", "token": token}
+
+
 ACTIONS: dict[str, Callable[[], dict[str, object]]] = {
     "status": status_action,
     "start": start_action,
     "stop": stop_action,
+    "demo_token": demo_token_action,
 }
 
 

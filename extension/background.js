@@ -46,6 +46,23 @@ chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
   return true;
 });
 
+// Fill in the local demo token from the project's .env through the native
+// host, so the user does not have to copy it by hand. The token goes straight
+// into extension storage and is never sent anywhere but the local backend.
+chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
+  if (message?.type !== "load-demo-token" || sender.id !== chrome.runtime.id) return false;
+  chrome.runtime.sendNativeMessage(NATIVE_HOST_NAME, { action: "demo_token" }, async (response) => {
+    const token = chrome.runtime.lastError ? null : response?.token;
+    if (response?.ok !== true || typeof token !== "string" || !token || /\s/.test(token)) {
+      sendResponse({ ok: false });
+      return;
+    }
+    await chrome.storage.local.set({ demoToken: token });
+    sendResponse({ ok: true });
+  });
+  return true;
+});
+
 // BOSS 直聘 auto capture: boss.js reports the job the user is viewing; this
 // worker saves it to the local backend. Nothing is ever sent to the job site.
 const API_BASE = "http://127.0.0.1:8000";

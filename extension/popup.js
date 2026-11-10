@@ -302,6 +302,18 @@ function showAutoCaptureStatus(count) {
     : "自动采集未开启";
 }
 
+// Ask the background worker to read the token from the project's .env.
+async function loadDemoTokenFromProject() {
+  const response = await new Promise((resolve) => {
+    chrome.runtime.sendMessage({ type: "load-demo-token" }, (reply) => {
+      resolve(chrome.runtime.lastError ? null : reply);
+    });
+  });
+  if (!response?.ok) return "";
+  const { demoToken: token } = await extensionStorage.get({ demoToken: "" });
+  return token;
+}
+
 async function loadExtensionSettings() {
   greetingTemplate.value = DEFAULT_GREETING_TEMPLATE;
   if (!extensionStorage) return;
@@ -315,6 +327,7 @@ async function loadExtensionSettings() {
   });
   autoCapture.checked = settings.bossAutoCapture;
   autoAnalyze.checked = settings.bossAutoAnalyze;
+  if (!settings.demoToken) settings.demoToken = await loadDemoTokenFromProject();
   if (settings.demoToken && !demoToken.value) demoToken.value = settings.demoToken;
   greetingMode.value = settings.greetingMode;
   greetingTemplate.value = settings.greetingTemplate;

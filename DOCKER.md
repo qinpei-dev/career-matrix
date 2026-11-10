@@ -76,7 +76,7 @@ Copy-Item .env.example .env.docker
 
 按需填写 LLM / Embedding Provider 配置和本地开发 Token。不要提交 `.env`、`.env.docker`、密码、API Key 或 Token。
 
-保存岗位和分析接口要求 `DEMO_AUTH_TOKENS` 中的本地 Bearer Token。Web 的 `NEXT_PUBLIC_DEMO_AUTH_TOKEN` 必须与其对应；扩展弹窗需手动输入同一个 Token。它是演示机制，不是正式用户认证。Compose 对 `NEXT_PUBLIC_DEMO_AUTH_TOKEN` 的构建参数使用 Compose 插值，请在运行构建命令的本机环境或 Compose 使用的根 `.env` 中配置；仅写入 `.env.docker` 不会为前端构建参数赋值。
+保存岗位和分析接口要求 `DEMO_AUTH_TOKENS` 中的本地 Bearer Token。Web 的 `NEXT_PUBLIC_DEMO_AUTH_TOKEN` 必须与其对应；扩展在安装了 Native Host 时会自动从根目录 `.env` 读取该 Token，否则需手动输入同一个 Token。它是演示机制，不是正式用户认证。Compose 对 `NEXT_PUBLIC_DEMO_AUTH_TOKEN` 的构建参数使用 Compose 插值，请在运行构建命令的本机环境或 Compose 使用的根 `.env` 中配置；仅写入 `.env.docker` 不会为前端构建参数赋值。
 
 Compose 会覆盖 Backend 容器内的 `DATABASE_URL`，使其指向内部 `postgres` 服务。浏览器可见的 `NEXT_PUBLIC_*` 值会进入 Frontend bundle，不能存放生产秘密。
 
