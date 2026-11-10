@@ -28,7 +28,7 @@ from ..schemas.analysis import AnalysisEvidence
 from ..core.security import redact_sensitive_text
 
 SCORING_VERSION = "deterministic-v1"
-PROMPT_VERSION = "retrieval-evidence-v2"
+PROMPT_VERSION = "retrieval-evidence-v3"
 EVIDENCE_REQUIREMENT_LIMIT = 20
 
 

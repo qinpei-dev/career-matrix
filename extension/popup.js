@@ -62,6 +62,10 @@ const API_BASE = "http://127.0.0.1:8000";
 const SAVED_RESULT_POLL_INTERVAL = 5000;
 const SAVED_RESULT_POLL_ATTEMPTS = 12;
 let currentJobId = null;
+// True while the workspace still holds the seeded sample profile, not the
+// user's own resume; saved-job analysis would then describe the sample.
+let workspaceProfileIsSample = false;
+const SAMPLE_PROFILE_NAME = "Demo Candidate";
 let savedResultTimer;
 
 const HEALTH_URL = "http://127.0.0.1:8000/health";
@@ -452,6 +456,13 @@ async function saveCurrentJob({ analyze = false } = {}) {
       showStatus("岗位保存成功", "success");
       return;
     }
+    if (workspaceProfileIsSample) {
+      showStatus(
+        "岗位已保存。工作台里还是示例资料，不是你的简历，先不分析；请到工作台上传简历，或点“分析岗位”用下方你填的资料分析",
+        "warning",
+      );
+      return;
+    }
     showStatus("正在分析岗位……", "loading");
     const analysisResponse = await fetch(
       `http://127.0.0.1:8000/api/v1/jobs/${encodeURIComponent(savedJob.job_id)}/analyze`,
@@ -788,7 +799,15 @@ async function syncCandidateProfile() {
       return;
     }
     if (!response.ok) return;
-    const text = formatProfile(await response.json());
+    const profile = await response.json();
+    workspaceProfileIsSample = profile.name === SAMPLE_PROFILE_NAME;
+    if (workspaceProfileIsSample) {
+      profileSource.textContent =
+        "Web 工作台里还是示例资料（Demo Candidate），不是你的简历；请到工作台“候选人资料”上传简历。暂用下方你自己填的文字。";
+      profileSource.className = "field-help status-warning";
+      return;
+    }
+    const text = formatProfile(profile);
     if (!text) return;
     candidateProfile.value = text;
     profileSource.textContent = "已同步 Web 工作台里的候选人资料（来自你上传的简历）；在这里改动只影响本次分析。";
