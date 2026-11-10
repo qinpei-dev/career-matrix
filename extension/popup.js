@@ -296,6 +296,7 @@ function showGreeting() {
 }
 
 function showAutoCaptureStatus(count) {
+  autoCaptureStatus.className = "field-help";
   autoCaptureStatus.textContent = autoCapture.checked
     ? `自动采集已开启，已保存 ${count} 个岗位`
     : "自动采集未开启";
@@ -334,6 +335,12 @@ async function saveAutoCaptureSettings() {
     demoAuthorizationHeaders();
   } catch {
     autoCapture.checked = false;
+    // Explain right under the checkbox and jump to the token field; the shared
+    // status line sits far below and is easy to miss.
+    autoCaptureStatus.textContent = "勾选失败：请先在下方“本地 Demo Token”填写 Token，再勾选";
+    autoCaptureStatus.className = "field-help status-warning";
+    demoToken.scrollIntoView?.({ behavior: "smooth", block: "center" });
+    demoToken.focus?.();
     showStatus("请先填写有效的本地 Demo Token，再开启自动采集", "warning");
     return;
   }

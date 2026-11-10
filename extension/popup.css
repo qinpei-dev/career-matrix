@@ -188,7 +188,8 @@ h3 {
   color: var(--color-success);
 }
 
-.service-status.status-warning {
+.service-status.status-warning,
+.field-help.status-warning {
   color: var(--color-warning);
 }
 
