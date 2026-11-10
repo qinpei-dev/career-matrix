@@ -24,7 +24,7 @@ export function RetryDocument({ documentId }: { documentId: string }) {
   }
 
   return <div>
-    <button type="button" onClick={retry} disabled={retrying} className="rounded-xl bg-[#2563eb] px-3 py-2 text-xs font-semibold text-white disabled:opacity-50">
+    <button type="button" onClick={retry} disabled={retrying} className="rounded-xl bg-[#18181b] px-3 py-2 text-xs font-semibold text-white disabled:opacity-50">
       {retrying ? "重新解析并生成 Embedding…" : "重试解析"}
     </button>
     {error && <p role="alert" className="mt-2 max-w-sm text-xs text-[#b91c1c]">{error}</p>}

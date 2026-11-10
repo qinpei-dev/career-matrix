@@ -33,10 +33,10 @@ function EditableGroup({
   return <section>
     <h3 className="text-sm font-semibold">{title}</h3>
     <div className="mt-3 space-y-3">
-      {items.map((item, index) => <div key={`${item.evidence_ids.join("-")}-${index}`} className="rounded-xl border border-[#e2e8f0] p-3">
+      {items.map((item, index) => <div key={`${item.evidence_ids.join("-")}-${index}`} className="rounded-xl border border-[#e4e4e7] p-3">
         <div className="mb-2 flex items-center justify-between">
-          <span className="rounded-full bg-[#f1f5f9] px-2 py-1 text-[11px] font-semibold text-[#2563eb]">{item.action}</span>
-          <span className="text-[11px] text-[#94a3b8]">{item.evidence_ids.length} 条依据</span>
+          <span className="rounded-full bg-[#f4f4f5] px-2 py-1 text-[11px] font-semibold text-[#18181b]">{item.action}</span>
+          <span className="text-[11px] text-[#a1a1aa]">{item.evidence_ids.length} 条依据</span>
         </div>
         <textarea
           value={item.text}
@@ -46,10 +46,10 @@ function EditableGroup({
             next[index] = { ...item, text: event.target.value, action: "改写" };
             onChange(next);
           }}
-          className="min-h-24 w-full resize-y rounded-lg bg-[#f8fafc] p-3 text-sm leading-6 outline-none focus:ring-2 focus:ring-[#3b82f6]"
+          className="min-h-24 w-full resize-y rounded-lg bg-[#fafafa] p-3 text-sm leading-6 outline-none focus:ring-2 focus:ring-[#52525b]"
         />
       </div>)}
-      {items.length === 0 && <p className="rounded-xl bg-[#f8fafc] p-4 text-xs text-[#64748b]">原始简历没有可归入此部分的证据。</p>}
+      {items.length === 0 && <p className="rounded-xl bg-[#fafafa] p-4 text-xs text-[#71717a]">原始简历没有可归入此部分的证据。</p>}
     </div>
   </section>;
 }
@@ -248,7 +248,7 @@ export function TailoredResumeWorkflow({
   }
 
   return <div className="mt-7 space-y-5">
-    <section className="rounded-xl border border-[#e2e8f0] bg-white p-5 md:p-6">
+    <section className="rounded-xl border border-[#e4e4e7] bg-white p-5 md:p-6">
       <div className="grid gap-5 lg:grid-cols-2">
         <div>
           <label htmlFor="source-resume" className="text-sm font-semibold">1. 选择原始简历</label>
@@ -261,7 +261,7 @@ export function TailoredResumeWorkflow({
               setResume(null);
               setError("");
             }}
-            className="mt-3 w-full rounded-xl border border-[#e2e8f0] bg-white px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-[#3b82f6]"
+            className="mt-3 w-full rounded-xl border border-[#e4e4e7] bg-white px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-[#52525b]"
           >
             {documents.map((document) => <option key={document.id} value={document.id}>
               {document.filename} · {document.chunk_count} 个证据块
@@ -269,23 +269,23 @@ export function TailoredResumeWorkflow({
           </select> : <div className="mt-3 rounded-xl border border-[#fde68a] bg-[#fffbeb] p-4 text-sm text-[#92400e]">
             没有解析和 Embedding 就绪的简历。<Link href="/resumes" className="ml-1 font-semibold underline">先上传简历</Link>
           </div>}
-          {sourceSummary && <div className="mt-4 rounded-xl bg-[#f1f5f9] p-4">
-            <p className="text-[11px] font-semibold text-[#94a3b8]">原始简历摘要</p>
-            <p className="mt-2 whitespace-pre-wrap text-sm leading-6 text-[#475569]">{sourceSummary}</p>
+          {sourceSummary && <div className="mt-4 rounded-xl bg-[#f4f4f5] p-4">
+            <p className="text-[11px] font-semibold text-[#a1a1aa]">原始简历摘要</p>
+            <p className="mt-2 whitespace-pre-wrap text-sm leading-6 text-[#52525b]">{sourceSummary}</p>
           </div>}
         </div>
-        <div className="rounded-xl bg-[#f1f5f9] p-4">
-          <p className="text-[11px] font-semibold text-[#94a3b8]">目标岗位</p>
+        <div className="rounded-xl bg-[#f4f4f5] p-4">
+          <p className="text-[11px] font-semibold text-[#a1a1aa]">目标岗位</p>
           <h2 className="mt-2 font-semibold">{job.title}</h2>
-          <p className="mt-1 text-xs text-[#64748b]">{job.company || "未填写公司"}</p>
-          <p className="mt-3 line-clamp-6 whitespace-pre-wrap text-sm leading-6 text-[#475569]">{job.description}</p>
+          <p className="mt-1 text-xs text-[#71717a]">{job.company || "未填写公司"}</p>
+          <p className="mt-3 line-clamp-6 whitespace-pre-wrap text-sm leading-6 text-[#52525b]">{job.description}</p>
         </div>
       </div>
       <div className="mt-5 flex flex-wrap items-center gap-3">
         <button
           onClick={generate}
           disabled={!selectedDocumentId || !generationEnabled}
-          className="rounded-xl bg-[#2563eb] px-5 py-3 text-sm font-semibold text-white disabled:cursor-not-allowed disabled:opacity-50"
+          className="rounded-xl bg-[#18181b] px-5 py-3 text-sm font-semibold text-white disabled:cursor-not-allowed disabled:opacity-50"
         >
           {busy === "generating"
             ? "正在检索证据并生成…"
@@ -295,43 +295,43 @@ export function TailoredResumeWorkflow({
                 ? "重试生成"
                 : "生成定制简历"}
         </button>
-        {resume && <span className="rounded-full bg-[#f1f5f9] px-3 py-2 text-xs font-semibold text-[#2563eb]">
+        {resume && <span className="rounded-full bg-[#f4f4f5] px-3 py-2 text-xs font-semibold text-[#18181b]">
           {finalized ? "已完成版本" : resume.status} · v{resume.version}
         </span>}
-        <span className="text-xs text-[#64748b]">按钮忙碌期间不可重复提交</span>
+        <span className="text-xs text-[#71717a]">按钮忙碌期间不可重复提交</span>
       </div>
     </section>
 
-    {error && <div role="alert" className="rounded-xl border border-[#fca5a5] bg-[#f8fafc] p-4 text-sm text-[#b91c1c]">{error}</div>}
-    {success && <div role="status" className="rounded-xl border border-[#cbd5e1] bg-[#f1f5f9] p-4 text-sm text-[#059669]">{success}</div>}
-    {resume?.status === "FAILED" && <div className="rounded-xl border border-[#fca5a5] bg-[#f8fafc] p-4 text-sm text-[#b91c1c]">
+    {error && <div role="alert" className="rounded-xl border border-[#fca5a5] bg-[#fafafa] p-4 text-sm text-[#b91c1c]">{error}</div>}
+    {success && <div role="status" className="rounded-xl border border-[#d4d4d8] bg-[#f4f4f5] p-4 text-sm text-[#059669]">{success}</div>}
+    {resume?.status === "FAILED" && <div className="rounded-xl border border-[#fca5a5] bg-[#fafafa] p-4 text-sm text-[#b91c1c]">
       生成失败：{resume.error_message || "未知错误"}。可使用上方“重试生成”继续。
     </div>}
 
     {generated && resume && <>
-      <section className="rounded-xl border border-[#e2e8f0] bg-white p-5 md:p-6">
+      <section className="rounded-xl border border-[#e4e4e7] bg-white p-5 md:p-6">
         <div className="flex flex-wrap items-center justify-between gap-3">
-          <div><h2 className="text-lg font-semibold">2. 原版 / 定制版对比</h2><p className="mt-1 text-xs text-[#64748b]">每项状态与 evidence 均来自真实 API。</p></div>
-          <span className="rounded-full bg-[#e2e8f0] px-3 py-2 text-xs font-semibold text-[#059669]">
+          <div><h2 className="text-lg font-semibold">2. 原版 / 定制版对比</h2><p className="mt-1 text-xs text-[#71717a]">每项状态与 evidence 均来自真实 API。</p></div>
+          <span className="rounded-full bg-[#e4e4e7] px-3 py-2 text-xs font-semibold text-[#059669]">
             证据 {resume.evidence_json.length} 条
           </span>
         </div>
         <div className="mt-5 grid gap-4 lg:grid-cols-2">
-          <div className="rounded-xl bg-[#f1f5f9] p-4">
+          <div className="rounded-xl bg-[#f4f4f5] p-4">
             <h3 className="text-sm font-semibold">原职业摘要</h3>
-            <p className="mt-3 whitespace-pre-wrap text-sm leading-6 text-[#64748b]">{original?.summary || "原简历未识别到摘要"}</p>
+            <p className="mt-3 whitespace-pre-wrap text-sm leading-6 text-[#71717a]">{original?.summary || "原简历未识别到摘要"}</p>
           </div>
-          <div className="rounded-xl border border-[#e2e8f0] bg-[#f8fafc] p-4">
-            <div className="flex justify-between"><h3 className="text-sm font-semibold">定制摘要</h3><span className="text-[11px] font-semibold text-[#1d4ed8]">{comparisonLabel(original?.summary || "", summary)}</span></div>
-            <textarea value={summary} disabled={finalized} onChange={(event) => setSummary(event.target.value)} className="mt-3 min-h-32 w-full resize-y rounded-lg bg-white p-3 text-sm leading-6 outline-none focus:ring-2 focus:ring-[#3b82f6]" />
+          <div className="rounded-xl border border-[#e4e4e7] bg-[#fafafa] p-4">
+            <div className="flex justify-between"><h3 className="text-sm font-semibold">定制摘要</h3><span className="text-[11px] font-semibold text-[#27272a]">{comparisonLabel(original?.summary || "", summary)}</span></div>
+            <textarea value={summary} disabled={finalized} onChange={(event) => setSummary(event.target.value)} className="mt-3 min-h-32 w-full resize-y rounded-lg bg-white p-3 text-sm leading-6 outline-none focus:ring-2 focus:ring-[#52525b]" />
           </div>
-          <div className="rounded-xl bg-[#f1f5f9] p-4">
+          <div className="rounded-xl bg-[#f4f4f5] p-4">
             <h3 className="text-sm font-semibold">原技能顺序</h3>
-            <p className="mt-3 text-sm leading-6 text-[#64748b]">{original?.skills?.join(" · ") || "未识别"}</p>
+            <p className="mt-3 text-sm leading-6 text-[#71717a]">{original?.skills?.join(" · ") || "未识别"}</p>
           </div>
-          <div className="rounded-xl border border-[#e2e8f0] bg-[#f8fafc] p-4">
+          <div className="rounded-xl border border-[#e4e4e7] bg-[#fafafa] p-4">
             <h3 className="text-sm font-semibold">定制技能顺序</h3>
-            <textarea value={skillsText} disabled={finalized} onChange={(event) => setSkillsText(event.target.value)} className="mt-3 min-h-24 w-full resize-y rounded-lg bg-white p-3 text-sm leading-6 outline-none focus:ring-2 focus:ring-[#3b82f6]" />
+            <textarea value={skillsText} disabled={finalized} onChange={(event) => setSkillsText(event.target.value)} className="mt-3 min-h-24 w-full resize-y rounded-lg bg-white p-3 text-sm leading-6 outline-none focus:ring-2 focus:ring-[#52525b]" />
           </div>
         </div>
         <div className="mt-6 grid gap-6 lg:grid-cols-3">
@@ -342,11 +342,11 @@ export function TailoredResumeWorkflow({
       </section>
 
       <section className="grid gap-5 lg:grid-cols-2">
-        <div className="rounded-xl border border-[#cbd5e1] bg-[#f1f5f9] p-5">
+        <div className="rounded-xl border border-[#d4d4d8] bg-[#f4f4f5] p-5">
           <h2 className="font-semibold text-[#059669]">JD 关键词覆盖</h2>
           <div className="mt-3 flex flex-wrap gap-2">
             {(resume.generated_content_json.keyword_coverage?.covered || []).map((keyword) => <span key={keyword} className="rounded-full bg-white px-3 py-1.5 text-xs font-semibold text-[#059669]">保留 · {keyword}</span>)}
-            {(resume.generated_content_json.keyword_coverage?.covered || []).length === 0 && <span className="text-sm text-[#1d4ed8]">没有可由原简历证据支持的 JD 关键词。</span>}
+            {(resume.generated_content_json.keyword_coverage?.covered || []).length === 0 && <span className="text-sm text-[#27272a]">没有可由原简历证据支持的 JD 关键词。</span>}
           </div>
         </div>
         <div className="rounded-xl border border-[#fde68a] bg-[#fffbeb] p-5">
@@ -360,28 +360,28 @@ export function TailoredResumeWorkflow({
         </div>
       </section>
 
-      <section className="rounded-xl border border-[#e2e8f0] bg-white p-5 md:p-6">
+      <section className="rounded-xl border border-[#e4e4e7] bg-white p-5 md:p-6">
         <h2 className="font-semibold">修改依据</h2>
         <div className="mt-4 grid gap-3 md:grid-cols-2">
-          {resume.evidence_json.map((item) => <article key={item.id} className="rounded-xl bg-[#f1f5f9] p-4">
-            <div className="flex justify-between text-[11px] font-semibold text-[#64748b]"><span>{item.section}</span><span>{item.rag_score === null ? "源 chunk" : `RAG ${item.rag_score.toFixed(3)}`}</span></div>
-            <p className="mt-2 whitespace-pre-wrap text-sm leading-6 text-[#475569]">{item.content}</p>
+          {resume.evidence_json.map((item) => <article key={item.id} className="rounded-xl bg-[#f4f4f5] p-4">
+            <div className="flex justify-between text-[11px] font-semibold text-[#71717a]"><span>{item.section}</span><span>{item.rag_score === null ? "源 chunk" : `RAG ${item.rag_score.toFixed(3)}`}</span></div>
+            <p className="mt-2 whitespace-pre-wrap text-sm leading-6 text-[#52525b]">{item.content}</p>
           </article>)}
         </div>
       </section>
 
-      <section className="sticky bottom-4 z-10 flex flex-wrap gap-3 rounded-xl border border-[#e2e8f0] bg-white/95 p-4 shadow-lg backdrop-blur">
-        <button onClick={save} disabled={busy !== null || finalized} className="rounded-xl bg-[#2563eb] px-4 py-2.5 text-sm font-semibold text-white disabled:opacity-50">{busy === "saving" ? "保存中…" : "保存草稿"}</button>
-        <button onClick={finalize} disabled={busy !== null || finalized} className="rounded-xl border border-[#2563eb] px-4 py-2.5 text-sm font-semibold text-[#2563eb] disabled:opacity-50">{busy === "finalizing" ? "确认中…" : finalized ? "已最终确认" : "最终确认"}</button>
-        <button onClick={downloadDocx} disabled={busy !== null} className="rounded-xl border border-[#cbd5e1] px-4 py-2.5 text-sm font-semibold text-[#475569] disabled:opacity-50">{busy === "downloading" ? "下载中…" : "下载 DOCX"}</button>
-        <button disabled title="PDF export NOT VERIFIED" className="rounded-xl border border-dashed border-[#cbd5e1] px-4 py-2.5 text-sm font-semibold text-[#94a3b8]">PDF · NOT VERIFIED</button>
+      <section className="sticky bottom-4 z-10 flex flex-wrap gap-3 rounded-xl border border-[#e4e4e7] bg-white/95 p-4 shadow-lg backdrop-blur">
+        <button onClick={save} disabled={busy !== null || finalized} className="rounded-xl bg-[#18181b] px-4 py-2.5 text-sm font-semibold text-white disabled:opacity-50">{busy === "saving" ? "保存中…" : "保存草稿"}</button>
+        <button onClick={finalize} disabled={busy !== null || finalized} className="rounded-xl border border-[#18181b] px-4 py-2.5 text-sm font-semibold text-[#18181b] disabled:opacity-50">{busy === "finalizing" ? "确认中…" : finalized ? "已最终确认" : "最终确认"}</button>
+        <button onClick={downloadDocx} disabled={busy !== null} className="rounded-xl border border-[#d4d4d8] px-4 py-2.5 text-sm font-semibold text-[#52525b] disabled:opacity-50">{busy === "downloading" ? "下载中…" : "下载 DOCX"}</button>
+        <button disabled title="PDF export NOT VERIFIED" className="rounded-xl border border-dashed border-[#d4d4d8] px-4 py-2.5 text-sm font-semibold text-[#a1a1aa]">PDF · NOT VERIFIED</button>
         <button onClick={remove} disabled={busy !== null || finalized} className="ml-auto rounded-xl px-4 py-2.5 text-sm font-semibold text-[#b91c1c] disabled:opacity-40">{busy === "deleting" ? "删除中…" : "删除草稿"}</button>
       </section>
     </>}
 
-    {history.length > 0 && <section className="rounded-xl border border-[#e2e8f0] bg-white p-5">
+    {history.length > 0 && <section className="rounded-xl border border-[#e4e4e7] bg-white p-5">
       <h2 className="font-semibold">历史版本</h2>
-      <div className="mt-3 flex flex-wrap gap-2">{history.map((item) => <button key={item.id} onClick={() => loadVersion(item.id)} disabled={busy !== null} className="rounded-xl border border-[#e2e8f0] px-3 py-2 text-left text-xs hover:bg-[#f1f5f9]">
+      <div className="mt-3 flex flex-wrap gap-2">{history.map((item) => <button key={item.id} onClick={() => loadVersion(item.id)} disabled={busy !== null} className="rounded-xl border border-[#e4e4e7] px-3 py-2 text-left text-xs hover:bg-[#f4f4f5]">
         <strong>{item.status}</strong> · {new Date(item.updated_at).toLocaleString("zh-CN")}
       </button>)}</div>
     </section>}

@@ -254,69 +254,69 @@ export function AnalysisWorkflow({
   const actionDisabled = busy || task?.is_running || task?.status === "COMPLETED";
 
   return <div className="space-y-5">
-    <section className="rounded-xl border border-[#e2e8f0] bg-white p-6">
+    <section className="rounded-xl border border-[#e4e4e7] bg-white p-6">
       <div className="flex flex-col justify-between gap-5 sm:flex-row sm:items-start">
         <div>
-          <p className="text-[11px] font-semibold text-[#1d4ed8]">AI match report</p>
+          <p className="text-[11px] font-semibold text-[#27272a]">AI match report</p>
           <div className="mt-2 flex items-center gap-2">
             <h2 className="text-lg font-semibold">岗位匹配分析</h2>
             <StatusPill status={statusLabels[visibleStatus]}/>
           </div>
-          {task && <p className="mt-2 text-xs text-[#64748b]">
+          {task && <p className="mt-2 text-xs text-[#71717a]">
             当前步骤：{statusLabels[task.current_step as AnalysisTaskStatus] ?? task.current_step}
             {" · "}重试 {task.retry_count}/{task.max_retries}
           </p>}
         </div>
         <div className="flex items-center gap-4">
-          <div className="text-right"><span className="text-4xl font-semibold tracking-[-.02em]">{analysis?.score ?? "—"}</span><span className="text-sm text-[#94a3b8]"> / 100</span></div>
+          <div className="text-right"><span className="text-4xl font-semibold tracking-[-.02em]">{analysis?.score ?? "—"}</span><span className="text-sm text-[#a1a1aa]"> / 100</span></div>
           <button type="button" onClick={action.handler} disabled={actionDisabled}
-            className="rounded-xl bg-[#2563eb] px-4 py-2.5 text-xs font-semibold text-white transition hover:bg-[#2563eb] disabled:cursor-wait disabled:bg-[#94a3b8]">
+            className="rounded-xl bg-[#18181b] px-4 py-2.5 text-xs font-semibold text-white transition hover:bg-[#18181b] disabled:cursor-wait disabled:bg-[#a1a1aa]">
             {busy ? "处理中…" : action.label}
           </button>
         </div>
       </div>
       {task && <div className="mt-5">
-        <div className="mb-2 flex justify-between text-[11px] text-[#64748b]">
+        <div className="mb-2 flex justify-between text-[11px] text-[#71717a]">
           <span>{statusLabels[task.status]}</span><span>{task.progress}%</span>
         </div>
-        <div className="h-2 overflow-hidden rounded-full bg-[#e2e8f0]">
+        <div className="h-2 overflow-hidden rounded-full bg-[#e4e4e7]">
           <div className="h-full rounded-full bg-[#34d399] transition-[width]" style={{width: `${task.progress}%`}}/>
         </div>
       </div>}
       {(error || task?.error_message) && <p role="alert" className="mt-4 rounded-xl bg-[#fef2f2] px-4 py-3 text-sm text-[#b91c1c]">{error || task?.error_message}</p>}
       {recoveryFailed && <button type="button" onClick={() => void loadPersistedTask()} disabled={busy}
-        className="mt-3 rounded-lg border border-[#cbd5e1] px-3 py-2 text-xs font-semibold text-[#2563eb] disabled:opacity-50">
+        className="mt-3 rounded-lg border border-[#d4d4d8] px-3 py-2 text-xs font-semibold text-[#18181b] disabled:opacity-50">
         重新加载状态
       </button>}
-      {task?.status === "WAITING_FOR_REVIEW" && <p className="mt-4 text-sm leading-7 text-[#64748b]">分析结果已安全保存，请审核后确认完成。</p>}
-      {task?.status === "COMPLETED" && <p className="mt-4 text-sm leading-7 text-[#64748b]">分析已由你确认完成。</p>}
+      {task?.status === "WAITING_FOR_REVIEW" && <p className="mt-4 text-sm leading-7 text-[#71717a]">分析结果已安全保存，请审核后确认完成。</p>}
+      {task?.status === "COMPLETED" && <p className="mt-4 text-sm leading-7 text-[#71717a]">分析已由你确认完成。</p>}
     </section>
 
-    {analysis && <section className="rounded-xl border border-[#e2e8f0] bg-white p-6">
-      {summary && <p className="mb-6 rounded-xl bg-[#f1f5f9] p-4 text-sm leading-7 text-[#475569]">{summary}</p>}
+    {analysis && <section className="rounded-xl border border-[#e4e4e7] bg-white p-6">
+      {summary && <p className="mb-6 rounded-xl bg-[#f4f4f5] p-4 text-sm leading-7 text-[#52525b]">{summary}</p>}
       <div className="grid gap-6 sm:grid-cols-2">
-        <div><h3 className="text-[15px] font-semibold">匹配理由</h3>{reasons.length ? <ul className="mt-4 space-y-3">{reasons.map((reason) => <li key={reason} className="text-sm leading-6 text-[#64748b]">• {reason}</li>)}</ul> : <p className="mt-4 text-sm text-[#64748b]">暂无额外匹配理由。</p>}</div>
-        <div><h3 className="text-[15px] font-semibold">能力缺口</h3>{gaps.length ? <div className="mt-4 flex flex-wrap gap-2">{gaps.map((gap) => <span key={gap} className="rounded-lg bg-[#fef3c7] px-2.5 py-1.5 text-[11px] font-semibold text-[#b45309]">{gap}</span>)}</div> : <p className="mt-4 text-sm text-[#64748b]">未识别到明确缺口。</p>}</div>
+        <div><h3 className="text-[15px] font-semibold">匹配理由</h3>{reasons.length ? <ul className="mt-4 space-y-3">{reasons.map((reason) => <li key={reason} className="text-sm leading-6 text-[#71717a]">• {reason}</li>)}</ul> : <p className="mt-4 text-sm text-[#71717a]">暂无额外匹配理由。</p>}</div>
+        <div><h3 className="text-[15px] font-semibold">能力缺口</h3>{gaps.length ? <div className="mt-4 flex flex-wrap gap-2">{gaps.map((gap) => <span key={gap} className="rounded-lg bg-[#fef3c7] px-2.5 py-1.5 text-[11px] font-semibold text-[#b45309]">{gap}</span>)}</div> : <p className="mt-4 text-sm text-[#71717a]">未识别到明确缺口。</p>}</div>
       </div>
-      <div className="mt-6 grid gap-5 border-t border-[#e2e8f0] pt-5 md:grid-cols-3">
-        <div><h3 className="text-sm font-semibold">优势</h3><p className="mt-2 text-xs leading-6 text-[#64748b]">{strengths.length ? strengths.join("、") : "暂无已验证优势"}</p></div>
-        <div><h3 className="text-sm font-semibold">部分匹配</h3><p className="mt-2 text-xs leading-6 text-[#64748b]">{partial.length ? partial.join("、") : "暂无部分匹配项"}</p></div>
-        <div><h3 className="text-sm font-semibold">改进建议</h3><p className="mt-2 text-xs leading-6 text-[#64748b]">{learningPlan.length ? learningPlan.join("；") : "暂无额外建议"}</p></div>
+      <div className="mt-6 grid gap-5 border-t border-[#e4e4e7] pt-5 md:grid-cols-3">
+        <div><h3 className="text-sm font-semibold">优势</h3><p className="mt-2 text-xs leading-6 text-[#71717a]">{strengths.length ? strengths.join("、") : "暂无已验证优势"}</p></div>
+        <div><h3 className="text-sm font-semibold">部分匹配</h3><p className="mt-2 text-xs leading-6 text-[#71717a]">{partial.length ? partial.join("、") : "暂无部分匹配项"}</p></div>
+        <div><h3 className="text-sm font-semibold">改进建议</h3><p className="mt-2 text-xs leading-6 text-[#71717a]">{learningPlan.length ? learningPlan.join("；") : "暂无额外建议"}</p></div>
       </div>
-      {(projectEvidence.length > 0 || experienceEvidence.length > 0) && <div className="mt-6 border-t border-[#e2e8f0] pt-5">
+      {(projectEvidence.length > 0 || experienceEvidence.length > 0) && <div className="mt-6 border-t border-[#e4e4e7] pt-5">
         <h3 className="text-[15px] font-semibold">面试准备要点</h3>
-        <ul className="mt-3 space-y-2 text-xs leading-6 text-[#64748b]">
+        <ul className="mt-3 space-y-2 text-xs leading-6 text-[#71717a]">
           {[...projectEvidence, ...experienceEvidence].map((item) => <li key={item}>• {item}</li>)}
         </ul>
       </div>}
-      {greeting && <div className="mt-6 border-t border-[#e2e8f0] pt-5">
+      {greeting && <div className="mt-6 border-t border-[#e4e4e7] pt-5">
         <h3 className="text-[15px] font-semibold">沟通草稿</h3>
-        <p className="mt-3 whitespace-pre-line rounded-xl bg-[#f1f5f9] p-4 text-sm leading-7 text-[#475569]">{greeting}</p>
-        <p className="mt-2 text-[11px] text-[#64748b]">仅供复制和人工审核，系统不会自动发送或投递。</p>
+        <p className="mt-3 whitespace-pre-line rounded-xl bg-[#f4f4f5] p-4 text-sm leading-7 text-[#52525b]">{greeting}</p>
+        <p className="mt-2 text-[11px] text-[#71717a]">仅供复制和人工审核，系统不会自动发送或投递。</p>
       </div>}
-      <div className="mt-6 border-t border-[#e2e8f0] pt-5">
-        <h3 className="text-[15px] font-semibold">引用证据 <span className="text-[11px] text-[#94a3b8]">{evidence.length} 条</span></h3>
-        {evidence.length ? <div className="mt-4 grid gap-3">{evidence.map((item) => <article key={`${item.requirement}-${item.chunk_id}`} className="rounded-xl bg-[#f1f5f9] p-4"><h4 className="text-xs font-semibold text-[#2563eb]">{item.requirement}</h4><p className="mt-2 text-xs leading-6 text-[#475569]">{item.content}</p></article>)}</div> : <p className="mt-4 text-sm text-[#64748b]">暂无可引用的简历向量证据。</p>}
+      <div className="mt-6 border-t border-[#e4e4e7] pt-5">
+        <h3 className="text-[15px] font-semibold">引用证据 <span className="text-[11px] text-[#a1a1aa]">{evidence.length} 条</span></h3>
+        {evidence.length ? <div className="mt-4 grid gap-3">{evidence.map((item) => <article key={`${item.requirement}-${item.chunk_id}`} className="rounded-xl bg-[#f4f4f5] p-4"><h4 className="text-xs font-semibold text-[#18181b]">{item.requirement}</h4><p className="mt-2 text-xs leading-6 text-[#52525b]">{item.content}</p></article>)}</div> : <p className="mt-4 text-sm text-[#71717a]">暂无可引用的简历向量证据。</p>}
       </div>
     </section>}
   </div>;

@@ -90,44 +90,44 @@ export function AgentWorkflow({ jobId }: { jobId: string }) {
   }
 
   const active = starting || run?.status === "pending" || run?.status === "running";
-  return <section className="rounded-xl border border-[#e2e8f0] bg-white p-5">
+  return <section className="rounded-xl border border-[#e4e4e7] bg-white p-5">
     <div className="flex items-start justify-between gap-3">
       <div>
-        <p className="text-[11px] font-semibold text-[#1d4ed8]">Career Copilot Agent</p>
+        <p className="text-[11px] font-semibold text-[#27272a]">Career Copilot Agent</p>
         <h2 className="mt-2 text-[15px] font-semibold">Agent Timeline</h2>
       </div>
       {run && <span className={`rounded-full px-2 py-1 text-[11px] font-semibold ${
-        run.status === "completed" ? "bg-[#e2e8f0] text-[#2563eb]"
+        run.status === "completed" ? "bg-[#e4e4e7] text-[#18181b]"
           : run.status === "failed" || run.status === "timeout" ? "bg-[#fef2f2] text-[#b91c1c]"
-            : "bg-[#fef3c7] text-[#2563eb]"
+            : "bg-[#fef3c7] text-[#18181b]"
       }`}>{run.status}</span>}
     </div>
 
     {run?.steps.length ? <ol className="mt-5 space-y-3">
       {run.steps.map((step) => <li key={step.id} className="flex gap-3">
         <span className={`grid h-6 w-6 shrink-0 place-items-center rounded-full text-xs font-semibold ${
-          step.status === "completed" ? "bg-[#60a5fa] text-[#2563eb]"
+          step.status === "completed" ? "bg-[#71717a] text-[#18181b]"
             : step.status === "failed" ? "bg-[#fecaca] text-[#b91c1c]"
-              : "animate-pulse bg-[#e2e8f0] text-[#2563eb]"
+              : "animate-pulse bg-[#e4e4e7] text-[#18181b]"
         }`}>{statusMarks[step.status]}</span>
         <div className="min-w-0 pt-0.5">
           <p className="text-xs font-semibold">{stepLabels[step.step_name] ?? step.step_name}</p>
-          {step.output_summary && <p className="mt-1 text-[11px] leading-4 text-[#64748b]">{step.output_summary}</p>}
-          {step.duration_ms !== null && <p className="mt-1 text-[11px] text-[#94a3b8]">{step.duration_ms} ms</p>}
+          {step.output_summary && <p className="mt-1 text-[11px] leading-4 text-[#71717a]">{step.output_summary}</p>}
+          {step.duration_ms !== null && <p className="mt-1 text-[11px] text-[#a1a1aa]">{step.duration_ms} ms</p>}
         </div>
       </li>)}
-    </ol> : <p className="mt-4 text-xs leading-5 text-[#64748b]">运行后，这里会展示后端实际记录的每一步，不使用模拟数据。</p>}
+    </ol> : <p className="mt-4 text-xs leading-5 text-[#71717a]">运行后，这里会展示后端实际记录的每一步，不使用模拟数据。</p>}
 
-    {run?.result && <div className="mt-5 rounded-xl bg-[#f1f5f9] p-4">
-      <p className="text-[11px] font-semibold text-[#64748b]">最终匹配分</p>
-      <p className="mt-1 text-2xl font-semibold text-[#2563eb]">{run.result.analysis.score}<span className="text-xs"> / 100</span></p>
+    {run?.result && <div className="mt-5 rounded-xl bg-[#f4f4f5] p-4">
+      <p className="text-[11px] font-semibold text-[#71717a]">最终匹配分</p>
+      <p className="mt-1 text-2xl font-semibold text-[#18181b]">{run.result.analysis.score}<span className="text-xs"> / 100</span></p>
     </div>}
     {(error || run?.error_message) && <p role="alert" className="mt-4 rounded-xl bg-[#fef2f2] px-3 py-2 text-xs text-[#b91c1c]">{error || run?.error_message}</p>}
     <button
       type="button"
       onClick={start}
       disabled={active}
-      className="mt-5 w-full rounded-xl bg-[#2563eb] py-2.5 text-xs font-semibold text-white transition hover:bg-[#2563eb] disabled:cursor-wait disabled:bg-[#94a3b8]"
+      className="mt-5 w-full rounded-xl bg-[#18181b] py-2.5 text-xs font-semibold text-white transition hover:bg-[#18181b] disabled:cursor-wait disabled:bg-[#a1a1aa]"
     >{active ? "Copilot Agent 运行中…" : run?.status === "failed" || run?.status === "timeout" ? "重新运行 Copilot Agent" : "运行 Copilot Agent"}</button>
   </section>;
 }

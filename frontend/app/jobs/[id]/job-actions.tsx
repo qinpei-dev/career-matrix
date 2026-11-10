@@ -61,7 +61,7 @@ export function JobActions({ job }: { job: SavedJob }) {
         type="button"
         onClick={() => { setEditing((value) => !value); setError(""); setSuccess(""); }}
         disabled={saving || deleting}
-        className="rounded-xl border border-[#e2e8f0] bg-white px-4 py-2.5 text-xs font-semibold disabled:opacity-50"
+        className="rounded-xl border border-[#e4e4e7] bg-white px-4 py-2.5 text-xs font-semibold disabled:opacity-50"
       >
         {editing ? "取消编辑" : "编辑岗位"}
       </button>
@@ -69,29 +69,29 @@ export function JobActions({ job }: { job: SavedJob }) {
         type="button"
         onClick={remove}
         disabled={saving || deleting}
-        className="rounded-xl border border-[#fca5a5] bg-[#f8fafc] px-4 py-2.5 text-xs font-semibold text-[#b91c1c] disabled:opacity-50"
+        className="rounded-xl border border-[#fca5a5] bg-[#fafafa] px-4 py-2.5 text-xs font-semibold text-[#b91c1c] disabled:opacity-50"
       >
         {deleting ? "删除中…" : "删除岗位"}
       </button>
     </div>
-    {success && <p role="status" className="mt-3 rounded-xl bg-[#f1f5f9] px-4 py-3 text-sm text-[#2563eb]">{success}</p>}
+    {success && <p role="status" className="mt-3 rounded-xl bg-[#f4f4f5] px-4 py-3 text-sm text-[#18181b]">{success}</p>}
     {error && <p role="alert" className="mt-3 rounded-xl bg-[#fef2f2] px-4 py-3 text-sm text-[#b91c1c]">{error}</p>}
-    {editing && <form onSubmit={save} className="mt-4 grid gap-3 rounded-xl border border-[#e2e8f0] bg-[#f8fafc] p-4 md:min-w-[520px]">
+    {editing && <form onSubmit={save} className="mt-4 grid gap-3 rounded-xl border border-[#e4e4e7] bg-[#fafafa] p-4 md:min-w-[520px]">
       <div className="grid gap-3 sm:grid-cols-2">
         <label className="grid gap-1 text-xs font-semibold">岗位名称
-          <input name="title" required maxLength={500} defaultValue={job.title} className="rounded-xl border border-[#e2e8f0] bg-white px-3 py-2.5 text-sm font-normal" />
+          <input name="title" required maxLength={500} defaultValue={job.title} className="rounded-xl border border-[#e4e4e7] bg-white px-3 py-2.5 text-sm font-normal" />
         </label>
         <label className="grid gap-1 text-xs font-semibold">公司
-          <input name="company" maxLength={300} defaultValue={job.company || ""} className="rounded-xl border border-[#e2e8f0] bg-white px-3 py-2.5 text-sm font-normal" />
+          <input name="company" maxLength={300} defaultValue={job.company || ""} className="rounded-xl border border-[#e4e4e7] bg-white px-3 py-2.5 text-sm font-normal" />
         </label>
       </div>
       <label className="grid gap-1 text-xs font-semibold">岗位链接
-        <input name="source_url" type="url" maxLength={2048} defaultValue={job.source_url || ""} className="rounded-xl border border-[#e2e8f0] bg-white px-3 py-2.5 text-sm font-normal" />
+        <input name="source_url" type="url" maxLength={2048} defaultValue={job.source_url || ""} className="rounded-xl border border-[#e4e4e7] bg-white px-3 py-2.5 text-sm font-normal" />
       </label>
       <label className="grid gap-1 text-xs font-semibold">岗位描述
-        <textarea name="description" required rows={8} defaultValue={job.description} className="rounded-xl border border-[#e2e8f0] bg-white px-3 py-2.5 text-sm font-normal" />
+        <textarea name="description" required rows={8} defaultValue={job.description} className="rounded-xl border border-[#e4e4e7] bg-white px-3 py-2.5 text-sm font-normal" />
       </label>
-      <button disabled={saving || deleting} className="justify-self-end rounded-xl bg-[#2563eb] px-4 py-2.5 text-xs font-semibold text-white disabled:opacity-50">
+      <button disabled={saving || deleting} className="justify-self-end rounded-xl bg-[#18181b] px-4 py-2.5 text-xs font-semibold text-white disabled:opacity-50">
         {saving ? "保存中…" : "保存修改"}
       </button>
     </form>}

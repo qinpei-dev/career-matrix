@@ -28,13 +28,13 @@ export default async function TailoredResumePage({
   );
 
   return <AppShell><div className="animate-rise">
-    <Link href={`/jobs/${encodeURIComponent(job.id)}`} className="text-xs font-semibold text-[#64748b]">
+    <Link href={`/jobs/${encodeURIComponent(job.id)}`} className="text-xs font-semibold text-[#71717a]">
       ← 返回岗位详情
     </Link>
     <div className="mt-5">
-      <p className="text-[11px] font-semibold text-[#1d4ed8]">Evidence-backed tailoring</p>
+      <p className="text-[11px] font-semibold text-[#27272a]">Evidence-backed tailoring</p>
       <h1 className="mt-2 text-3xl font-semibold tracking-[-.02em]">定制简历</h1>
-      <p className="mt-3 max-w-3xl text-sm leading-7 text-[#64748b]">
+      <p className="mt-3 max-w-3xl text-sm leading-7 text-[#71717a]">
         基于“{job.title}”的真实 JD 与所选原始简历生成新版本。JD 和简历均作为不可信数据处理；
         无原始证据的技能、经历与指标只会进入风险提示，不会写入简历。
       </p>

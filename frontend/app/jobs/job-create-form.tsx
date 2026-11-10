@@ -39,23 +39,23 @@ export function JobCreateForm() {
   }
 
   if (!open) {
-    return <button type="button" onClick={() => setOpen(true)} className="rounded-xl bg-[#2563eb] px-4 py-2.5 text-sm font-semibold text-white">＋ 添加岗位</button>;
+    return <button type="button" onClick={() => setOpen(true)} className="rounded-xl bg-[#18181b] px-4 py-2.5 text-sm font-semibold text-white">＋ 添加岗位</button>;
   }
 
-  return <form onSubmit={submit} className="mb-5 grid gap-3 rounded-xl border border-[#e2e8f0] bg-white p-5">
+  return <form onSubmit={submit} className="mb-5 grid gap-3 rounded-xl border border-[#e4e4e7] bg-white p-5">
     <div className="grid gap-3 md:grid-cols-2">
-      <input name="title" required maxLength={500} placeholder="岗位名称" className="rounded-xl border border-[#e2e8f0] px-4 py-3 text-sm" />
-      <input name="company" maxLength={300} placeholder="公司（可选）" className="rounded-xl border border-[#e2e8f0] px-4 py-3 text-sm" />
+      <input name="title" required maxLength={500} placeholder="岗位名称" className="rounded-xl border border-[#e4e4e7] px-4 py-3 text-sm" />
+      <input name="company" maxLength={300} placeholder="公司（可选）" className="rounded-xl border border-[#e4e4e7] px-4 py-3 text-sm" />
     </div>
-    <input name="source_url" type="url" maxLength={2048} placeholder="岗位链接（可选）" className="rounded-xl border border-[#e2e8f0] px-4 py-3 text-sm" />
-    <textarea name="description" required rows={6} placeholder="岗位描述 / JD" className="rounded-xl border border-[#e2e8f0] px-4 py-3 text-sm" />
+    <input name="source_url" type="url" maxLength={2048} placeholder="岗位链接（可选）" className="rounded-xl border border-[#e4e4e7] px-4 py-3 text-sm" />
+    <textarea name="description" required rows={6} placeholder="岗位描述 / JD" className="rounded-xl border border-[#e4e4e7] px-4 py-3 text-sm" />
     {error && <p role="alert" className="rounded-xl bg-[#fef2f2] px-4 py-3 text-sm text-[#b91c1c]">{error}</p>}
     {duplicateJobId && <p role="status" className="rounded-xl bg-[#fffbeb] px-4 py-3 text-sm text-[#78350f]">
       该岗位已保存。<a className="font-semibold underline" href={`/jobs/${duplicateJobId}`}>查看已有岗位</a>
     </p>}
     <div className="flex justify-end gap-2">
-      <button type="button" onClick={() => setOpen(false)} disabled={saving} className="rounded-xl border border-[#e2e8f0] px-4 py-2.5 text-xs font-semibold">取消</button>
-      <button disabled={saving} className="rounded-xl bg-[#2563eb] px-4 py-2.5 text-xs font-semibold text-white disabled:opacity-50">{saving ? "保存中…" : "保存岗位"}</button>
+      <button type="button" onClick={() => setOpen(false)} disabled={saving} className="rounded-xl border border-[#e4e4e7] px-4 py-2.5 text-xs font-semibold">取消</button>
+      <button disabled={saving} className="rounded-xl bg-[#18181b] px-4 py-2.5 text-xs font-semibold text-white disabled:opacity-50">{saving ? "保存中…" : "保存岗位"}</button>
     </div>
   </form>;
 }

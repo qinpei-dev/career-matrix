@@ -1,21 +1,21 @@
 :root {
   color-scheme: light;
   font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", "PingFang SC", "Microsoft YaHei UI", sans-serif;
-  --color-bg: #f5f7fa;
+  --color-bg: #fafafa;
   --color-surface: #ffffff;
-  --color-text: #0f172a;
-  --color-muted: #64748b;
-  --color-subtle: #94a3b8;
-  --color-border: #e2e8f0;
-  --color-primary: #2563eb;
-  --color-primary-hover: #1d4ed8;
-  --color-primary-soft: #eff6ff;
+  --color-text: #18181b;
+  --color-muted: #71717a;
+  --color-subtle: #a1a1aa;
+  --color-border: #e4e4e7;
+  --color-primary: #18181b;
+  --color-primary-hover: #27272a;
+  --color-primary-soft: #f4f4f5;
   --color-success: #047857;
-  --color-success-soft: #ecfdf5;
+  --color-success-soft: #f4f4f5;
   --color-warning: #b45309;
-  --color-warning-soft: #fffbeb;
+  --color-warning-soft: #f4f4f5;
   --color-error: #b91c1c;
-  --color-error-soft: #fef2f2;
+  --color-error-soft: #fafafa;
   --shadow-card: none;
   --radius: 10px;
   --radius-small: 8px;
@@ -66,7 +66,7 @@ h2 {
 
 h3 {
   margin-bottom: 7px;
-  color: #344054;
+  color: #3f3f46;
   font-size: 13px;
 }
 
@@ -131,7 +131,7 @@ h3 {
   width: 8px;
   height: 8px;
   border-radius: 50%;
-  background: #98a2b3;
+  background: #a1a1aa;
 }
 
 .backend-status.status-success {
@@ -154,7 +154,7 @@ h3 {
   align-items: flex-end;
   margin-top: 13px;
   padding-top: 12px;
-  border-top: 1px solid #edf0f4;
+  border-top: 1px solid #f4f4f5;
 }
 
 .shortcut-hint {
@@ -200,14 +200,14 @@ h3 {
 .service-help {
   margin: 11px 0 0;
   padding-top: 10px;
-  border-top: 1px solid #edf0f4;
+  border-top: 1px solid #f4f4f5;
   color: var(--color-subtle);
   font-size: 11px;
   line-height: 1.5;
 }
 
 .service-help code {
-  color: #475467;
+  color: #52525b;
   font-size: 10px;
 }
 
@@ -230,9 +230,9 @@ h3 {
   gap: 8px;
   margin: 0 0 13px;
   padding: 11px 12px;
-  border: 1px solid #e5e9f0;
+  border: 1px solid #e4e4e7;
   border-radius: var(--radius-small);
-  background: #fafbfc;
+  background: #fafafa;
 }
 
 .page-details div {
@@ -244,7 +244,7 @@ h3 {
 
 dt,
 label {
-  color: #475467;
+  color: #52525b;
   font-size: 12px;
   font-weight: 650;
 }
@@ -304,7 +304,7 @@ textarea {
   min-height: 112px;
   padding: 10px 11px;
   resize: vertical;
-  border: 1px solid #c8d0dc;
+  border: 1px solid #d4d4d8;
   border-radius: var(--radius-small);
   outline: none;
   color: inherit;
@@ -319,7 +319,7 @@ textarea {
   width: 100%;
   margin-bottom: 8px;
   padding: 9px 11px;
-  border: 1px solid #c8d0dc;
+  border: 1px solid #d4d4d8;
   border-radius: var(--radius-small);
   font: inherit;
 }
@@ -364,14 +364,14 @@ summary:focus-visible {
 }
 
 .button-secondary {
-  color: #344054;
-  border-color: #cfd6e1;
+  color: #3f3f46;
+  border-color: #d4d4d8;
   background: #fff;
 }
 
 .button-secondary:hover:not(:disabled) {
   color: var(--color-primary);
-  border-color: #aebbe0;
+  border-color: #d4d4d8;
   background: var(--color-primary-soft);
 }
 
@@ -433,7 +433,7 @@ summary:focus-visible {
 
 .status-message.info,
 .status-message.loading {
-  color: #2854b8;
+  color: #71717a;
   background: var(--color-primary-soft);
 }
 
@@ -454,14 +454,14 @@ summary:focus-visible {
 .reference-label {
   flex: none;
   color: var(--color-muted);
-  background: #f0f2f5;
+  background: #f4f4f5;
 }
 
 .score-card {
   padding: 13px;
-  border: 1px solid #d8e1f8;
+  border: 1px solid #e4e4e7;
   border-radius: 10px;
-  background: #f7f9ff;
+  background: #fafafa;
 }
 
 .score-caption {
@@ -472,7 +472,7 @@ summary:focus-visible {
 
 .score-value {
   margin: 0;
-  color: #173f9f;
+  color: #52525b;
   font-size: 28px;
   font-weight: 750;
   line-height: 1.1;
@@ -487,10 +487,10 @@ summary:focus-visible {
 .score-label {
   padding: 5px 9px;
   border-radius: 999px;
-  color: #36537d;
+  color: #52525b;
   font-size: 11px;
   font-weight: 700;
-  background: #e8eef8;
+  background: #f4f4f5;
 }
 
 .summary-text {
@@ -542,9 +542,9 @@ summary:focus-visible {
 }
 
 .tag-neutral li {
-  color: #36537d;
-  border-color: #cfd9e9;
-  background: #eff3f8;
+  color: #52525b;
+  border-color: #d4d4d8;
+  background: #f4f4f5;
 }
 
 .tag-warning li {
@@ -554,9 +554,9 @@ summary:focus-visible {
 }
 
 .tag-muted li {
-  color: #5f6b7c;
-  border-color: #d8dde5;
-  background: #f2f4f7;
+  color: #71717a;
+  border-color: #e4e4e7;
+  background: #f4f4f5;
 }
 
 .section-note {
@@ -570,12 +570,12 @@ summary:focus-visible {
   margin-top: 10px;
   border: 1px solid var(--color-border);
   border-radius: var(--radius-small);
-  background: #fafbfc;
+  background: #fafafa;
 }
 
 .detail-card summary {
   padding: 10px 12px;
-  color: #344054;
+  color: #3f3f46;
   font-size: 12px;
   font-weight: 700;
   cursor: pointer;
@@ -604,7 +604,7 @@ summary:focus-visible {
 
 .breakdown-item {
   padding: 9px 0;
-  border-bottom: 1px solid #e7eaf0;
+  border-bottom: 1px solid #e4e4e7;
 }
 
 .breakdown-item:last-child {
@@ -629,7 +629,7 @@ summary:focus-visible {
 }
 
 .breakdown-reason {
-  color: #475467;
+  color: #52525b;
   font-size: 11px;
 }
 
@@ -723,7 +723,7 @@ summary:focus-visible {
   gap: 6px;
   padding: 12px;
   border: 0;
-  border-bottom: 1px solid #f1f5f9;
+  border-bottom: 1px solid #f4f4f5;
   border-radius: 0;
   background: transparent;
   box-shadow: none;
