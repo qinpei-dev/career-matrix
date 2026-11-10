@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
+import { createPortal } from "react-dom";
 import Link from "next/link";
 import type { SavedJob } from "@/lib/jobs-api";
 import { documentsApi, type DocumentChunk, type ResumeDocument } from "@/lib/documents-api";
@@ -54,6 +55,34 @@ function EditableGroup({
   </section>;
 }
 
+function ResumePrintSheet({
+  title,
+  target,
+  summary,
+  skills,
+  groups,
+}: {
+  title: string;
+  target: string;
+  summary: string;
+  skills: string[];
+  groups: [string, TailoredItem[]][];
+}) {
+  return <div className="resume-print">
+    <h1>{title}</h1>
+    <p className="resume-target">{target}</p>
+    {summary.trim() && <><h2>职业摘要</h2><p>{summary.trim()}</p></>}
+    {skills.length > 0 && <><h2>技能</h2><p>{skills.join(" · ")}</p></>}
+    {groups.map(([heading, items]) => {
+      const lines = items.map((item) => item.text.trim()).filter(Boolean);
+      return lines.length > 0 && <section key={heading}>
+        <h2>{heading}</h2>
+        <ul>{lines.map((line, index) => <li key={index}>{line}</li>)}</ul>
+      </section>;
+    })}
+  </div>;
+}
+
 export function TailoredResumeWorkflow({
   job,
   documents,
@@ -77,6 +106,9 @@ export function TailoredResumeWorkflow({
   const [experience, setExperience] = useState<TailoredItem[]>([]);
   const [projects, setProjects] = useState<TailoredItem[]>([]);
   const [education, setEducation] = useState<TailoredItem[]>([]);
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => setMounted(true), []);
 
   function hydrate(next: TailoredResume) {
     setResume(next);
@@ -164,7 +196,7 @@ export function TailoredResumeWorkflow({
     try {
       const next = await tailoredResumesApi.update(resume.id, {
         summary,
-        skills: skillsText.split(/[,，\n]/).map((item) => item.trim()).filter(Boolean),
+        skills,
         experience,
         projects,
         education,
@@ -247,7 +279,29 @@ export function TailoredResumeWorkflow({
     }
   }
 
+  function exportPdf() {
+    if (!resume || busy) return;
+    const previousTitle = document.title;
+    document.title = resume.title;
+    document.body.classList.add("printing-resume");
+    try {
+      window.print();
+    } finally {
+      document.body.classList.remove("printing-resume");
+      document.title = previousTitle;
+    }
+  }
+
+  const skills = skillsText.split(/[,，\n]/).map((item) => item.trim()).filter(Boolean);
+
   return <div className="mt-7 space-y-5">
+    {mounted && resume && createPortal(<ResumePrintSheet
+      title={resume.title}
+      target={`应聘岗位：${job.title}${job.company ? ` · ${job.company}` : ""}`}
+      summary={summary}
+      skills={skills}
+      groups={[["工作经历", experience], ["项目经历", projects], ["教育经历", education]]}
+    />, document.body)}
     <section className="rounded-xl border border-[#e4e4e7] bg-white p-5 md:p-6">
       <div className="grid gap-5 lg:grid-cols-2">
         <div>
@@ -374,7 +428,7 @@ export function TailoredResumeWorkflow({
         <button onClick={save} disabled={busy !== null || finalized} className="rounded-xl bg-[#18181b] px-4 py-2.5 text-sm font-semibold text-white disabled:opacity-50">{busy === "saving" ? "保存中…" : "保存草稿"}</button>
         <button onClick={finalize} disabled={busy !== null || finalized} className="rounded-xl border border-[#18181b] px-4 py-2.5 text-sm font-semibold text-[#18181b] disabled:opacity-50">{busy === "finalizing" ? "确认中…" : finalized ? "已最终确认" : "最终确认"}</button>
         <button onClick={downloadDocx} disabled={busy !== null} className="rounded-xl border border-[#d4d4d8] px-4 py-2.5 text-sm font-semibold text-[#52525b] disabled:opacity-50">{busy === "downloading" ? "下载中…" : "下载 DOCX"}</button>
-        <button disabled title="PDF export NOT VERIFIED" className="rounded-xl border border-dashed border-[#d4d4d8] px-4 py-2.5 text-sm font-semibold text-[#a1a1aa]">PDF · NOT VERIFIED</button>
+        <button onClick={exportPdf} disabled={busy !== null} title="打开打印窗口，目标选「另存为 PDF」" className="rounded-xl border border-[#d4d4d8] px-4 py-2.5 text-sm font-semibold text-[#52525b] disabled:opacity-50">导出 PDF</button>
         <button onClick={remove} disabled={busy !== null || finalized} className="ml-auto rounded-xl px-4 py-2.5 text-sm font-semibold text-[#b91c1c] disabled:opacity-40">{busy === "deleting" ? "删除中…" : "删除草稿"}</button>
       </section>
     </>}

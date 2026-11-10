@@ -41,3 +41,18 @@ input:focus, textarea:focus, select:focus { border-color: var(--primary); box-sh
 }
 
 .animate-rise { animation: rise .25s ease-out both; }
+
+/* Tailored resume PDF export: print only the resume sheet, via the browser's "Save as PDF". */
+.resume-print { display: none; }
+@media print {
+  @page { size: A4; margin: 16mm 18mm; }
+  body.printing-resume > *:not(.resume-print) { display: none !important; }
+  body.printing-resume { background: #fff !important; }
+  body.printing-resume .resume-print { display: block; color: #111; font-size: 10.5pt; line-height: 1.6; }
+  .resume-print h1 { font-size: 20pt; font-weight: 700; margin: 0 0 2pt; }
+  .resume-print .resume-target { color: #555; font-size: 9.5pt; margin-bottom: 10pt; }
+  .resume-print h2 { font-size: 12pt; font-weight: 700; margin: 12pt 0 5pt; padding-bottom: 2pt; border-bottom: 1px solid #333; break-after: avoid; }
+  .resume-print p { margin: 0; white-space: pre-wrap; }
+  .resume-print ul { margin: 0; padding-left: 14pt; list-style: disc; }
+  .resume-print li { margin: 0 0 4pt; white-space: pre-wrap; break-inside: avoid; }
+}
