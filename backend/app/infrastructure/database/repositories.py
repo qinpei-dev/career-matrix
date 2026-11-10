@@ -4,7 +4,7 @@ import math
 import uuid
 from datetime import datetime
 
-from sqlalchemy import Float, delete, exists, func, or_, select, update
+from sqlalchemy import Float, delete, exists, func, or_, select, text, update
 from sqlalchemy.orm import Session
 
 from .models import (
@@ -338,7 +338,11 @@ class RetrievalRepository:
         document_id: uuid.UUID | None = None,
     ) -> list[tuple[DocumentChunk, float]]:
         if self.session.bind is not None and self.session.bind.dialect.name == "postgresql":
-            distance = DocumentChunk.embedding.op("<=>", return_type=Float)(query_embedding)
+            # The HNSW index finds nearest neighbours before the user filter is applied,
+            # so a small tenant can get fewer than top_k rows. Iterative scan (pgvector
+            # >= 0.8) keeps scanning until enough rows pass the filter.
+            self.session.execute(text("SET LOCAL hnsw.iterative_scan = strict_order"))
+            distance =DocumentChunk.embedding.op("<=>", return_type=Float)(query_embedding)
             statement = (
                 select(DocumentChunk, (1.0 - distance).label("score"))
                 .join(Document)
