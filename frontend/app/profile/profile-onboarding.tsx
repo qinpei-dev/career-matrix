@@ -144,15 +144,15 @@ export function ProfileOnboarding({ documentId }: { documentId?: string }) {
   }
 
   if (loading) {
-    return <section className="soft-shadow rounded-2xl border border-[#e4e9e2] bg-white p-8 text-sm text-[#707a76]" role="status">
+    return <section className="rounded-xl border border-[#e2e8f0] bg-white p-8 text-sm text-[#64748b]" role="status">
       正在加载候选人资料并生成草稿…
     </section>;
   }
 
   if (error && !draft && !existingProfile && documentId) {
-    return <section className="rounded-2xl border border-[#efd4ca] bg-[#fff5f1] p-6">
-      <p role="alert" className="text-sm text-[#9a4b35]">{error}</p>
-      <Link href="/resumes" className="mt-4 inline-flex text-xs font-bold text-[#315d4f]">返回简历管理</Link>
+    return <section className="rounded-xl border border-[#fecaca] bg-[#f8fafc] p-6">
+      <p role="alert" className="text-sm text-[#b91c1c]">{error}</p>
+      <Link href="/resumes" className="mt-4 inline-flex text-xs font-semibold text-[#2563eb]">返回简历管理</Link>
     </section>;
   }
 
@@ -164,57 +164,57 @@ export function ProfileOnboarding({ documentId }: { documentId?: string }) {
   ];
 
   return <div className="grid gap-5 xl:grid-cols-[minmax(0,1.25fr)_minmax(280px,.75fr)]">
-    <form onSubmit={confirm} className="soft-shadow rounded-2xl border border-[#e4e9e2] bg-white p-5 md:p-7">
+    <form onSubmit={confirm} className="rounded-xl border border-[#e2e8f0] bg-white p-5 md:p-5">
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div>
-          <h2 className="text-base font-bold">{documentId ? "确认 Profile Draft" : "编辑候选人资料"}</h2>
-          <p className="mt-1 text-xs leading-5 text-[#7f8985]">
+          <h2 className="text-base font-semibold">{documentId ? "确认 Profile Draft" : "编辑候选人资料"}</h2>
+          <p className="mt-1 text-xs leading-5 text-[#64748b]">
             {existingProfile ? "确认后将更新现有 CandidateProfile。" : "确认前不会创建 CandidateProfile。"}
           </p>
         </div>
-        <span className="rounded-full bg-[#edf2eb] px-3 py-1.5 text-[10px] font-bold text-[#466157]">
+        <span className="rounded-full bg-[#e2e8f0] px-3 py-1.5 text-[11px] font-semibold text-[#2563eb]">
           {existingProfile ? "已有 Profile" : "尚未保存"}
         </span>
       </div>
 
-      {saved && <p role="status" className="mt-5 rounded-xl bg-[#e9f5ec] px-4 py-3 text-sm text-[#2e654c]">候选人资料已保存。</p>}
-      {error && <p role="alert" className="mt-5 rounded-xl bg-[#fff1ec] px-4 py-3 text-sm text-[#a44d35]">{error}</p>}
+      {saved && <p role="status" className="mt-5 rounded-xl bg-[#f1f5f9] px-4 py-3 text-sm text-[#2563eb]">候选人资料已保存。</p>}
+      {error && <p role="alert" className="mt-5 rounded-xl bg-[#fef2f2] px-4 py-3 text-sm text-[#b91c1c]">{error}</p>}
 
       <div className="mt-6 grid gap-5 md:grid-cols-2">
-        <label className="text-xs font-bold text-[#58645f]">姓名
-          <input required maxLength={200} value={fields.name} onChange={(event) => editFields({ ...fields, name: event.target.value })} className="mt-2 w-full rounded-xl border border-[#dfe5dd] px-4 py-3 text-sm font-normal" />
+        <label className="text-xs font-semibold text-[#475569]">姓名
+          <input required maxLength={200} value={fields.name} onChange={(event) => editFields({ ...fields, name: event.target.value })} className="mt-2 w-full rounded-xl border border-[#e2e8f0] px-4 py-3 text-sm font-normal" />
         </label>
-        <label className="text-xs font-bold text-[#58645f]">目标岗位
-          <input maxLength={200} value={fields.target_role ?? ""} onChange={(event) => editFields({ ...fields, target_role: event.target.value || null })} className="mt-2 w-full rounded-xl border border-[#dfe5dd] px-4 py-3 text-sm font-normal" />
+        <label className="text-xs font-semibold text-[#475569]">目标岗位
+          <input maxLength={200} value={fields.target_role ?? ""} onChange={(event) => editFields({ ...fields, target_role: event.target.value || null })} className="mt-2 w-full rounded-xl border border-[#e2e8f0] px-4 py-3 text-sm font-normal" />
         </label>
       </div>
 
-      <label className="mt-5 block text-xs font-bold text-[#58645f]">技能
-        <textarea rows={3} value={skillsText} onChange={(event) => { setSkillsText(event.target.value); setSaved(false); }} className="mt-2 w-full rounded-xl border border-[#dfe5dd] px-4 py-3 text-sm font-normal leading-6" placeholder="使用逗号或换行分隔技能" />
+      <label className="mt-5 block text-xs font-semibold text-[#475569]">技能
+        <textarea rows={3} value={skillsText} onChange={(event) => { setSkillsText(event.target.value); setSaved(false); }} className="mt-2 w-full rounded-xl border border-[#e2e8f0] px-4 py-3 text-sm font-normal leading-6" placeholder="使用逗号或换行分隔技能" />
       </label>
 
-      <label className="mt-5 block text-xs font-bold text-[#58645f]">个人简介
-        <textarea rows={6} value={fields.summary ?? ""} onChange={(event) => editFields({ ...fields, summary: event.target.value || null })} className="mt-2 w-full rounded-xl border border-[#dfe5dd] px-4 py-3 text-sm font-normal leading-6" />
+      <label className="mt-5 block text-xs font-semibold text-[#475569]">个人简介
+        <textarea rows={6} value={fields.summary ?? ""} onChange={(event) => editFields({ ...fields, summary: event.target.value || null })} className="mt-2 w-full rounded-xl border border-[#e2e8f0] px-4 py-3 text-sm font-normal leading-6" />
       </label>
 
       <div className="mt-6 flex flex-wrap items-center gap-3">
-        <button disabled={saving} className="rounded-xl bg-[#234e43] px-5 py-3 text-sm font-bold text-white disabled:cursor-wait disabled:opacity-60">
+        <button disabled={saving} className="rounded-xl bg-[#2563eb] px-5 py-3 text-sm font-semibold text-white disabled:cursor-wait disabled:opacity-60">
           {saving ? "保存中…" : existingProfile ? "确认并更新 Profile" : "确认并创建 Profile"}
         </button>
-        <Link href="/resumes" className="px-3 py-2 text-xs font-bold text-[#65716c]">返回简历管理</Link>
+        <Link href="/resumes" className="px-3 py-2 text-xs font-semibold text-[#64748b]">返回简历管理</Link>
       </div>
     </form>
 
-    <aside className="soft-shadow h-fit rounded-2xl border border-[#e4e9e2] bg-white p-5 md:p-6">
-      <h2 className="text-sm font-bold">草稿来源</h2>
-      <p className="mt-1 text-xs leading-5 text-[#7f8985]">简历内容只用于生成建议字段；保存前请逐项确认。</p>
-      {documentId && <p className="mt-4 break-all rounded-xl bg-[#f6f8f4] px-3 py-2 text-[10px] text-[#68736e]">Document: {documentId}</p>}
+    <aside className="h-fit rounded-xl border border-[#e2e8f0] bg-white p-5 md:p-6">
+      <h2 className="text-sm font-semibold">草稿来源</h2>
+      <p className="mt-1 text-xs leading-5 text-[#64748b]">简历内容只用于生成建议字段；保存前请逐项确认。</p>
+      {documentId && <p className="mt-4 break-all rounded-xl bg-[#f1f5f9] px-3 py-2 text-[11px] text-[#64748b]">Document: {documentId}</p>}
       <div className="mt-4 space-y-3">
-        {evidence.map((item, index) => <article key={`${item.label}-${index}`} className="rounded-xl border border-[#e8ece6] p-3">
-          <p className="text-[10px] font-bold text-[#466157]">{item.label}</p>
-          <p className="mt-2 whitespace-pre-wrap text-xs leading-5 text-[#69736f]">{item.excerpt}</p>
+        {evidence.map((item, index) => <article key={`${item.label}-${index}`} className="rounded-xl border border-[#e2e8f0] p-3">
+          <p className="text-[11px] font-semibold text-[#2563eb]">{item.label}</p>
+          <p className="mt-2 whitespace-pre-wrap text-xs leading-5 text-[#64748b]">{item.excerpt}</p>
         </article>)}
-        {evidence.length === 0 && <p className="rounded-xl bg-[#f6f8f4] px-4 py-5 text-xs leading-5 text-[#7f8985]">
+        {evidence.length === 0 && <p className="rounded-xl bg-[#f1f5f9] px-4 py-5 text-xs leading-5 text-[#64748b]">
           {documentId ? "该简历没有返回可展示的证据字段，请手动补充并确认。" : "从简历管理上传或选择 ready 文档后，可在这里查看草稿依据。"}
         </p>}
       </div>

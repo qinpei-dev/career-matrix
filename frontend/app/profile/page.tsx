@@ -12,7 +12,7 @@ export default async function ProfilePage({
   const query = await searchParams;
   const documentId = typeof query.document_id === "string" ? query.document_id : undefined;
 
-  return <AppShell><div className="animate-rise pb-20 lg:pb-0">
+  return <AppShell><div className="animate-rise">
     <PageHeading
       eyebrow="Profile onboarding"
       title="候选人资料"

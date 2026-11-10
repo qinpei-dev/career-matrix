@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { AppShell } from "@/components/app-shell";
-import { JobRow, PageHeading } from "@/components/ui";
+import { JobRow, JobTableHeader, PageHeading } from "@/components/ui";
 import { api } from "@/lib/api";
 import { jobsApi, type JobListQuery } from "@/lib/jobs-api";
 import { latestAnalysesByJob, toJobListItem } from "@/lib/jobs";
@@ -61,60 +61,58 @@ export default async function JobsPage({
 
   return <AppShell><div className="animate-rise">
     <PageHeading
-      eyebrow="Job pipeline"
       title="岗位管理"
-      description="搜索、筛选并维护从浏览器扩展或手动保存的真实岗位。"
+      description="从浏览器扩展采集或手动添加的岗位，可搜索、筛选和排序。"
       action={<JobCreateForm />}
     />
-    {params.deleted === "1" && <p role="status" className="mb-4 rounded-xl bg-[#e9f5ec] px-4 py-3 text-sm text-[#2e654c]">岗位及其历史记录已删除。</p>}
-    <form action="/jobs" className="mb-4 grid gap-3 rounded-2xl border border-[#e4e9e2] bg-white p-4 md:grid-cols-[minmax(220px,1fr)_160px_160px_180px_auto]">
+    {params.deleted === "1" && <p role="status" className="mb-3 rounded-lg border border-[#a7f3d0] bg-[#ecfdf5] px-4 py-2.5 text-sm text-[#047857]">岗位及其历史记录已删除。</p>}
+    <form action="/jobs" className="mb-3 grid gap-2 rounded-xl border border-[#e2e8f0] bg-white p-3 md:grid-cols-[minmax(220px,1fr)_150px_140px_160px_auto]">
       <input
         name="query"
         defaultValue={params.query}
         maxLength={200}
         placeholder="搜索岗位或公司"
-        className="rounded-xl border border-[#dfe5dd] px-3 py-2.5 text-sm"
+        className="rounded-lg border border-[#e2e8f0] bg-white px-3 py-2 text-sm"
       />
-      <select name="source_type" defaultValue={params.source_type || ""} className="rounded-xl border border-[#dfe5dd] px-3 py-2.5 text-sm">
+      <select name="source_type" defaultValue={params.source_type || ""} className="rounded-lg border border-[#e2e8f0] bg-white px-3 py-2 text-sm">
         <option value="">全部来源</option>
         <option value="manual">手动添加</option>
         <option value="extension">浏览器扩展</option>
         <option value="zhipin">BOSS 直聘采集</option>
       </select>
-      <select name="analysis_status" defaultValue={analysisStatus || ""} className="rounded-xl border border-[#dfe5dd] px-3 py-2.5 text-sm">
+      <select name="analysis_status" defaultValue={analysisStatus || ""} className="rounded-lg border border-[#e2e8f0] bg-white px-3 py-2 text-sm">
         <option value="">全部状态</option>
         <option value="analyzed">已有分析</option>
         <option value="pending">待分析</option>
       </select>
-      <select name="sort" defaultValue={sort} className="rounded-xl border border-[#dfe5dd] px-3 py-2.5 text-sm">
+      <select name="sort" defaultValue={sort} className="rounded-lg border border-[#e2e8f0] bg-white px-3 py-2 text-sm">
         <option value="updated_desc">最近更新</option>
         <option value="created_desc">最近添加</option>
         <option value="title_asc">岗位名称 A-Z</option>
         <option value="company_asc">公司名称 A-Z</option>
       </select>
-      <button className="rounded-xl bg-[#234e43] px-4 py-2.5 text-sm font-bold text-white">应用</button>
+      <button className="rounded-lg bg-[#2563eb] px-4 py-2 text-sm font-medium text-white hover:bg-[#1d4ed8]">筛选</button>
     </form>
-    {hasFilters && <div className="mb-4 flex items-center justify-between gap-3 rounded-xl bg-[#edf2eb] px-4 py-3 text-xs text-[#466157]">
+    {hasFilters && <div className="mb-3 flex items-center justify-between gap-3 rounded-lg bg-[#eff6ff] px-4 py-2 text-xs text-[#1d4ed8]">
       <span>已应用搜索或筛选条件</span>
-      <Link href="/jobs" className="font-bold underline">清除条件</Link>
+      <Link href="/jobs" className="font-semibold underline">清除条件</Link>
     </div>}
-    <section className="soft-shadow overflow-hidden rounded-2xl border border-[#e4e9e2] bg-white">
-      {rows.length > 0 && <div className="hidden grid-cols-[minmax(260px,1.3fr)_1fr_110px_100px_24px] px-5 py-4 text-[9px] font-black uppercase tracking-[.12em] text-[#9aa29f] md:grid"><span>岗位</span><span>状态</span><span>匹配度</span><span>更新时间</span><span /></div>}
+    <section className="overflow-hidden rounded-xl border border-[#e2e8f0] bg-white">
+      {rows.length > 0 && <JobTableHeader />}
       {rows.map((job) => <JobRow key={job.id} job={job} />)}
       {rows.length === 0 && <div className="px-6 py-16 text-center">
-        <span className="mx-auto grid h-12 w-12 place-items-center rounded-2xl bg-[#edf2eb] text-[#466157]">0</span>
-        <h2 className="mt-4 text-sm font-bold">{hasFilters ? "没有匹配的岗位" : "暂无岗位"}</h2>
-        <p className="mt-2 text-xs text-[#858e8a]">{hasFilters ? "尝试调整搜索词或清除筛选条件。" : "添加岗位后，持久化数据会显示在这里。"}</p>
+                <h2 className="mt-4 text-sm font-semibold">{hasFilters ? "没有匹配的岗位" : "暂无岗位"}</h2>
+        <p className="mt-2 text-xs text-[#64748b]">{hasFilters ? "尝试调整搜索词或清除筛选条件。" : "添加岗位后，持久化数据会显示在这里。"}</p>
       </div>}
     </section>
-    <nav aria-label="岗位分页" className="mt-5 flex items-center justify-center gap-3 pb-20 lg:pb-0">
+    <nav aria-label="岗位分页" className="mt-4 flex items-center justify-center gap-3">
       {page > 1
-        ? <Link href={pageHref(params, page - 1)} className="rounded-xl border border-[#dfe5dd] bg-white px-4 py-2 text-xs font-bold">上一页</Link>
-        : <span className="rounded-xl border border-[#edf0eb] px-4 py-2 text-xs text-[#a3aaa7]">上一页</span>}
-      <span className="text-xs text-[#6f7975]">第 {page} 页</span>
+        ? <Link href={pageHref(params, page - 1)} className="rounded-lg border border-[#e2e8f0] bg-white px-3 py-1.5 text-xs font-medium hover:bg-[#f8fafc]">上一页</Link>
+        : <span className="rounded-lg border border-[#e2e8f0] px-3 py-1.5 text-xs text-[#cbd5e1]">上一页</span>}
+      <span className="text-xs text-[#64748b]">第 {page} 页</span>
       {hasNextPage
-        ? <Link href={pageHref(params, page + 1)} className="rounded-xl border border-[#dfe5dd] bg-white px-4 py-2 text-xs font-bold">下一页</Link>
-        : <span className="rounded-xl border border-[#edf0eb] px-4 py-2 text-xs text-[#a3aaa7]">下一页</span>}
+        ? <Link href={pageHref(params, page + 1)} className="rounded-lg border border-[#e2e8f0] bg-white px-3 py-1.5 text-xs font-medium hover:bg-[#f8fafc]">下一页</Link>
+        : <span className="rounded-lg border border-[#e2e8f0] px-3 py-1.5 text-xs text-[#cbd5e1]">下一页</span>}
     </nav>
   </div></AppShell>;
 }

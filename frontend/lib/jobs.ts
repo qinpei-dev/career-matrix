@@ -7,9 +7,17 @@ export interface JobListItem {
   status: string;
   score: number | null;
   location: string;
+  salary: string;
+  facts: string;
   date: string;
   accent: string;
 }
+
+const SOURCE_LABELS: Record<string, string> = {
+  manual: "手动添加",
+  extension: "浏览器扩展",
+  zhipin: "BOSS 直聘",
+};
 
 export function latestAnalysesByJob(analyses: Analysis[]): Map<string, Analysis> {
   const latest = new Map<string, Analysis>();
@@ -46,7 +54,9 @@ export function toJobListItem(job: Job, analysis?: AnalysisListStatus): JobListI
     role: job.title,
     status: analysisLabel(analysis),
     score: analysis?.score ?? null,
-    location: `来源：${job.source_type}`,
+    location: SOURCE_LABELS[job.source_type] || job.source_type,
+    salary: job.salary || "",
+    facts: [job.location, job.experience, job.education].filter(Boolean).join(" · "),
     date: new Intl.DateTimeFormat("zh-CN", { month: "numeric", day: "numeric" }).format(new Date(job.updated_at)),
     accent,
   };

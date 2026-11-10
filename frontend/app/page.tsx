@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { AppShell } from "@/components/app-shell";
 import { Icon } from "@/components/icons";
-import { JobRow, PageHeading } from "@/components/ui";
+import { JobRow, JobTableHeader, PageHeading, Score } from "@/components/ui";
 import { api } from "@/lib/api";
 import { toJobListItem } from "@/lib/jobs";
 
@@ -25,7 +25,7 @@ export default async function DashboardPage() {
     ]);
     const { stats } = dashboard;
     const recentJobs = dashboard.recent_jobs
-      .slice(0, 5)
+      .slice(0, 8)
       .map((job) => toJobListItem(
         job,
         job.analysis_status
@@ -43,46 +43,49 @@ export default async function DashboardPage() {
     ] as const;
     const maxFunnel = Math.max(...funnel.map(([, value]) => value), 1);
 
+    const card = "rounded-xl border border-[#e2e8f0] bg-white";
+    const cardHead = (title: string, sub: string, link?: React.ReactNode) => <div className="flex items-center justify-between gap-3 border-b border-[#f1f5f9] px-4 py-3"><div><h2 className="text-sm font-semibold">{title}</h2><p className="mt-0.5 text-xs text-[#94a3b8]">{sub}</p></div>{link}</div>;
+
     return <AppShell><div className="animate-rise">
-      <PageHeading title="求职工作台" description={`已同步 ${stats.jobs} 个岗位，${stats.pending_jobs} 个岗位等待分析。`} action={<Link href="/jobs" className="rounded-xl bg-[#234e43] px-4 py-2.5 text-sm font-bold text-white">＋ 添加岗位</Link>} />
+      <PageHeading title="求职工作台" description={`已保存 ${stats.jobs} 个岗位，${stats.pending_jobs} 个等待分析。`} action={<Link href="/jobs" className="inline-flex items-center gap-1.5 rounded-lg bg-[#2563eb] px-3.5 py-2 text-sm font-medium text-white hover:bg-[#1d4ed8]"><Icon name="plus" className="h-4 w-4" />添加岗位</Link>} />
 
-      <section className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+      <section className="grid grid-cols-2 gap-3 lg:grid-cols-4">
         {[
-          ["岗位总数", String(stats.jobs), "实时", "briefcase", "bg-[#e7efe8] text-[#315d4f]"],
-          ["平均匹配度", stats.average_score === null ? "—" : `${stats.average_score}%`, `${stats.analyzed_jobs} 个岗位已分析`, "trend", "bg-[#edf2d1] text-[#5f6f2d]"],
-          ["简历知识库", `${stats.ready_documents}/${stats.documents}`, "已就绪 / 全部", "file", "bg-[#f7e9dd] text-[#8d5a35]"],
-          ["活跃任务", String(stats.active_tasks), stats.failed_tasks ? `${stats.failed_tasks} 个失败` : "运行正常", "clock", "bg-[#e9e8f3] text-[#5f587d]"],
-        ].map(([label, value, meta, icon, tone], i) => <article key={label} className="soft-shadow rounded-2xl border border-[#e4e9e2] bg-white p-5" style={{ animationDelay: `${i * 50}ms` }}><div className="mb-5 flex items-start justify-between"><span className={`grid h-9 w-9 place-items-center rounded-xl ${tone}`}><Icon name={icon} className="h-[18px] w-[18px]" /></span><span className="text-[10px] font-bold text-[#7f8985]">{meta}</span></div><p className="text-[11px] font-semibold text-[#77817d]">{label}</p><p className="mt-1 text-[28px] font-semibold tracking-[-.04em]">{value}</p></article>)}
+          ["岗位总数", String(stats.jobs), `${stats.pending_jobs} 个待分析`, "briefcase", "text-[#2563eb] bg-[#eff6ff]"],
+          ["平均匹配度", stats.average_score === null ? "—" : `${stats.average_score}`, `${stats.analyzed_jobs} 个已分析 · ${stats.high_matches} 个高匹配`, "trend", "text-[#059669] bg-[#ecfdf5]"],
+          ["简历知识库", `${stats.ready_documents}/${stats.documents}`, "已就绪 / 全部", "file", "text-[#d97706] bg-[#fffbeb]"],
+          ["活跃任务", String(stats.active_tasks), stats.failed_tasks ? `${stats.failed_tasks} 个失败` : "运行正常", "clock", "text-[#7c3aed] bg-[#f5f3ff]"],
+        ].map(([label, value, meta, icon, tone]) => <article key={label} className={`${card} flex items-center gap-3 p-3.5`}><span className={`grid h-9 w-9 shrink-0 place-items-center rounded-lg ${tone}`}><Icon name={icon} className="h-[18px] w-[18px]" /></span><div className="min-w-0"><p className="text-xs text-[#64748b]">{label}</p><p className="text-xl font-semibold tabular-nums leading-7">{value}</p><p className="truncate text-[11px] text-[#94a3b8]">{meta}</p></div></article>)}
       </section>
 
-      <section className="mt-5 grid gap-5 xl:grid-cols-[1.6fr_1fr]">
-        <article className="soft-shadow overflow-hidden rounded-2xl border border-[#e4e9e2] bg-white">
-          <div className="flex items-center justify-between px-5 py-5"><div><h2 className="text-[15px] font-bold">最近岗位</h2><p className="mt-1 text-xs text-[#89928e]">按最近更新时间排序</p></div><Link href="/jobs" className="flex items-center gap-2 text-xs font-bold text-[#315d4f]">查看全部 <Icon name="arrow" className="h-3.5 w-3.5" /></Link></div>
-          {recentJobs.length > 0 && <div className="hidden grid-cols-[minmax(260px,1.3fr)_1fr_110px_100px_24px] px-5 pb-2 text-[9px] font-black uppercase tracking-[.12em] text-[#9aa29f] md:grid"><span>岗位</span><span>状态</span><span>匹配度</span><span>更新时间</span><span /></div>}
+      <section className="mt-4 grid gap-4 xl:grid-cols-[minmax(0,1fr)_320px]">
+        <article className={`${card} overflow-hidden`}>
+          {cardHead("最近岗位", "按最近更新时间排序", <Link href="/jobs" className="flex items-center gap-1 text-xs font-medium text-[#2563eb] hover:underline">查看全部 <Icon name="arrow" className="h-3.5 w-3.5" /></Link>)}
+          {recentJobs.length > 0 && <JobTableHeader />}
           {recentJobs.map((job) => <JobRow key={job.id} job={job}/>)}
-          {recentJobs.length === 0 && <div className="border-t border-[#edf0eb] px-5 py-12 text-center"><p className="text-sm font-bold text-[#52605a]">还没有岗位</p><p className="mt-2 text-xs text-[#89928e]">添加或从浏览器扩展同步岗位后，会显示在这里。</p></div>}
+          {recentJobs.length === 0 && <div className="px-4 py-12 text-center"><p className="text-sm font-medium text-[#475569]">还没有岗位</p><p className="mt-1 text-xs text-[#94a3b8]">在浏览器扩展里保存岗位，或点右上角“添加岗位”。</p></div>}
         </article>
 
-        <article className="soft-shadow rounded-2xl border border-[#e4e9e2] bg-[#234e43] p-5 text-white">
-          <div className="flex items-center justify-between"><div><h2 className="text-[15px] font-bold">分析覆盖率</h2><p className="mt-1 text-xs text-white/55">基于已保存岗位与最新分析</p></div><span className="grid h-9 w-9 place-items-center rounded-xl bg-white/10 text-[#d9ef84]"><Icon name="file" className="h-[18px] w-[18px]" /></span></div>
-          <div className="my-6 flex items-end justify-between"><div><span className="text-4xl font-semibold tracking-[-.06em]">{coverage}</span><span className="ml-1 text-sm text-white/50">%</span></div><span className="rounded-full bg-[#d9ef84] px-2.5 py-1 text-[10px] font-black text-[#234e43]">{stats.analyzed_jobs} / {stats.jobs}</span></div>
-          <div className="h-2 overflow-hidden rounded-full bg-white/10"><div className="h-full rounded-full bg-[#d9ef84]" style={{ width: `${coverage}%` }}/></div>
-          <p className="mt-5 text-xs leading-6 text-white/65">匹配分数、简历状态和任务进度均来自后端持久化数据。</p>
-          <Link href="/resumes" className="mt-6 flex w-full items-center justify-center gap-2 rounded-xl bg-white/10 py-2.5 text-xs font-bold transition hover:bg-white/15">查看简历知识库 <Icon name="arrow" className="h-3.5 w-3.5" /></Link>
+        <div className="grid content-start gap-4">
+          <article className={card}>
+            {cardHead("求职进度", `分析覆盖率 ${coverage}%`)}
+            <div className="grid gap-2.5 p-4">{funnel.map(([label, value]) => <div key={label} className="grid grid-cols-[48px_1fr_28px] items-center gap-2 text-xs"><span className="text-[#64748b]">{label}</span><div className="h-2 overflow-hidden rounded-full bg-[#f1f5f9]"><div className="h-full rounded-full" style={{ width: `${(value / maxFunnel) * 100}%`, backgroundColor: label === "高匹配" ? "#059669" : label === "待分析" ? "#f59e0b" : "#2563eb" }}/></div><strong className="text-right tabular-nums">{value}</strong></div>)}</div>
+          </article>
+          <article className={card}>
+            {cardHead("分析任务", "最近的执行状态", <Link href="/agents" className="text-xs font-medium text-[#2563eb] hover:underline">说明</Link>)}
+            <div className="divide-y divide-[#f1f5f9]">{dashboard.recent_tasks.map((task) => <Link key={task.id} href={`/jobs/${task.job_id}`} className="block px-4 py-2.5 hover:bg-[#f8fafc]"><div className="flex items-center justify-between gap-3"><p className="truncate text-xs font-medium">{task.job_title}</p><span className={`shrink-0 rounded-md px-1.5 py-0.5 text-[11px] font-medium ${task.status === "FAILED" ? "bg-[#fef2f2] text-[#b91c1c]" : task.status === "COMPLETED" ? "bg-[#ecfdf5] text-[#047857]" : "bg-[#eff6ff] text-[#1d4ed8]"}`}>{taskLabels[task.status] || task.status}</span></div><div className="mt-1.5 h-1 overflow-hidden rounded-full bg-[#f1f5f9]"><div className="h-full rounded-full bg-[#2563eb]" style={{ width: `${task.progress}%` }} /></div>{settings.show_technical_details && task.error_message && <p className="mt-1.5 text-[11px] text-[#b91c1c]">{task.error_message}</p>}</Link>)}{dashboard.recent_tasks.length === 0 && <p className="px-4 py-6 text-center text-xs text-[#94a3b8]">创建分析任务后，进度会显示在这里。</p>}</div>
+          </article>
+        </div>
+      </section>
+
+      <section className="mt-4">
+        <article className={card}>
+          {cardHead("最近分析", "最近更新的分析结果", <Link href="/jobs?analysis_status=analyzed" className="text-xs font-medium text-[#2563eb] hover:underline">全部已分析岗位</Link>)}
+          <div className="grid divide-y divide-[#f1f5f9] md:grid-cols-2 md:divide-y-0">{dashboard.recent_analyses.map((analysis) => <Link key={analysis.id} href={`/jobs/${analysis.job_id}`} className="flex items-center justify-between gap-4 px-4 py-2.5 hover:bg-[#f8fafc]"><div className="min-w-0"><p className="truncate text-sm font-medium">{analysis.job_title}</p><p className="mt-0.5 truncate text-xs text-[#64748b]">{analysis.company || "未填写公司"}</p></div><Score value={analysis.score} /></Link>)}{dashboard.recent_analyses.length === 0 && <p className="px-4 py-6 text-center text-xs text-[#94a3b8] md:col-span-2">完成岗位分析后，结果会显示在这里。</p>}</div>
         </article>
-      </section>
-
-      <section className="mt-5 grid gap-5 xl:grid-cols-2">
-        <article className="soft-shadow rounded-2xl border border-[#e4e9e2] bg-white p-5"><div className="flex items-center justify-between"><div><h2 className="text-[15px] font-bold">最近分析</h2><p className="mt-1 text-xs text-[#89928e]">最近更新的真实分析结果</p></div><Link href="/jobs" className="text-xs font-bold text-[#315d4f]">选择岗位</Link></div><div className="mt-4 space-y-2">{dashboard.recent_analyses.map((analysis) => <Link key={analysis.id} href={`/jobs/${analysis.job_id}`} className="flex items-center justify-between gap-4 rounded-xl border border-[#edf0eb] p-3 hover:bg-[#f8faf7]"><div className="min-w-0"><p className="truncate text-xs font-bold">{analysis.job_title}</p><p className="mt-1 truncate text-[10px] text-[#7f8985]">{analysis.company || "未填写公司"} · {analysis.status}</p></div><strong className="text-sm text-[#315d4f]">{analysis.score === null ? "—" : analysis.score}</strong></Link>)}{dashboard.recent_analyses.length === 0 && <p className="py-8 text-center text-xs text-[#7f8985]">完成岗位分析后，结果会显示在这里。</p>}</div></article>
-
-        <article className="soft-shadow rounded-2xl border border-[#e4e9e2] bg-white p-5"><div className="flex items-center justify-between"><div><h2 className="text-[15px] font-bold">分析任务状态</h2><p className="mt-1 text-xs text-[#89928e]">受控工作流的最近持久化状态</p></div><Link href="/agents" className="text-xs font-bold text-[#315d4f]">工作流说明</Link></div><div className="mt-4 space-y-2">{dashboard.recent_tasks.map((task) => <Link key={task.id} href={`/jobs/${task.job_id}`} className="block rounded-xl border border-[#edf0eb] p-3 hover:bg-[#f8faf7]"><div className="flex items-center justify-between gap-4"><p className="truncate text-xs font-bold">{task.job_title}</p><span className={`shrink-0 rounded-full px-2 py-1 text-[9px] font-bold ${task.status === "FAILED" ? "bg-[#fbe8e5] text-[#a14d42]" : "bg-[#e7f0e9] text-[#3d6c50]"}`}>{taskLabels[task.status] || task.status}</span></div><div className="mt-2 h-1.5 overflow-hidden rounded-full bg-[#e7ebe5]"><div className="h-full rounded-full bg-[#6c9477]" style={{ width: `${task.progress}%` }} /></div>{settings.show_technical_details && task.error_message && <p className="mt-2 text-[10px] text-[#a14d42]">{task.error_message}</p>}</Link>)}{dashboard.recent_tasks.length === 0 && <p className="py-8 text-center text-xs text-[#7f8985]">创建分析任务后，执行进度会显示在这里。</p>}</div></article>
-      </section>
-
-      <section className="mt-5 pb-20 lg:pb-0">
-        <article className="soft-shadow rounded-2xl border border-[#e4e9e2] bg-white p-5"><div className="flex items-center justify-between"><div><h2 className="text-[15px] font-bold">求职进度</h2><p className="mt-1 text-xs text-[#89928e]">当前真实数据概览</p></div><span className="text-[10px] font-bold text-[#668176]">实时</span></div><div className="mt-7 flex h-32 items-end justify-between gap-3">{funnel.map(([label, value]) => <div key={label} className="flex h-full flex-1 flex-col items-center gap-2"><strong className="text-xs">{value}</strong><div className="flex min-h-0 w-full flex-1 items-end justify-center"><div className="w-full max-w-20 rounded-t-lg bg-[#b9cdbf]" style={{height: `${value === 0 ? 2 : Math.max(12, (value / maxFunnel) * 100)}%`, backgroundColor: label === "高匹配" ? "#d9ef84" : undefined}}/></div><span className="text-[10px] text-[#7f8985]">{label}</span></div>)}</div></article>
       </section>
     </div></AppShell>;
   } catch (caught) {
-    return <AppShell><div className="animate-rise"><PageHeading title="求职工作台" description="加载真实岗位、简历与分析任务概览。" /><p role="alert" className="rounded-xl border border-[#efd4ca] bg-[#fff5f1] px-4 py-3 text-sm text-[#9a4b35]">{caught instanceof Error ? caught.message : "工作台加载失败"}</p></div></AppShell>;
+    return <AppShell><div className="animate-rise"><PageHeading title="求职工作台" description="加载真实岗位、简历与分析任务概览。" /><p role="alert" className="rounded-xl border border-[#fecaca] bg-[#f8fafc] px-4 py-3 text-sm text-[#b91c1c]">{caught instanceof Error ? caught.message : "工作台加载失败"}</p></div></AppShell>;
   }
 }

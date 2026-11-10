@@ -1,15 +1,13 @@
 @import "tailwindcss";
 
 :root {
-  --ink: #182121;
-  --muted: #66706d;
-  --paper: #f5f7f3;
+  --ink: #0f172a;
+  --muted: #64748b;
+  --paper: #f5f7fa;
   --card: #ffffff;
-  --line: #e4e9e2;
-  --green: #234e43;
-  --green-soft: #e7f0eb;
-  --lime: #d9ef84;
-  --orange: #f1a56b;
+  --line: #e2e8f0;
+  --primary: #2563eb;
+  --primary-soft: #eff6ff;
 }
 
 * { box-sizing: border-box; }
@@ -19,22 +17,27 @@ html { background: var(--paper); }
 body {
   margin: 0;
   color: var(--ink);
-  background:
-    radial-gradient(circle at 88% 4%, rgba(217, 239, 132, .18), transparent 24rem),
-    var(--paper);
-  font-family: Arial, "PingFang SC", "Microsoft YaHei", sans-serif;
+  background: var(--paper);
+  font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", "PingFang SC", "Microsoft YaHei UI", "Microsoft YaHei", sans-serif;
+  -webkit-font-smoothing: antialiased;
 }
 
-button, input, textarea { font: inherit; }
+/* Controls default to 14px; size utilities on an element still win. */
+@layer base {
+  button, input, select, textarea { font: inherit; font-size: .875rem; }
+}
 
-::selection { color: #fff; background: var(--green); }
+input, textarea, select { outline: none; }
+input:focus, textarea:focus, select:focus { border-color: var(--primary); box-shadow: 0 0 0 3px rgba(37, 99, 235, .12); }
 
-.soft-shadow { box-shadow: 0 16px 45px rgba(31, 53, 45, .07); }
-.fine-grid { background-image: radial-gradient(#d9dfd8 0.7px, transparent 0.7px); background-size: 12px 12px; }
+::selection { color: #fff; background: var(--primary); }
+
+.soft-shadow { box-shadow: 0 1px 2px rgba(15, 23, 42, .04), 0 4px 16px rgba(15, 23, 42, .04); }
+.fine-grid { background-image: radial-gradient(#e2e8f0 0.7px, transparent 0.7px); background-size: 12px 12px; }
 
 @keyframes rise {
-  from { opacity: 0; transform: translateY(8px); }
+  from { opacity: 0; transform: translateY(4px); }
   to { opacity: 1; transform: translateY(0); }
 }
 
-.animate-rise { animation: rise .45s ease-out both; }
+.animate-rise { animation: rise .25s ease-out both; }

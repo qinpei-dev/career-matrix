@@ -24,7 +24,7 @@ export function DeleteDocument({ documentId }: { documentId: string }) {
   }
 
   return <div className="text-right">
-    <button type="button" onClick={remove} disabled={deleting} className="rounded-xl border border-[#e9cfc5] px-3 py-2 text-xs font-bold text-[#9b4e37] disabled:opacity-50">{deleting ? "删除中…" : "删除文档"}</button>
-    {error && <p role="alert" className="mt-2 text-xs text-[#9b4e37]">{error}</p>}
+    <button type="button" onClick={remove} disabled={deleting} className="rounded-xl border border-[#fca5a5] px-3 py-2 text-xs font-semibold text-[#b91c1c] disabled:opacity-50">{deleting ? "删除中…" : "删除文档"}</button>
+    {error && <p role="alert" className="mt-2 text-xs text-[#b91c1c]">{error}</p>}
   </div>;
 }
