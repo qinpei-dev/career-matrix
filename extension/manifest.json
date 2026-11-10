@@ -2,23 +2,20 @@
   "manifest_version": 3,
   "name": "CareerMatrix",
   "description": "AI-Powered Career Intelligence & Decision System：采集岗位并提供可解释的职业决策支持。",
-  "version": "0.1.3",
+  "version": "0.1.4",
   "permissions": [
     "activeTab",
     "scripting",
     "nativeMessaging",
-    "storage",
-    "sidePanel"
+    "storage"
   ],
   "host_permissions": [
     "http://localhost:8000/*",
-    "http://127.0.0.1:8000/*"
+    "http://127.0.0.1:8000/*",
+    "https://www.zhipin.com/*"
   ],
   "action": {
     "default_title": "CareerMatrix"
-  },
-  "side_panel": {
-    "default_path": "popup.html"
   },
   "background": {
     "service_worker": "background.js"
@@ -38,9 +35,20 @@
         "https://www.zhipin.com/*"
       ],
       "js": [
-        "boss.js"
+        "boss.js",
+        "floating.js"
       ],
       "run_at": "document_idle"
+    }
+  ],
+  "web_accessible_resources": [
+    {
+      "resources": [
+        "popup.html"
+      ],
+      "matches": [
+        "<all_urls>"
+      ]
     }
   ]
 }

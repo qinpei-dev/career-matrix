@@ -1,6 +1,18 @@
-// Clicking the toolbar icon (or Alt+J) opens a side panel that stays open while
-// the user browses, instead of a popup that closes on every page click.
-chrome.sidePanel?.setPanelBehavior({ openPanelOnActionClick: true }).catch(() => {});
+// Clicking the toolbar icon (or Alt+J) toggles a draggable floating window on
+// the current page. Unlike a popup it stays open while the user clicks the page.
+chrome.action.onClicked.addListener(async (tab) => {
+  if (!tab.id) return;
+  try {
+    await chrome.scripting.executeScript({ target: { tabId: tab.id }, files: ["floating.js"] });
+    await chrome.scripting.executeScript({
+      target: { tabId: tab.id },
+      func: () => window.__careerMatrixFloating.toggle(),
+    });
+  } catch {
+    // Browser pages (edge://, the add-ons store) cannot host the window.
+    chrome.action.setBadgeText({ tabId: tab.id, text: "×" });
+  }
+});
 
 const NATIVE_HOST_NAME = "com.ai_job_copilot.service_control";
 const ALLOWED_ACTIONS = new Set(["status", "start", "stop"]);

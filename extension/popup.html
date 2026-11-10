@@ -60,8 +60,7 @@
         </label>
         <p id="auto-capture-status" class="field-help" aria-live="polite"></p>
         <p class="field-help">
-          只读取你已打开的岗位页面，不会替你点击、沟通或投递。需先在下方填写 Demo Token；
-          开启后 Token 会保存在本机浏览器中，关闭即清除。
+          只读取你已打开的岗位页面，不会替你点击、沟通或投递。需先在下方填写 Demo Token。
         </p>
       </section>
 
@@ -117,7 +116,7 @@
       <section class="action-section" aria-label="分析操作">
         <label for="demo-token">本地 Demo Token</label>
         <input id="demo-token" type="password" autocomplete="off" spellcheck="false" placeholder="与后端 DEMO_AUTH_TOKENS 配置一致">
-        <p class="field-help">默认仅用于当前弹窗；开启自动采集后会保存在本机浏览器中。</p>
+        <p class="field-help">相当于本地后端的访问口令，填一次即可，会记在本机浏览器的扩展存储里；清空输入框即删除。</p>
         <button id="save-job" class="button button-secondary" type="button">保存岗位</button>
         <button id="save-and-analyze" class="button button-secondary" type="button">保存并分析</button>
         <button id="analyze-job" class="button button-primary" type="button">

@@ -326,7 +326,6 @@ async function saveAutoCaptureSettings() {
   if (!extensionStorage) return;
   if (!autoCapture.checked) {
     await extensionStorage.set({ bossAutoCapture: false, bossAutoAnalyze: autoAnalyze.checked });
-    await extensionStorage.remove("demoToken");
     chrome.action?.setBadgeText({ text: "" });
     showAutoCaptureStatus(0);
     return;
@@ -657,6 +656,12 @@ greetingTextarea.addEventListener("input", () => {
 });
 copyGreetingButton.addEventListener("click", copyGreeting);
 autoCapture.addEventListener("change", saveAutoCaptureSettings);
+// Remember the token in this browser's extension storage so it is typed once.
+demoToken.addEventListener("change", () => {
+  const token = demoToken.value.trim();
+  if (token) extensionStorage?.set({ demoToken: token });
+  else extensionStorage?.remove("demoToken");
+});
 autoAnalyze.addEventListener("change", saveAutoCaptureSettings);
 greetingMode.addEventListener("change", () => {
   extensionStorage?.set({ greetingMode: greetingMode.value });
@@ -674,18 +679,18 @@ readCurrentJob({ automatic: true });
 detectServiceStatus();
 followActiveTab();
 
-// The side panel stays open while the user browses: re-read the page whenever
-// they switch tabs, load another page, or open another job on a job site.
+// The floating window stays open while the user browses: re-read the page
+// whenever it finishes loading or the user opens another job on a job site.
 function followActiveTab() {
-  if (!chrome.tabs?.onActivated) return;
+  if (!chrome.tabs?.onUpdated) return;
   const refresh = () => {
     clearTimeout(followTimer);
     followTimer = setTimeout(() => {
-      if (analysisInProgress || saveInProgress) return;
+      // Each tab has its own floating window; only the visible one re-reads.
+      if (analysisInProgress || saveInProgress || document.visibilityState === "hidden") return;
       readCurrentJob({ automatic: true });
     }, 300);
   };
-  chrome.tabs.onActivated.addListener(refresh);
   chrome.tabs.onUpdated.addListener((_tabId, changeInfo, tab) => {
     if (tab.active && changeInfo.status === "complete") refresh();
   });
