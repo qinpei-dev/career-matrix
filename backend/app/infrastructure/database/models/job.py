@@ -39,6 +39,10 @@ class Job(TimestampMixin, Base):
     source_url: Mapped[str | None] = mapped_column(String(2048))
     source_type: Mapped[str] = mapped_column(String(50), default="manual", nullable=False)
     job_fingerprint: Mapped[str | None] = mapped_column(String(64), index=True)
+    salary: Mapped[str | None] = mapped_column(String(100))
+    location: Mapped[str | None] = mapped_column(String(200))
+    experience: Mapped[str | None] = mapped_column(String(100))
+    education: Mapped[str | None] = mapped_column(String(100))
 
     user: Mapped["User"] = relationship(back_populates="jobs")
     analyses: Mapped[list["Analysis"]] = relationship(

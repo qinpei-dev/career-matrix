@@ -26,4 +26,4 @@ Provider Key 仅由 Backend 使用。浏览器中的 Demo Token 是公开给本�
 
 ## 文档与迁移
 
-当前 Alembic 唯一 head 为 `20261110_0013`，对应 `chunk_embedding_hnsw`（仅 PostgreSQL 建 HNSW 余弦索引）。`20260730_0012` 对应 `tailored_resumes`。早期 `20260724_0010` 对应 `analysis_task_claim_lease`。版本和历史验收材料保留供追溯，不代表本页所述的当前状态。
+当前 Alembic 唯一 head 为 `20261110_0014`，对应 `job_listing_fields`（岗位薪资、地点、经验、学历）。`20261110_0013` 对应 `chunk_embedding_hnsw`（仅 PostgreSQL 建 HNSW 余弦索引）。`20260730_0012` 对应 `tailored_resumes`。早期 `20260724_0010` 对应 `analysis_task_claim_lease`。版本和历史验收材料保留供追溯，不代表本页所述的当前状态。

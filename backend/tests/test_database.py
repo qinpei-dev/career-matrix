@@ -130,6 +130,10 @@ def test_models_define_required_tables_and_postgresql_jsonb() -> None:
         "source_url",
         "source_type",
         "job_fingerprint",
+        "salary",
+        "location",
+        "experience",
+        "education",
         "created_at",
         "updated_at",
     }

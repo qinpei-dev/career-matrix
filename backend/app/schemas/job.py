@@ -17,8 +17,15 @@ class JobCreate(BaseModel):
     description: str = Field(min_length=1, max_length=MAX_UNTRUSTED_JOB_CONTENT_CHARS)
     source_url: str | None = Field(default=None, max_length=2048)
     source_type: str = Field(default="manual", min_length=1, max_length=50)
+    salary: str | None = Field(default=None, max_length=100)
+    location: str | None = Field(default=None, max_length=200)
+    experience: str | None = Field(default=None, max_length=100)
+    education: str | None = Field(default=None, max_length=100)
 
-    @field_validator("title", "company", "description", "source_url", "source_type")
+    @field_validator(
+        "title", "company", "description", "source_url", "source_type",
+        "salary", "location", "experience", "education",
+    )
     @classmethod
     def strip_text(cls, value: str | None, info: ValidationInfo) -> str | None:
         if value is None:
@@ -47,8 +54,15 @@ class JobUpdate(BaseModel):
     )
     source_url: str | None = Field(default=None, max_length=2048)
     source_type: str | None = Field(default=None, min_length=1, max_length=50)
+    salary: str | None = Field(default=None, max_length=100)
+    location: str | None = Field(default=None, max_length=200)
+    experience: str | None = Field(default=None, max_length=100)
+    education: str | None = Field(default=None, max_length=100)
 
-    @field_validator("title", "company", "description", "source_url", "source_type")
+    @field_validator(
+        "title", "company", "description", "source_url", "source_type",
+        "salary", "location", "experience", "education",
+    )
     @classmethod
     def strip_text(cls, value: str | None, info: ValidationInfo) -> str | None:
         if value is None:
