@@ -29,9 +29,7 @@ from ..core.security import redact_sensitive_text
 
 SCORING_VERSION = "deterministic-v1"
 PROMPT_VERSION = "retrieval-evidence-v2"
-EVIDENCE_TOP_K = 2
 EVIDENCE_REQUIREMENT_LIMIT = 20
-EVIDENCE_MIN_SCORE = 0.35
 
 
 class AnalysisService:
@@ -123,7 +121,7 @@ class ApplicationAnalysisService:
         evidence: list[AnalysisEvidence] = []
         try:
             for requirement in self._requirements(extracted):
-                matches = self.retrieval_service.search(requirement, EVIDENCE_TOP_K)
+                matches = self.retrieval_service.search_evidence(requirement)
                 evidence.extend(
                     AnalysisEvidence(
                         chunk_id=match.chunk_id,
@@ -133,7 +131,6 @@ class ApplicationAnalysisService:
                         requirement=redact_sensitive_text(requirement),
                     )
                     for match in matches
-                    if match.score >= EVIDENCE_MIN_SCORE
                 )
         except EmbeddingServiceError:
             return []

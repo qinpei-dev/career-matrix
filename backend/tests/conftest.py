@@ -22,6 +22,8 @@ TEST_DEMO_AUTH_TOKENS = {
 def configure_demo_auth(monkeypatch: pytest.MonkeyPatch):
     """Install fake per-test credentials without relying on a developer .env file."""
     monkeypatch.setenv("DEMO_AUTH_TOKENS", json.dumps(TEST_DEMO_AUTH_TOKENS))
+    # Keep tests offline even when the developer .env enables the hosted reranker.
+    monkeypatch.setenv("RERANK_MODEL", "")
     get_settings.cache_clear()
     yield
     get_settings.cache_clear()

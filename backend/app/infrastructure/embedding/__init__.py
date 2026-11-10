@@ -4,6 +4,7 @@ from ...core.config import Settings
 from ..database.vector import BGE_M3_DIMENSION
 from .openai_compatible import OpenAICompatibleEmbeddingProvider
 from .provider import EmbeddingConfigurationError, EmbeddingProvider
+from .reranker import Reranker
 
 
 def create_embedding_provider(settings: Settings) -> EmbeddingProvider:
@@ -26,4 +27,15 @@ def create_embedding_provider(settings: Settings) -> EmbeddingProvider:
     )
 
 
-__all__ = ["EmbeddingProvider", "create_embedding_provider"]
+def create_reranker(settings: Settings) -> Reranker | None:
+    """Return the configured reranker, or None when RERANK_MODEL is unset."""
+    if not settings.rerank_model.strip():
+        return None
+    return Reranker(
+        model=settings.rerank_model,
+        base_url=settings.embedding_base_url,
+        api_key=settings.embedding_api_key,
+    )
+
+
+__all__ = ["EmbeddingProvider", "Reranker", "create_embedding_provider", "create_reranker"]

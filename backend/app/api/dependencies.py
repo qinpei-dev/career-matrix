@@ -18,7 +18,7 @@ from ..core.demo_auth import DemoAuthenticationError, authenticate_demo_token
 from ..infrastructure.database.models import User
 from ..infrastructure.database.repositories import UserRepository
 from ..infrastructure.database.session import get_db_session
-from ..infrastructure.embedding import create_embedding_provider
+from ..infrastructure.embedding import create_embedding_provider, create_reranker
 from ..infrastructure.embedding.provider import EmbeddingProvider
 from ..infrastructure.llm.deepseek import DeepSeekProvider
 from ..infrastructure.llm.provider import ResumeTailoringProvider
@@ -81,6 +81,7 @@ def get_application_analysis_service(
             session,
             current_user.email,
             embedding_provider,
+            reranker=create_reranker(get_settings()),
         ),
     )
 
@@ -128,7 +129,10 @@ def get_agent_run_service(
         current_user.email,
         analyzer=AnalysisService(DeepSeekProvider()),
         retrieval_service=RetrievalService(
-            session, current_user.email, embedding_provider
+            session,
+            current_user.email,
+            embedding_provider,
+            reranker=create_reranker(get_settings()),
         ),
         timeout_seconds=settings.agent_run_timeout_seconds,
     )
@@ -145,7 +149,10 @@ def get_analysis_task_service(
         current_user.email,
         analyzer=AnalysisService(DeepSeekProvider()),
         retrieval_service=RetrievalService(
-            session, current_user.email, embedding_provider
+            session,
+            current_user.email,
+            embedding_provider,
+            reranker=create_reranker(get_settings()),
         ),
     )
 

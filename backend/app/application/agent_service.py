@@ -43,8 +43,6 @@ from ..infrastructure.llm.parser import build_final_analysis
 from ..services.scoring import calculate_match_score
 from ..schemas.analysis import AnalysisEvidence
 from .analysis_service import (
-    EVIDENCE_MIN_SCORE,
-    EVIDENCE_TOP_K,
     PROMPT_VERSION,
     SCORING_VERSION,
     AnalysisService,
@@ -213,15 +211,14 @@ class AgentRunService:
     ) -> RetrieveCandidateEvidenceOutput:
         evidence = []
         for requirement in payload.requirements:
-            for match in self.retrieval_service.search(requirement, EVIDENCE_TOP_K):
-                if match.score >= EVIDENCE_MIN_SCORE:
-                    evidence.append(AnalysisEvidence(
-                        chunk_id=match.chunk_id,
-                        document_id=match.document_id,
-                        content=redact_sensitive_text(match.content),
-                        section=redact_sensitive_text(match.section),
-                        requirement=redact_sensitive_text(requirement),
-                    ))
+            for match in self.retrieval_service.search_evidence(requirement):
+                evidence.append(AnalysisEvidence(
+                    chunk_id=match.chunk_id,
+                    document_id=match.document_id,
+                    content=redact_sensitive_text(match.content),
+                    section=redact_sensitive_text(match.section),
+                    requirement=redact_sensitive_text(requirement),
+                ))
         return RetrieveCandidateEvidenceOutput(evidence=evidence)
 
     @staticmethod
